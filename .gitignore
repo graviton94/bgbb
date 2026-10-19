@@ -1,0 +1,11 @@
+# Third-party / Sub-tools
+.ui-ux-pro-max/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# OS generated
+.DS_Store
+Thumbs.db
