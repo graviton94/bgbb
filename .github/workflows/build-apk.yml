@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
   workflow_dispatch:
 
@@ -12,51 +12,39 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
 
-      - name: Accept Android SDK Licenses
-        run: |
-          yes | timeout 180 $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
+      - name: Accept Android SDK licenses
+        run: yes | timeout 180 $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
 
-      - name: Setup Gradle 8.7
-        uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      # 웹 앱과 효과음은 gradle 의 syncWebAssets / syncRawSounds 태스크가 APK 에 넣는다.
-      - name: Build Debug APK
-        working-directory: ./android
+      # 웹 앱·효과음은 gradle 의 syncWeb / syncRaw 태스크가 APK 에 넣는다
+      - name: Build debug APK
+        working-directory: android
         run: gradle assembleDebug
 
-      - name: Copy APK to root with clean name
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk ./banggu-bboong-debug.apk
+      - run: cp android/app/build/outputs/apk/debug/app-debug.apk banggu-bboong-debug.apk
 
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: banggu-bboong-debug-apk
-          path: ./banggu-bboong-debug.apk
+          path: banggu-bboong-debug.apk
 
-      - name: Publish APK to GitHub Release
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+      - name: Publish to GitHub Release
+        if: github.ref == 'refs/heads/main'
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v5.0.0-apk
-          name: "방구뿡 (Bang-gu Bboong) V5.0.0 Android APK"
-          body: |
-            ### 🐹 방구뿡 V5.0.0
-            - 불시 작전이 진짜로 "하루 N회, 작전 시간대 안에서만" 울림 (AlarmManager)
-            - 상주 서비스·WakeLock 제거 → 대기 중 배터리 소모 거의 0
-            - 앱이 꺼져 있을 때 울린 기록도 앱을 열면 대담/소심/꾹참으로 집계
-          files: ./banggu-bboong-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v6.0.0-apk
+          name: 방구뿡 V6 Android APK
+          files: banggu-bboong-debug.apk

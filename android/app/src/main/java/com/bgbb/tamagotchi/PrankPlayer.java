@@ -18,10 +18,10 @@ import java.io.File;
 import java.util.Random;
 
 /**
- * 작전 1회 실행: 친구 하나를 골라 폰의 실제 상태대로 반응한다.
- *  - 소리 모드  → 소리 재생 (대담, loud)
- *  - 진동 모드  → 진동만 (소심, soft)
- *  - 무음/방해금지 → 아무것도 안 함 (꾹참, hold)
+ * 작전 1회: 참여 중인 친구 하나를 골라, 그 순간의 진짜 폰 상태대로 반응한다.
+ *   소리 모드        → 소리 재생   = 대담 (loud)
+ *   진동 모드        → 진동만      = 소심 (soft)
+ *   무음 / 방해금지   → 아무것도 X  = 꾹참 (hold)
  */
 final class PrankPlayer {
 
@@ -30,7 +30,7 @@ final class PrankPlayer {
 
     private PrankPlayer() {}
 
-    /** done 은 소리가 끝났거나 실패했을 때 메인 스레드에서 정확히 한 번 호출된다. */
+    /** done 은 끝났을 때 메인 스레드에서 정확히 한 번 불린다. */
     static void fire(Context c, Runnable done) {
         JSONArray sounds = PrankScheduler.config(c).optJSONArray("sounds");
         if (sounds == null || sounds.length() == 0) {
@@ -38,18 +38,10 @@ final class PrankPlayer {
             return;
         }
         JSONObject pick = sounds.optJSONObject(RANDOM.nextInt(sounds.length()));
-        String charId = pick.optString("char");
+        String charId = pick.optString("char", "hamster");
         String sound = pick.optString("sound", "main");
         String mode = deviceMode(c);
-
-        try {
-            JSONObject event = new JSONObject()
-                    .put("t", System.currentTimeMillis())
-                    .put("char", charId)
-                    .put("mode", mode);
-            PrankScheduler.logEvent(c, event);
-        } catch (Exception ignored) {
-        }
+        PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
 
         if ("loud".equals(mode)) {
             play(c, charId, sound, done);
@@ -73,15 +65,16 @@ final class PrankPlayer {
 
     private static void play(Context c, String charId, String sound, Runnable done) {
         Handler main = new Handler(Looper.getMainLooper());
+        MediaPlayer mp = new MediaPlayer();
         boolean[] finished = {false};
-        Runnable finishOnce = () -> {
+        Runnable finish = () -> {
             if (finished[0]) return;
             finished[0] = true;
+            mp.release();
             done.run();
         };
-        MediaPlayer mp = new MediaPlayer();
         try {
-            // 알림 소리로 취급 → 알림 볼륨을 따르고 방해금지 모드에서 막힌다.
+            // 알림 소리로 취급: 알림 볼륨을 따르고 방해금지 모드에서는 시스템이 막는다.
             mp.setAudioAttributes(new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -90,23 +83,21 @@ final class PrankPlayer {
             if ("diy".equals(sound) && diy.exists()) {
                 mp.setDataSource(diy.getAbsolutePath());
             } else {
-                int res = c.getResources().getIdentifier(rawName(charId, sound), "raw", c.getPackageName());
-                if (res == 0) throw new IllegalStateException("missing sound");
+                String style = "soft".equals(sound) || "loud".equals(sound) ? sound : "main";
+                int res = c.getResources().getIdentifier(charId + "_" + style, "raw", c.getPackageName());
+                if (res == 0) throw new IllegalStateException("no sound " + charId + "_" + style);
                 try (AssetFileDescriptor afd = c.getResources().openRawResourceFd(res)) {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                 }
             }
-            mp.setOnCompletionListener(p -> { p.release(); finishOnce.run(); });
-            mp.setOnErrorListener((p, what, extra) -> { p.release(); finishOnce.run(); return true; });
             mp.setOnPreparedListener(MediaPlayer::start);
+            mp.setOnCompletionListener(p -> finish.run());
+            mp.setOnErrorListener((p, what, extra) -> { finish.run(); return true; });
             mp.prepareAsync();
-            // 녹음 파일이 길거나 콜백이 안 와도 브로드캐스트 제한(10초) 안에 끝낸다.
-            main.postDelayed(() -> {
-                if (!finished[0]) { mp.release(); finishOnce.run(); }
-            }, 6000);
+            // 콜백이 안 오더라도 브로드캐스트 제한 시간(10초) 안에 끝낸다.
+            main.postDelayed(finish, 6000);
         } catch (Exception e) {
-            mp.release();
-            finishOnce.run();
+            finish.run();
         }
     }
 
@@ -115,11 +106,5 @@ final class PrankPlayer {
         if (vib != null && vib.hasVibrator()) {
             vib.vibrate(VibrationEffect.createWaveform(new long[]{0, 90, 50, 140}, -1));
         }
-    }
-
-    static String rawName(String charId, String sound) {
-        String prefix = "hamster".equals(charId) ? "fart" : charId;
-        String style = ("soft".equals(sound) || "loud".equals(sound)) ? sound : "main";
-        return prefix + "_" + style;
     }
 }

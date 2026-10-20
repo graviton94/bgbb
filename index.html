@@ -1,439 +1,174 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>방구뿡 - 주머니 속 다마고치 비밀 다이어리</title>
-  <meta name="description" content="주머니 속 귀여운 낙서 친구들이 뛰노는 다마고치 아지트 & B급 힐링 오락 앱">
-  <!-- Google Fonts: Gaegu, Jua, Noto Sans KR -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FFF6E5">
+  <title>방구뿡</title>
+  <meta name="description" content="주머니 속 다마고치 - 하루 몇 번, 친구들이 불시에 소리를 낸다. 소리면 대담, 진동이면 소심, 무음이면 꾹참!">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/main.js"></script>
 </head>
 <body>
-  <div class="app-shell" id="appShell">
-    
-    <!-- 모바일 프레임 컨테이너 -->
-    <main class="mobile-device" id="mobileDevice">
-      
-      <!-- 1. 상단 위장 바 (Stealth Header) -->
-      <header class="top-camouflage-bar" id="topCamouflageBar">
-        <div class="stealth-indicator">
-          <span class="status-dot pulsing" id="statusDot"></span>
-          <span class="stealth-text" id="stealthText">햄찌와 친구들이 주머니 속 낮잠 중 💤</span>
+  <div class="app">
+    <header class="topbar">
+      <button class="status" id="status" type="button">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">작전 준비 중…</span>
+      </button>
+      <span class="acorns" id="acorns">🌰 0</span>
+      <button class="icon-btn" id="openSettings" type="button" aria-label="작전 설정">⚙️</button>
+    </header>
+
+    <main>
+      <!-- 아지트 -->
+      <section class="screen active" id="screen-home">
+        <div class="world">
+          <canvas id="world" aria-label="친구들이 노는 아지트. 친구나 소품을 눌러보세요."></canvas>
+          <button class="world-chip" id="themeChip" type="button"></button>
         </div>
-        <div class="top-nav-actions">
-          <button class="nav-icon-btn" id="btnOpenDecor" title="아지트 꾸미기" aria-label="아지트 꾸미기">
-            🎨
-          </button>
-          <button class="nav-icon-btn" id="btnOpenSettings" title="작전 설정" aria-label="작전 설정">
-            ⚙️
-          </button>
+        <div class="today" id="today"></div>
+        <div class="home-actions">
+          <button class="btn" id="openDecor" type="button">🎨 꾸미기</button>
+          <button class="btn freeze" id="freeze" type="button">🚨 긴급탈출</button>
         </div>
-      </header>
-
-      <!-- 2. 네비게이션 탭 -->
-      <nav class="sub-nav-tabs" id="subTabs">
-        <button class="tab-btn active" data-tab="tab-home" id="tabHomeBtn">
-          <span>🏡</span> 미니 아지트
-        </button>
-        <button class="tab-btn" data-tab="tab-diary" id="tabDiaryBtn">
-          <span>📖</span> 저녁 일기장
-        </button>
-        <button class="tab-btn" data-tab="tab-sound" id="tabSoundBtn">
-          <span>🎵</span> 소리 보관함
-        </button>
-        <button class="tab-btn" data-tab="tab-rank" id="tabRankBtn">
-          <span>🏅</span> 참음왕
-        </button>
-      </nav>
-
-      <!-- TAB 1: 메인 화면 - 살아 숨쉬는 다마고치 미니홈피 아지트 -->
-      <section class="tab-content active" id="tab-home">
-        
-        <!-- 대형 다마고치 미니홈피 아지트 (Hero Living World) -->
-        <div class="tamagotchi-world meadow" id="tamagotchiWorld">
-          
-          <!-- 월드 상단 상태 HUD (테마/시간대 뱃지 & 도토리 카운터) -->
-          <div class="minihompy-hud-header">
-            <button class="world-theme-badge" id="worldThemeBadge" title="터치하면 시간대별 배경(낮/노을/밤/실시간 자동)이 전환돼요!">🌿 산들바람 초원 (낮)</button>
-            <span class="world-acorn-badge" id="worldAcornBadge" title="보유 도토리">🌰 0</span>
-          </div>
-
-          <!-- 월드 상단 보조 터치 가이드 팁 -->
-          <div class="world-hint-tip">
-            <span>👆 캐릭터나 아지트 소품을 콕 찌르면 리액션 &amp; 도토리!</span>
-          </div>
-
-          <!-- 하늘 & 벽면 배경 레이어 (테마별 동적 전환) -->
-          <div class="world-sky" id="worldSky">
-            <div class="sky-sun" id="skySun"><img src="assets/props/sun.webp" alt="태양" class="sky-prop-img"></div>
-            <div class="sky-moon" id="skyMoon"><img src="assets/props/moon.webp" alt="달" class="sky-prop-img"></div>
-            <div class="sky-cloud cloud-1"><img src="assets/props/cloud.webp" alt="구름" class="sky-prop-img"></div>
-            <div class="sky-cloud cloud-2"><img src="assets/props/cloud.webp" alt="구름" class="sky-prop-img"></div>
-            <div class="sky-stars" id="skyStars"><img src="assets/props/stars.webp" alt="별빛" class="sky-prop-img"></div>
-            <div class="room-window" id="roomWindow">🪟</div>
-            <div class="room-clock" id="roomClock">🕰️</div>
-            <div class="city-skyline" id="citySkyline"></div>
-          </div>
-
-          <!-- 바닥 & 지형 레이어 (초원 잔디 / 미니룸 마룻바닥 / 아스팔트 거리) -->
-          <div class="world-ground" id="worldGround">
-            <div class="grass-tuft t-1">🌱</div>
-            <div class="grass-tuft t-2">🌼</div>
-            <div class="grass-tuft t-3">🌷</div>
-            <div class="grass-tuft t-4">🌱</div>
-          </div>
-
-          <!-- 미니홈피 배치 아이템 레이어 (10종 크레용 수제 소품) -->
-          <div class="decor-items-layer" id="decorLayer">
-            <div class="decor-prop prop-carrot" id="propCarrot" title="당근 텃밭"><img src="assets/props/carrot.webp" alt="당근" class="decor-prop-img"></div>
-            <div class="decor-prop prop-sunflower" id="propSunflower" title="황금 해바라기"><img src="assets/props/sunflower.webp" alt="해바라기" class="decor-prop-img"></div>
-            <div class="decor-prop prop-box" id="propBox" title="뚱냥이 전용 상자"><img src="assets/props/box.webp" alt="상자" class="decor-prop-img"></div>
-            <div class="decor-prop prop-tent" id="propTent" title="꼬마 인디언 텐트"><img src="assets/props/tent.webp" alt="텐트" class="decor-prop-img"></div>
-            <div class="decor-prop prop-balloon" id="propBalloon" title="뽀옹 방구 풍선"><img src="assets/props/balloon.webp" alt="풍선" class="decor-prop-img"></div>
-            <div class="decor-prop prop-bench" id="propBench" title="통나무 미니 벤치"><img src="assets/props/bench.webp" alt="벤치" class="decor-prop-img"></div>
-            <div class="decor-prop prop-campfire" id="propCampfire" title="타닥타닥 모닥불">
-              <span class="campfire-aura aura-outer"></span>
-              <span class="campfire-aura aura-mid"></span>
-              <span class="campfire-aura aura-core"></span>
-              <img src="assets/props/campfire.webp" alt="모닥불" class="decor-prop-img">
-            </div>
-            <div class="decor-prop prop-churu" id="propChuru" title="황금 츄르 그릇"><img src="assets/props/churu.webp" alt="츄르" class="decor-prop-img"></div>
-            <div class="decor-prop prop-mat hidden" id="propMat" title="피크닉 돗자리"><img src="assets/props/mat.webp" alt="돗자리" class="decor-prop-img"></div>
-            <div class="decor-prop prop-tree hidden" id="propTree" title="크레용 큰 나무"><img src="assets/props/tree.webp" alt="큰나무" class="decor-prop-img"></div>
-          </div>
-
-          <!-- 살아 움직이는 다마고치 캐릭터들 (자율 2.5D 이동 & 투명 스프라이트) -->
-          <div class="pets-actors-layer" id="petsLayer">
-            
-            <!-- 1. 방구 햄찌 -->
-            <div class="pet-actor" id="petHamster" data-char="0" title="방구 햄찌를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleHamster">뽀옹! 💨</div>
-              <img src="assets/hamster.webp" alt="방구 햄찌" class="pet-sprite">
-              <span class="pet-nametag">방구 햄찌</span>
-            </div>
-
-            <!-- 2. 솜뭉치 오목눈이 -->
-            <div class="pet-actor" id="petTit" data-char="1" title="오목눈이를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleTit">짹짹! 🐤</div>
-              <img src="assets/tit.webp" alt="솜뭉치 오목눈이" class="pet-sprite">
-              <span class="pet-nametag">오목눈이</span>
-            </div>
-
-            <!-- 3. 시크 뚱냥이 -->
-            <div class="pet-actor" id="petCat" data-char="2" title="시크 뚱냥이를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleCat">냐옹~ 🐱</div>
-              <img src="assets/cat.webp" alt="시크 뚱냥이" class="pet-sprite">
-              <span class="pet-nametag">시크 뚱냥</span>
-            </div>
-
-          </div>
-
-          <!-- 월드 하단 플로팅 카운터 바 (대담 / 소심 / 꾹참 요약) -->
-          <div class="world-floating-hud">
-            <div class="hud-count-chip loud" title="오늘 소리 모드에서 터진 횟수">
-              <span class="chip-label">💥 대담</span>
-              <strong id="countLoud">0회</strong>
-            </div>
-            <div class="hud-count-chip soft" title="오늘 진동 모드에서 터진 횟수">
-              <span class="chip-label">🫧 소심</span>
-              <strong id="countSoft">0회</strong>
-            </div>
-            <div class="hud-count-chip hold" title="오늘 무음 모드에서 꾹 참은 횟수">
-              <span class="chip-label">🤫 꾹참</span>
-              <strong id="countHold">0회</strong>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- 최하단 원터치 긴급탈출 버튼 (Thumb-Zone) -->
-        <div class="emergency-dock" id="emergencyDock">
-          <button class="btn-emergency" id="btnEmergency">
-            <span class="icon">🚨</span>
-            <span class="text" id="emergencyText">긴급탈출! (원터치 소리 동결)</span>
-          </button>
-          <p class="emergency-hint">※ 조용한 회의나 시험 때 누르면 다시 누를 때까지 작전이 전부 멈춰요.</p>
-        </div>
-
+        <p class="hint" id="homeHint"></p>
       </section>
 
-      <!-- TAB 2: 저녁 21:00 그림일기장 & 9:16 인스타 스토리 카드 렌더러 -->
-      <section class="tab-content" id="tab-diary">
-        <div class="diary-header">
-          <h2>📖 오늘의 비밀 방귀 일기장</h2>
-          <p class="diary-subtitle">오늘의 한줄 일기와 날씨를 고르면 그림일기가 완성돼요 🎨</p>
+      <!-- 기록 -->
+      <section class="screen" id="screen-records">
+        <h2>🏆 나의 참음왕 기록</h2>
+        <div class="card summary" id="summary"></div>
+        <div class="card">
+          <h3>최근 7일</h3>
+          <div class="legend" id="legend"></div>
+          <div class="week" id="week" role="img"></div>
         </div>
-
-        <div class="diary-custom-controls">
-          <div class="diary-weather-row">
-            <span class="diary-ctrl-label">날씨:</span>
-            <button class="weather-chip active" data-weather="💨 뿡뿡">💨 뿡뿡</button>
-            <button class="weather-chip" data-weather="☀️ 맑음">☀️ 맑음</button>
-            <button class="weather-chip" data-weather="🌩️ 꾸르륵">🌩️ 꾸르륵</button>
-            <button class="weather-chip" data-weather="🌈 평화">🌈 평화</button>
-          </div>
-          <div class="diary-input-row">
-            <input type="text" id="diaryCustomNote" class="diary-note-input" maxlength="28" placeholder="오늘의 비밀 한줄 일기를 적어보세요! (최대 28자)">
-          </div>
+        <div class="card">
+          <h3>비밀 보물 <span class="muted" id="treasureCount"></span></h3>
+          <div class="shelf" id="shelf"></div>
         </div>
-
-        <div class="story-canvas-wrapper" id="storyCanvasWrapper">
-          <canvas id="storyCanvas" width="1080" height="1920"></canvas>
-        </div>
-
-        <div class="story-actions-dock">
-          <button class="btn-share instagram" id="btnShareStory">
-            <span>📸</span> 9:16 스토리 저장/공유
-          </button>
-          <button class="btn-share refresh" id="btnRedrawCanvas">
-            <span>🔄</span> 손글씨 다시 쓰기
-          </button>
+        <div class="card">
+          <h3>꾹참 명예의 전당</h3>
+          <ol class="best" id="best"></ol>
         </div>
       </section>
 
-      <!-- TAB 3: 소리 연구소 & 3초 DIY 녹음기 -->
-      <section class="tab-content" id="tab-sound">
-        <div class="sound-lab-header">
-          <h2>🎙️ 소리 보관함 & DIY 녹음</h2>
-          <p class="sound-lab-subtitle">캐릭터별 9종 리얼 합성음을 들어보거나 3초 목소리를 녹음해 장착하세요!</p>
-        </div>
-
-        <div class="sound-pack-list" id="soundPackList"><!-- app.js renderSoundPack() --></div>
-
-        <div class="crayon-card diy-recorder-card">
-          <div class="card-header">
-            <span class="crayon-title">🔴 나만의 3초 비밀 소리 녹음</span>
-          </div>
-          <p class="recorder-desc">내 목소리나 진짜 방구/웃음소리를 녹음해 캐릭터 불시 소리로 장착하세요!</p>
-          
-          <div class="recorder-controls">
-            <button class="btn-record" id="btnRecord">
-              <span class="rec-icon">🎙️</span>
-              <span class="rec-text" id="recText">눌러서 3초 녹음</span>
-            </button>
-            <div class="waveform-doodle" id="waveformDoodle">
-              <span>〰️</span><span>〰️</span><span>〰️</span>
-            </div>
-          </div>
-          <div class="recorded-preview" id="recordedPreview" style="display:none;">
-            <span class="recorded-label" id="recordedLabel">내 녹음</span>
-            <div class="recorded-actions">
-              <button class="btn-micro" id="btnPlayRecorded">▶ 들어보기</button>
-              <button class="btn-micro equip-diy" id="btnEquipRecorded">🎯 현재 캐릭터에 장착</button>
-            </div>
-          </div>
-        </div>
+      <!-- 일기 -->
+      <section class="screen" id="screen-diary">
+        <h2>📖 오늘의 그림일기</h2>
+        <div class="chips" id="weather"></div>
+        <input class="note" id="note" maxlength="28" placeholder="오늘의 비밀 한 줄 (28자)" autocomplete="off">
+        <div class="paper"><canvas id="diary" width="1080" height="1920"></canvas></div>
+        <button class="btn primary wide" id="shareDiary" type="button">📸 저장하고 공유하기</button>
       </section>
-
-      <!-- TAB 4: 전국 참음왕 리더보드 -->
-      <section class="tab-content" id="tab-rank">
-        <div class="ranking-header">
-          <h2>🏆 나의 참음왕 기록</h2>
-          <p class="ranking-subtitle">주머니 속 친구들이 진짜로 겪은 일만 기록돼요 👑</p>
-        </div>
-
-        <div class="my-rank-banner" id="myRankBanner"></div>
-
-        <div class="week-chart" id="weekChart" aria-label="최근 7일 기록"></div>
-
-        <div class="rank-list" id="rankList"><!-- app.js renderRecords() --></div>
-      </section>
-
-      <!-- MODAL 1: 개별 마스코트 다마고치 팝업 (클릭 시 등장) -->
-      <div class="tamagotchi-modal-overlay" id="mascotModalOverlay">
-        <div class="tamagotchi-modal-card" id="mascotModalCard">
-          <button class="modal-close-btn" id="btnCloseMascotModal" aria-label="닫기">✕</button>
-          
-          <div class="modal-header-profile">
-            <div class="modal-avatar-frame" id="modalAvatarFrame">
-              <img src="assets/hamster.webp" alt="캐릭터" id="modalMascotImg" class="modal-pet-img">
-            </div>
-            <div class="modal-title-group">
-              <div class="modal-badge-row">
-                <span class="modal-char-badge" id="modalCharBadge">친밀도 Lv.1</span>
-              </div>
-              <h3 id="modalMascotName">방구 햄찌</h3>
-              <p id="modalMascotDesc">소리: 뽀옹, 삐용, 뿡!</p>
-            </div>
-          </div>
-
-          <div class="modal-body-content">
-            <!-- 1. 개별 소리 ON/OFF 토글 스위치 -->
-            <div class="modal-toggle-row">
-              <div class="toggle-info">
-                <span class="row-label">이 친구 불시 소리 켜기</span>
-                <small class="row-sub">OFF로 두면 이 친구는 소리 작전에서 제외돼요</small>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="modalSoundToggle" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <!-- 2. 소리 종류 선택 칩 -->
-            <div class="sound-select-section">
-              <span class="section-micro-label">소리 스타일 선택:</span>
-              <div class="sound-variation-chips" id="soundVariationChips"></div>
-            </div>
-
-            <!-- 3. 다마고치 인터랙션 (간식, 쓰다듬기, 소리듣기) -->
-            <div class="modal-actions-grid">
-              <button class="btn-pet-action" id="btnFeedMascot">
-                <span class="action-icon" id="modalFeedIcon">🌻</span>
-                <span class="action-label" id="modalFeedLabel">간식 주기</span>
-              </button>
-              <button class="btn-pet-action" id="btnPetMascot">
-                <span class="action-icon">💖</span>
-                <span class="action-label">쓰다듬기</span>
-              </button>
-              <button class="btn-pet-action test-sound-btn" id="btnTestSoundMascot">
-                <span class="action-icon">🔊</span>
-                <span class="action-label">소리 테스트</span>
-              </button>
-            </div>
-
-            <!-- 4. 오늘의 활약 & 미니홈피 한 줄 일촌평 -->
-            <div class="modal-stat-box">
-              <div class="stat-line">
-                <span>오늘의 비밀 활약:</span>
-                <strong id="modalStatCount">교감 0회</strong>
-              </div>
-              <div class="modal-hompy-speech" id="modalHompySpeech"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MODAL 2: 미니홈피 꾸미기 & 업적 보상 바텀시트 -->
-      <div class="bottom-sheet-overlay" id="decorSheetOverlay">
-        <div class="bottom-sheet-content">
-          <div class="sheet-handle-bar"></div>
-          <div class="sheet-header">
-            <div>
-              <h3>🎨 아지트 꾸미기 & 미니홈피</h3>
-              <p class="sheet-subtitle">도토리 🌰 <strong id="userAcorns">0</strong>개 · 수집 보물 <strong id="userAchievements">0/9</strong></p>
-            </div>
-            <button class="sheet-close-btn" id="btnCloseDecorSheet" aria-label="닫기">✕</button>
-          </div>
-          <div class="sheet-body">
-            
-            <!-- 테마 선택 섹션 -->
-            <div class="decor-section">
-              <span class="section-label">배경 테마 &amp; 시간대 연동 (상단 뱃지 터치로도 전환 가능):</span>
-              <div class="theme-selector-chips">
-                <button class="theme-chip active" data-theme="auto">⏰ 실시간 자동</button>
-                <button class="theme-chip" data-theme="meadow">☀️ 낮 (초원)</button>
-                <button class="theme-chip" data-theme="sunset">🌇 저녁 (노을)</button>
-                <button class="theme-chip" data-theme="night">🌙 밤 (별빛)</button>
-                <button class="theme-chip" data-theme="room">🏠 아늑한 미니룸</button>
-                <button class="theme-chip locked" data-theme="city" title="누적 꾹참 15회 달성 시 해금">🏙️ 네온빛 도시 🔒</button>
-              </div>
-            </div>
-
-            <!-- 소품 가구 배치 섹션 -->
-            <div class="decor-section">
-              <span class="section-label">미니룸 꾸밈 소품 (터치해서 배치/해제 · 🌰 표시는 도토리로 구매):</span>
-              <div class="decor-props-grid" id="decorPropsGrid"><!-- app.js renderPropButtons() --></div>
-            </div>
-
-            <!-- 비밀 수집품 & 업적 보물함 섹션 -->
-            <div class="decor-section collectibles-section">
-              <div class="section-title-row">
-                <span class="section-label">🎒 나의 비밀 수집품 (총 9종 보물):</span>
-                <span class="collect-count-badge">획득 <strong id="collectCount">0</strong> / 9</span>
-              </div>
-              <div class="collectibles-shelf-grid" id="collectiblesGrid"><!-- app.js renderCollectibles() --></div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- MODAL 3: 작전 설정 & 시뮬레이터 바텀시트 -->
-      <div class="bottom-sheet-overlay" id="settingsSheetOverlay">
-        <div class="bottom-sheet-content">
-          <div class="sheet-handle-bar"></div>
-          <div class="sheet-header">
-            <h3>⚙️ 작전 설정 & 시뮬레이터</h3>
-            <button class="sheet-close-btn" id="btnCloseSettingsSheet">✕</button>
-          </div>
-          <div class="sheet-body">
-            <div class="setting-row">
-              <span class="row-label">불시 작전 가동:</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="operationToggle" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <span class="row-label">작전 시간대:</span>
-              <div class="time-range-badges">
-                <select class="time-select" id="windowStart" aria-label="시작 시각"></select>
-                <span>~</span>
-                <select class="time-select" id="windowEnd" aria-label="끝 시각"></select>
-              </div>
-            </div>
-
-            <div class="setting-row">
-              <span class="row-label">오늘의 긴장감:</span>
-              <div class="frequency-chips">
-                <button class="chip" data-freq="quiet">인내 (하루 1~2회)</button>
-                <button class="chip active" data-freq="normal">은밀함 (하루 3~5회)</button>
-                <button class="chip" data-freq="thrill">쫄깃함 (하루 6~9회)</button>
-              </div>
-            </div>
-
-            <div class="setting-row manner-row">
-              <span class="row-label" id="mannerLabel">기기 상태 (웹 미리보기용):</span>
-              <div class="manner-buttons">
-                <button class="manner-btn active" data-mode="sound" id="modeSound">🔊 소리</button>
-                <button class="manner-btn" data-mode="vibrate" id="modeVibrate">📳 진동</button>
-                <button class="manner-btn" data-mode="silent" id="modeSilent">🤫 무음</button>
-              </div>
-            </div>
-
-            <div class="test-trigger-dock">
-              <div class="next-trigger-info" id="nextTriggerStatus">⏱️ 작전 준비 중...</div>
-              <button class="btn-doodle" id="btnSimulateTrigger">🎲 지금 바로 1회 발생시키기</button>
-              <button class="btn-micro reset-data-btn" id="btnResetData">🗑️ 저장된 데이터 초기화</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 토스트 알림 배너 -->
-      <div class="crayon-toast" id="crayonToast"></div>
-
-      <!-- MODAL 4: 수집품 상세 정보 팝업 -->
-      <div class="tamagotchi-modal-overlay" id="collectibleModalOverlay">
-        <div class="tamagotchi-modal-card collectible-detail-card" id="collectibleDetailCard">
-          <button class="modal-close-btn" id="btnCloseCollectibleModal" aria-label="닫기">✕</button>
-          <div class="collectible-modal-body">
-            <div class="collect-detail-icon-frame">
-              <img src="assets/collectibles/acorn.webp" alt="수집품" id="collectibleModalImg" class="collect-detail-big-img">
-            </div>
-            <div class="collect-detail-meta">
-              <span class="collect-rarity-badge" id="collectibleModalRarity"></span>
-              <h3 id="collectibleModalTitle"></h3>
-              <p class="collect-detail-lore" id="collectibleModalLore"></p>
-              <div class="collect-detail-condition-box">
-                <span class="cond-label">획득 조건:</span>
-                <span class="cond-val" id="collectibleModalCond"></span>
-              </div>
-            </div>
-            <button class="btn-doodle btn-collect-confirm" id="btnConfirmCollectible">확인 완료 💖</button>
-          </div>
-        </div>
-      </div>
-
     </main>
 
+    <nav class="tabbar">
+      <button class="tab active" data-screen="home" type="button">🏡<span>아지트</span></button>
+      <button class="tab" data-screen="records" type="button">🏆<span>기록</span></button>
+      <button class="tab" data-screen="diary" type="button">📖<span>일기</span></button>
+    </nav>
   </div>
 
-  <script src="app.js"></script>
+  <!-- 친구 시트 -->
+  <dialog class="sheet" id="friendSheet">
+    <div class="sheet-body">
+      <div class="friend-head">
+        <img id="friendImg" alt="">
+        <div>
+          <h3 id="friendName"></h3>
+          <p class="muted" id="friendIntro"></p>
+          <div class="level"><span id="friendLevel"></span><div class="bar"><i id="friendBar"></i></div></div>
+        </div>
+      </div>
+      <div class="actions3">
+        <button class="btn" id="feed" type="button"></button>
+        <button class="btn" id="pat" type="button">🤲 쓰다듬기</button>
+        <button class="btn" id="listen" type="button">🔊 들어보기</button>
+      </div>
+      <label class="row">
+        <span>불시 작전에 참여</span>
+        <input type="checkbox" class="switch" id="friendOn">
+      </label>
+      <div class="row-label">작전 때 낼 소리</div>
+      <div class="chips" id="styles"></div>
+      <div class="diy">
+        <button class="btn" id="record" type="button">🎙️ 내 목소리 3초 녹음</button>
+        <span class="muted" id="recordState"></span>
+      </div>
+      <button class="btn ghost wide" data-close type="button">닫기</button>
+    </div>
+  </dialog>
+
+  <!-- 꾸미기 시트 -->
+  <dialog class="sheet" id="decorSheet">
+    <div class="sheet-body">
+      <h3>🎨 아지트 꾸미기</h3>
+      <div class="row-label">배경</div>
+      <div class="chips" id="themes"></div>
+      <div class="row-label">소품 <span class="muted">(누르면 배치/치우기 · 🌰 표시는 구매)</span></div>
+      <div class="props" id="props"></div>
+      <button class="btn ghost wide" data-close type="button">닫기</button>
+    </div>
+  </dialog>
+
+  <!-- 설정 시트 -->
+  <dialog class="sheet" id="settingsSheet">
+    <div class="sheet-body">
+      <h3>⚙️ 작전 설정</h3>
+      <p class="rules">작전 시간대 안에서 하루 몇 번, 친구 하나가 <b>불시에</b> 소리를 내요.<br>
+        그 순간 폰이 <b>🔊소리</b>면 대담 · <b>📳진동</b>이면 소심 · <b>🤫무음</b>이면 꾹참!</p>
+      <label class="row">
+        <span>불시 작전</span>
+        <input type="checkbox" class="switch" id="opOn">
+      </label>
+      <div class="row">
+        <span>작전 시간대</span>
+        <span class="time"><select id="winStart" aria-label="시작"></select> ~ <select id="winEnd" aria-label="끝"></select></span>
+      </div>
+      <div class="row-label">하루 횟수</div>
+      <div class="chips" id="freqs"></div>
+      <div id="previewBox">
+        <div class="row-label">미리보기 폰 상태 <span class="muted">(브라우저는 진짜 폰 상태를 못 읽어요)</span></div>
+        <div class="chips" id="previewModes"></div>
+      </div>
+      <p class="muted" id="scheduleInfo"></p>
+      <button class="btn wide" id="fireNow" type="button">🎲 지금 바로 1회 작전</button>
+      <button class="btn ghost wide danger" id="reset" type="button">🗑️ 모든 기록 지우기</button>
+      <button class="btn ghost wide" data-close type="button">닫기</button>
+    </div>
+  </dialog>
+
+  <!-- 보물 상세 -->
+  <dialog class="sheet small" id="treasureSheet">
+    <div class="sheet-body center">
+      <img id="treasureImg" class="treasure-img" alt="">
+      <h3 id="treasureName"></h3>
+      <p id="treasureLore"></p>
+      <p class="cond" id="treasureCond"></p>
+      <button class="btn wide" data-close type="button">확인</button>
+    </div>
+  </dialog>
+
+  <!-- 첫 실행 안내 -->
+  <dialog class="sheet small" id="welcome">
+    <div class="sheet-body center">
+      <h3>🐹 방구뿡에 온 걸 환영해요</h3>
+      <p>햄찌·오목눈이·뚱냥이가 당신 주머니에 숨어 있어요.<br>정해둔 시간대에 하루 몇 번, <b>불시에</b> 소리를 내요.</p>
+      <ul class="welcome-modes">
+        <li>🔊 소리 모드 → <b>💥 대담</b> (진짜 소리 남!)</li>
+        <li>📳 진동 모드 → <b>🫧 소심</b> (부르르 진동만)</li>
+        <li>🤫 무음 모드 → <b>🤫 꾹참</b> (도토리 더 많이!)</li>
+      </ul>
+      <p class="muted">회의·시험 땐 🚨 긴급탈출 한 번이면 전부 멈춰요.</p>
+      <button class="btn primary wide" data-close type="button">작전 시작!</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>
 </body>
 </html>

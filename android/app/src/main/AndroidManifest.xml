@@ -3,10 +3,9 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- 3초 DIY 녹음 버튼을 누를 때만 요청 -->
+    <!-- '내 목소리 녹음' 버튼을 누를 때만 요청 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <!-- 재부팅 후 불시 작전 알람 복구 -->
+    <!-- 재부팅 후 작전 알람 다시 걸기 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
@@ -19,16 +18,17 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|uiMode"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- 불시 작전: AlarmManager 가 깨울 때만 잠깐 실행됨 (상주 서비스/WakeLock 없음) -->
+        <!-- AlarmManager 가 깨울 때만 잠깐 실행된다. 상주 서비스·WakeLock 없음. -->
         <receiver
             android:name=".PrankReceiver"
             android:exported="false">
@@ -41,5 +41,4 @@
         </receiver>
 
     </application>
-
 </manifest>
