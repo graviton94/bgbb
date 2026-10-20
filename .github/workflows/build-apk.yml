@@ -42,7 +42,7 @@ jobs:
 
       - name: Build Debug APK (with Foreground Service & 9 Real WAV Assets)
         working-directory: ./android
-        run: gradle assembleDebug --stacktrace
+        run: gradle assembleDebug
 
       - name: Copy APK to root with clean name
         run: cp android/app/build/outputs/apk/debug/app-debug.apk ./banggu-bboong-v4-debug.apk
@@ -57,10 +57,10 @@ jobs:
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v4.1.0-apk
-          name: "방구뿡 (Bang-gu Bboong) V4.1 Android APK"
+          tag_name: v4.1.1-apk
+          name: "방구뿡 (Bang-gu Bboong) V4.1.1 Android APK"
           body: |
-            ### 🐹 방구뿡 V4.1 Android APK 빌드 완료
+            ### 🐹 방구뿡 V4.1.1 Android APK 빌드 완료
             - **시간대별 배경/소품 색 톤 변화 & 모닥불 야간 3중 불빛 파장 탑재**
             - **리얼 물리 음향 효과음 9종 (`res/raw/*.wav`) 내장**
             - **Android Foreground Service (`PocketSecretService`) + WakeLock 탑재**

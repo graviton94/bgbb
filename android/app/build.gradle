@@ -10,14 +10,13 @@ android {
         applicationId "com.bgbb.tamagotchi"
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName "4.1.0"
+        versionCode 6
+        versionName "4.1.1"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
             applicationIdSuffix ".debug"
@@ -32,7 +31,5 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'androidx.core:core:1.12.0'
-    implementation 'androidx.webkit:webkit:1.10.0'
+    // 100% Pure Android SDK (API 26+) - 외부 의존성 충돌 제로
 }

@@ -18,8 +18,6 @@ import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 
-import androidx.core.app.NotificationCompat;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -163,7 +161,6 @@ public class PocketSecretService extends Service {
                 }
             }
         }
-        // RINGER_MODE_SILENT 인 경우 조용히 참음 카운트 누적
     }
 
     private void acquireWakeLock() {
@@ -171,7 +168,7 @@ public class PocketSecretService extends Service {
         if (pm != null) {
             wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "BangguBboong::PocketWakeLock");
             wakeLock.setReferenceCounted(false);
-            wakeLock.acquire(4 * 60 * 60 * 1000L); // 최대 4시간 세션 유지
+            wakeLock.acquire(4 * 60 * 60 * 1000L);
         }
     }
 
@@ -181,7 +178,7 @@ public class PocketSecretService extends Service {
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
-        stopForeground(true);
+        stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
 
@@ -221,14 +218,19 @@ public class PocketSecretService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        return new NotificationCompat.Builder(this, CHANNEL_ID)
+        Notification.Action muteAction = new Notification.Action.Builder(
+                R.drawable.ic_launcher_hamster,
+                "🚨 긴급탈출(즉시동결)",
+                mutePendingIntent
+        ).build();
+
+        return new Notification.Builder(this, CHANNEL_ID)
                 .setContentTitle("방구뿡 · 다마고치 비밀 아지트")
                 .setContentText(contentText)
                 .setSmallIcon(R.drawable.ic_launcher_hamster)
                 .setOngoing(true)
                 .setContentIntent(contentPendingIntent)
-                .addAction(0, "🚨 긴급탈출(즉시동결)", mutePendingIntent)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .addAction(muteAction)
                 .build();
     }
 
