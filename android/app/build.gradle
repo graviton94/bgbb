@@ -10,8 +10,8 @@ android {
         applicationId "com.bgbb.tamagotchi"
         minSdk 26
         targetSdk 34
-        versionCode 4
-        versionName "4.0.0"
+        versionCode 5
+        versionName "4.1.0"
     }
 
     buildTypes {
@@ -30,46 +30,6 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 }
-
-// 빌드 시 루트의 웹 에셋(index.html, index.css, app.js, assets/**)과 효과음(res/raw) 자동 동기화
-tasks.register('syncWebAndRawAssets') {
-    doLast {
-        def webOutDir = file("${projectDir}/src/main/assets/public")
-        delete webOutDir
-        webOutDir.mkdirs()
-
-        copy {
-            from("${rootProject.projectDir}/..") {
-                include 'index.html'
-                include 'index.css'
-                include 'app.js'
-                include 'assets/**'
-            }
-            into webOutDir
-        }
-
-        def rawOutDir = file("${projectDir}/src/main/res/raw")
-        rawOutDir.mkdirs()
-        copy {
-            from("${rootProject.projectDir}/../assets/sounds") {
-                include '*.wav'
-            }
-            into rawOutDir
-        }
-
-        def drawableOutDir = file("${projectDir}/src/main/res/drawable")
-        drawableOutDir.mkdirs()
-        copy {
-            from("${rootProject.projectDir}/../assets") {
-                include 'hamster.png'
-            }
-            into drawableOutDir
-            rename { 'ic_launcher_hamster.png' }
-        }
-    }
-}
-
-preBuild.dependsOn syncWebAndRawAssets
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'

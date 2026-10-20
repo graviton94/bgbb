@@ -24,6 +24,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Prepare Web Assets and Raw Sounds for Android Package
+        run: |
+          mkdir -p android/app/src/main/assets/public
+          cp index.html index.css app.js android/app/src/main/assets/public/
+          cp -r assets android/app/src/main/assets/public/
+          mkdir -p android/app/src/main/res/raw
+          cp assets/sounds/*.wav android/app/src/main/res/raw/
+          mkdir -p android/app/src/main/res/drawable
+          cp assets/collectibles/acorn.png android/app/src/main/res/drawable/ic_launcher_hamster.png
+
       - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -43,15 +53,16 @@ jobs:
           path: ./banggu-bboong-v4-debug.apk
 
       - name: Publish APK to GitHub Release (latest-apk)
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v4.0.0-apk
-          name: "방구뿡 (Bang-gu Bboong) V4.0 Android APK"
+          tag_name: v4.1.0-apk
+          name: "방구뿡 (Bang-gu Bboong) V4.1 Android APK"
           body: |
-            ### 🐹 방구뿡 V4.0 Android APK 빌드 완료
+            ### 🐹 방구뿡 V4.1 Android APK 빌드 완료
+            - **시간대별 배경/소품 색 톤 변화 & 모닥불 야간 3중 불빛 파장 탑재**
             - **리얼 물리 음향 효과음 9종 (`res/raw/*.wav`) 내장**
-            - **Android Foreground Service (`PocketSecretService`) + WakeLock 탑재**: 화면을 끄고 주머니에 넣어도 불시 작전 타이머가 작동하며 상단 알림바에서 원터치 `[🚨 긴급탈출]` 제어가 가능합니다.
-            - **코어 1·2단계**: 아지트 10종 소품 터치 상호작용, `localStorage` 영구 저장, 실시간 전국 참음왕 순위 연동, 9:16 크레용 그림일기 공유 지원.
+            - **Android Foreground Service (`PocketSecretService`) + WakeLock 탑재**
           files: ./banggu-bboong-v4-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

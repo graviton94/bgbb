@@ -130,11 +130,11 @@
   </style>
 </head>
 <body>
-  <!-- Phone 1: 낮 시간대 자동 배경 + 중앙 점선 제거된 메인 아지트 -->
+  <!-- Phone 1: 저녁(노을) 시간대 - 소품 노을빛 색조 변화 + 모닥불 1단계 발광 -->
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>12:30 · SKT 5G</span>
+        <span>18:10 · SKT 5G</span>
         <div class="punch-hole"></div>
         <span>📳 🛜 🔋 98%</span>
       </div>
@@ -149,16 +149,16 @@
           <button class="fg-action-btn">🚨 긴급탈출(즉시동결)</button>
         </div>
       </div>
-      <iframe class="webview-container" src="index.html" id="frame1"></iframe>
+      <iframe class="webview-container" src="index.html#sunset" id="frame1"></iframe>
       <div class="android-nav-bar"><div class="gesture-pill"></div></div>
     </div>
   </div>
 
-  <!-- Phone 2: 밤/노을 시간대 배경 전환 모습 (별빛 밤하늘) -->
+  <!-- Phone 2: 밤(별빛) 시간대 - 소품 야간 톤다운 + 모닥불 최대 발광 & 3중 불빛 파장 -->
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>21:15 · SKT 5G</span>
+        <span>21:30 · SKT 5G</span>
         <div class="punch-hole"></div>
         <span>🔊 🛜 🔋 94%</span>
       </div>
@@ -171,7 +171,7 @@
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>21:15 · SKT 5G</span>
+        <span>21:30 · SKT 5G</span>
         <div class="punch-hole"></div>
         <span>🔊 🛜 🔋 94%</span>
       </div>
@@ -190,6 +190,8 @@
           f1.querySelector('.app-shell').style.maxHeight = 'none';
           f1.querySelector('.app-shell').style.borderRadius = '0';
           f1.body.style.padding = '0';
+          const sunsetChip = f1.querySelector('.theme-chip[data-theme="sunset"]');
+          if (sunsetChip) sunsetChip.click();
 
           const f2 = document.getElementById('frame2').contentDocument;
           f2.querySelector('.app-shell').style.border = 'none';
@@ -197,7 +199,6 @@
           f2.querySelector('.app-shell').style.maxHeight = 'none';
           f2.querySelector('.app-shell').style.borderRadius = '0';
           f2.body.style.padding = '0';
-          // 밤 시간대 테마 적용 시연
           const nightChip = f2.querySelector('.theme-chip[data-theme="night"]');
           if (nightChip) nightChip.click();
 
