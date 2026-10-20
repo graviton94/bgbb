@@ -74,7 +74,7 @@ const defaultState = {
       count: 3
     }
   ],
-  currentTheme: 'meadow', // 'meadow' | 'sunset' | 'night' | 'room' | 'city'
+  currentTheme: 'auto', // 'auto' | 'meadow' | 'sunset' | 'night' | 'room' | 'city'
   activeProps: {
     propCarrot: true,
     propSunflower: true,
@@ -846,25 +846,39 @@ function updateAcornDisplay() {
   if (dom.worldAcornBadge) dom.worldAcornBadge.textContent = `🌰 ${state.acorns}`;
 }
 
+function getTimeBasedTheme() {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 17) return 'meadow';
+  if (hour >= 17 && hour < 20) return 'sunset';
+  return 'night';
+}
+
 function applyThemeToDOM(theme) {
   state.currentTheme = theme;
+  const resolvedTheme = theme === 'auto' ? getTimeBasedTheme() : theme;
+
   if (dom.tamagotchiWorld) {
-    dom.tamagotchiWorld.className = `tamagotchi-world ${theme}`;
+    dom.tamagotchiWorld.className = `tamagotchi-world ${resolvedTheme}`;
   }
   document.querySelectorAll('.theme-chip').forEach(c => {
     c.classList.toggle('active', c.getAttribute('data-theme') === theme);
   });
 
-  // 하늘 소품 이미지(sun.png) 증발 버그 수정: innerHTML/textContent를 덮어쓰지 않고 테마 배지만 변경
   const themeNames = {
-    meadow: '🌿 산들바람 초원',
-    sunset: '🌇 포근한 노을 언덕',
-    night: '🌌 별빛 반짝 밤하늘',
-    room: '🏠 아늑한 미니룸',
-    city: '🏙️ 네온빛 밤거리'
+    meadow: '☀️ 낮 · 산들바람 초원',
+    sunset: '🌇 저녁 · 노을빛 언덕',
+    night: '🌙 밤 · 별빛 밤하늘',
+    room: '🏠 실내 · 아늑한 미니룸',
+    city: '🏙️ 심야 · 네온빛 밤거리'
   };
+
   if (dom.worldThemeBadge) {
-    dom.worldThemeBadge.textContent = themeNames[theme] || '🌿 산들바람 초원';
+    if (theme === 'auto') {
+      const autoLabel = resolvedTheme === 'meadow' ? '낮·초원' : resolvedTheme === 'sunset' ? '저녁·노을' : '밤·별빛';
+      dom.worldThemeBadge.textContent = `⏰ 실시간 (${autoLabel})`;
+    } else {
+      dom.worldThemeBadge.textContent = themeNames[resolvedTheme] || '☀️ 낮 · 산들바람 초원';
+    }
   }
 }
 
@@ -1463,6 +1477,19 @@ function initDecorModal() {
       synthPop(0.3);
     });
   });
+
+  // 상단 테마/시간대 뱃지 클릭 시 시간대별 배경 즉시 순환 전환 (자동 -> 낮 -> 노을 -> 밤 -> 미니룸)
+  if (dom.worldThemeBadge) {
+    dom.worldThemeBadge.addEventListener('click', () => {
+      const cycleOrder = ['auto', 'meadow', 'sunset', 'night', 'room'];
+      const curIdx = cycleOrder.indexOf(state.currentTheme);
+      const nextTheme = cycleOrder[(curIdx + 1) % cycleOrder.length];
+      applyThemeToDOM(nextTheme);
+      saveState();
+      synthPop(0.25);
+      showToast(`🕒 배경 전환: ${dom.worldThemeBadge.textContent}`);
+    });
+  }
 
   document.querySelectorAll('.prop-toggle-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -2263,78 +2290,93 @@ function renderStoryCanvas() {
       stampColor = '#10B981';
     }
 
-    // 칭호 박스
+    // 칭호 박스 (칸 내부 폭에 맞춰 안전 렌더링)
     ctx.save();
     ctx.fillStyle = '#FFF9DB';
     ctx.strokeStyle = '#242220';
     ctx.lineWidth = 4;
     const badgeY = 900;
     ctx.beginPath();
-    ctx.roundRect(120, badgeY, w - 240, 80, [20]);
+    ctx.roundRect(110, badgeY, w - 220, 82, [20]);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = '#242220';
-    ctx.font = 'bold 42px "Jua", sans-serif';
+    ctx.font = 'bold 40px "Jua", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`[ 오늘의 칭호: ${titleBadge} ]`, w / 2, badgeY + 53);
+    ctx.fillText(`[ 오늘의 칭호: ${titleBadge} ]`, w / 2, badgeY + 54, w - 260);
     ctx.restore();
 
     // 3단계 스코어카드 박스
-    const scoreBoxY = 1015;
+    const scoreBoxY = 1010;
     ctx.save();
     ctx.fillStyle = '#FFFFFF';
     ctx.strokeStyle = '#242220';
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.roundRect(110, scoreBoxY, w - 220, 410, [24]);
+    ctx.roundRect(110, scoreBoxY, w - 220, 390, [24]);
     ctx.fill();
     ctx.stroke();
 
-    drawCrayonCheckbox(ctx, 160, scoreBoxY + 68, true);
-    ctx.font = 'bold 48px "Gaegu", cursive';
+    const maxScoreTextW = w - 380;
+    drawCrayonCheckbox(ctx, 155, scoreBoxY + 66, true);
+    ctx.font = 'bold 44px "Gaegu", cursive';
     ctx.fillStyle = '#242220';
     ctx.textAlign = 'left';
-    ctx.fillText(`대담하게 발사 : ${state.counts.loud}회 (뿡뿡! 💥)`, 230, scoreBoxY + 90);
+    ctx.fillText(`대담하게 발사 : ${state.counts.loud}회 (뿡뿡! 💥)`, 220, scoreBoxY + 86, maxScoreTextW);
 
-    drawCrayonCheckbox(ctx, 160, scoreBoxY + 185, true);
-    ctx.fillText(`소심하게 발사 : ${state.counts.soft}회 (피식... 🫧)`, 230, scoreBoxY + 207);
+    drawCrayonCheckbox(ctx, 155, scoreBoxY + 180, true);
+    ctx.fillText(`소심하게 발사 : ${state.counts.soft}회 (피식... 🫧)`, 220, scoreBoxY + 200, maxScoreTextW);
 
-    drawCrayonCheckbox(ctx, 160, scoreBoxY + 302, true);
-    ctx.fillText(`눈치보며 참음 : ${state.counts.hold}회 (윽! 참았다 🤫)`, 230, scoreBoxY + 324);
+    drawCrayonCheckbox(ctx, 155, scoreBoxY + 294, true);
+    ctx.fillText(`눈치보며 참음 : ${state.counts.hold}회 (윽! 참았다 🤫)`, 220, scoreBoxY + 314, maxScoreTextW);
     ctx.restore();
 
-    // 오늘의 한줄 원고지 노트
-    const noteY = 1480;
+    // 오늘의 한줄 원고지 노트 (자동 줄바꿈 & 칸 이탈 완전 방지)
+    const noteY = 1440;
+    const noteBoxH = 260;
     ctx.save();
     ctx.fillStyle = '#FFFDF0';
     ctx.strokeStyle = '#242220';
     ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.roundRect(110, noteY, w - 220, 210, [20]);
+    ctx.roundRect(110, noteY, w - 220, noteBoxH, [20]);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = '#888';
-    ctx.font = 'bold 34px "Jua", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('✏️ 오늘의 비밀 한줄 일기:', 145, noteY + 58);
+    // 클리핑 영역 설정 (절대로 박스 밖으로 글자가 삐져나가지 않도록 보장)
+    ctx.beginPath();
+    ctx.roundRect(118, noteY + 8, w - 236, noteBoxH - 16, [16]);
+    ctx.clip();
 
-    const noteText = state.diaryNote || '오늘도 주머니 속에서 평화를 지켰다!';
+    ctx.fillStyle = '#888';
+    ctx.font = 'bold 32px "Jua", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('✏️ 오늘의 비밀 일기:', 145, noteY + 52);
+
+    const rawNote = `"${state.diaryNote || '오늘도 주머니 속에서 평화를 지켰다!'}"`;
     ctx.fillStyle = '#242220';
-    ctx.font = 'bold 46px "Gaegu", cursive';
-    ctx.fillText(`"${noteText}"`, 145, noteY + 135);
-    drawCrayonLine(ctx, 145, noteY + 155, w - 145, noteY + 155, '#D5CEBE', 2.5);
+    ctx.font = 'bold 40px "Gaegu", cursive';
+
+    const maxNoteWidth = w - 290; // 790px
+    const wrappedLines = wrapCanvasText(ctx, rawNote, maxNoteWidth);
+
+    // 최대 2줄 원고지 밑줄 및 텍스트 출력
+    wrappedLines.slice(0, 2).forEach((lineStr, idx) => {
+      const lineY = noteY + 122 + idx * 72;
+      ctx.fillText(lineStr, 145, lineY, maxNoteWidth);
+      drawCrayonLine(ctx, 145, lineY + 16, w - 145, lineY + 16, '#D5CEBE', 2.5);
+    });
     ctx.restore();
 
     // 도장 쾅
-    drawCrayonRubberStamp(ctx, w - 240, scoreBoxY + 360, stampTitle, stampSubtitle, stampColor, -12);
+    drawCrayonRubberStamp(ctx, w - 235, scoreBoxY + 340, stampTitle, stampSubtitle, stampColor, -12);
 
     // 워터마크 태그
-    ctx.font = 'bold 36px "Gaegu", cursive';
+    ctx.font = 'bold 34px "Gaegu", cursive';
     ctx.fillStyle = '#888';
     ctx.textAlign = 'center';
-    ctx.fillText(`@방구뿡   #도토리${state.acorns}개   #다마고치아지트`, w / 2, h - 85);
+    ctx.fillText(`@방구뿡   #도토리${state.acorns}개   #다마고치아지트`, w / 2, h - 85, w - 180);
   };
 
   if (mascotImg && mascotImg.complete) {
@@ -2349,29 +2391,56 @@ function renderStoryCanvas() {
   }
 }
 
+// 캔버스 텍스트 자동 줄바꿈 헬퍼 (칸 밖으로 넘침 방지)
+function wrapCanvasText(ctx, text, maxWidth) {
+  const lines = [];
+  let currentLine = '';
+  for (const ch of text) {
+    const testLine = currentLine + ch;
+    if (ctx.measureText(testLine).width > maxWidth && currentLine.length > 0) {
+      lines.push(currentLine);
+      currentLine = ch;
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+// 원본 이미지의 좌우 비율(naturalWidth / naturalHeight)을 100% 보존하여 그리는 헬퍼
+function drawImagePreservingAspect(ctx, img, centerX, bottomY, targetHeight) {
+  if (!img) return { x: centerX, y: bottomY, w: 0, h: 0 };
+  const nw = img.naturalWidth || img.width || 100;
+  const nh = img.naturalHeight || img.height || 100;
+  const aspect = nw / nh;
+  const drawH = targetHeight;
+  const drawW = drawH * aspect;
+  const drawX = centerX - drawW / 2;
+  const drawY = bottomY - drawH;
+  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+  return { x: drawX, y: drawY, w: drawW, h: drawH };
+}
+
 function drawMascotAndRest(ctx, mainImg, subImgs, w, callback) {
   ctx.save();
   ctx.shadowColor = 'rgba(40, 37, 35, 0.22)';
   ctx.shadowBlur = 14;
   ctx.shadowOffsetY = 8;
 
-  // 양옆 서브 친구들 그리기
+  // 양옆 서브 친구들 그리기 (원본 좌우 비율 100% 유지)
   if (subImgs[0] && subImgs[0].complete) {
-    ctx.drawImage(subImgs[0], 145, 480, 260, 260);
+    drawImagePreservingAspect(ctx, subImgs[0], 275, 765, 225);
   }
   if (subImgs[1] && subImgs[1].complete) {
-    ctx.drawImage(subImgs[1], w - 405, 480, 260, 260);
+    drawImagePreservingAspect(ctx, subImgs[1], w - 275, 765, 225);
   }
 
-  // 중앙 주인공 캐릭터 그리기
-  const imgW = 410;
-  const imgH = 410;
-  const imgX = (w - imgW) / 2;
-  const imgY = 395;
-  ctx.drawImage(mainImg, imgX, imgY, imgW, imgH);
+  // 중앙 주인공 캐릭터 그리기 (원본 좌우 비율 100% 유지)
+  const mainRect = drawImagePreservingAspect(ctx, mainImg, w / 2, 805, 360);
   ctx.restore();
 
-  drawCrayonCloud(ctx, imgX + imgW - 40, imgY + imgH - 80, '#95D5B2');
+  drawCrayonCloud(ctx, mainRect.x + mainRect.w - 30, mainRect.y + mainRect.h - 75, '#95D5B2');
 
   callback();
 }

@@ -55,9 +55,9 @@
         <!-- 대형 다마고치 미니홈피 아지트 (Hero Living World) -->
         <div class="tamagotchi-world meadow" id="tamagotchiWorld">
           
-          <!-- 월드 상단 상태 HUD (테마 뱃지 & 도토리 카운터) -->
+          <!-- 월드 상단 상태 HUD (테마/시간대 뱃지 & 도토리 카운터) -->
           <div class="minihompy-hud-header">
-            <span class="world-theme-badge" id="worldThemeBadge">🌿 산들바람 초원</span>
+            <button class="world-theme-badge" id="worldThemeBadge" title="터치하면 시간대별 배경(낮/노을/밤/실시간 자동)이 전환돼요!">🌿 산들바람 초원 (낮)</button>
             <span class="world-acorn-badge" id="worldAcornBadge" title="보유 도토리">🌰 185</span>
           </div>
 
@@ -465,11 +465,12 @@
             
             <!-- 테마 선택 섹션 -->
             <div class="decor-section">
-              <span class="section-label">배경 테마 확장 (5종):</span>
+              <span class="section-label">배경 테마 &amp; 시간대 연동 (상단 뱃지 터치로도 전환 가능):</span>
               <div class="theme-selector-chips">
-                <button class="theme-chip active" data-theme="meadow">🌿 싱그러운 초원</button>
-                <button class="theme-chip" data-theme="sunset">🌇 노을빛 언덕</button>
-                <button class="theme-chip" data-theme="night">🌌 별빛 밤하늘</button>
+                <button class="theme-chip active" data-theme="auto">⏰ 실시간 자동</button>
+                <button class="theme-chip" data-theme="meadow">☀️ 낮 (초원)</button>
+                <button class="theme-chip" data-theme="sunset">🌇 저녁 (노을)</button>
+                <button class="theme-chip" data-theme="night">🌙 밤 (별빛)</button>
                 <button class="theme-chip" data-theme="room">🏠 아늑한 미니룸</button>
                 <button class="theme-chip locked" data-theme="city" title="참음왕 15회 달성 시 해금">🏙️ 네온빛 도시 🔒</button>
               </div>

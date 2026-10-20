@@ -10,11 +10,11 @@
       background: #181920;
       font-family: 'Noto Sans KR', sans-serif;
       display: flex;
-      gap: 28px;
+      gap: 26px;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 24px;
+      padding: 20px;
       color: #fff;
     }
     .phone-frame {
@@ -37,7 +37,6 @@
       flex-direction: column;
       position: relative;
     }
-    /* Android 14 Status Bar */
     .android-status-bar {
       height: 34px;
       background: #282523;
@@ -61,7 +60,6 @@
       transform: translateX(-50%);
       top: 10px;
     }
-    /* Android Foreground Service Notification Toast Banner */
     .android-fg-notif {
       margin: 6px 10px 2px;
       background: rgba(32, 34, 42, 0.96);
@@ -132,11 +130,11 @@
   </style>
 </head>
 <body>
-  <!-- Phone 1: 메인 아지트 + 안드로이드 포그라운드 서비스 상단 알림 -->
+  <!-- Phone 1: 낮 시간대 자동 배경 + 중앙 점선 제거된 메인 아지트 -->
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>14:58 · SKT 5G</span>
+        <span>12:30 · SKT 5G</span>
         <div class="punch-hole"></div>
         <span>📳 🛜 🔋 98%</span>
       </div>
@@ -156,26 +154,26 @@
     </div>
   </div>
 
-  <!-- Phone 2: 9종 리얼 효과음 소리 보관함 & DIY 녹음 -->
+  <!-- Phone 2: 밤/노을 시간대 배경 전환 모습 (별빛 밤하늘) -->
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>14:58 · SKT 5G</span>
+        <span>21:15 · SKT 5G</span>
         <div class="punch-hole"></div>
-        <span>🔊 🛜 🔋 98%</span>
+        <span>🔊 🛜 🔋 94%</span>
       </div>
-      <iframe class="webview-container" src="index.html#sound" id="frame2"></iframe>
+      <iframe class="webview-container" src="index.html#night" id="frame2"></iframe>
       <div class="android-nav-bar"><div class="gesture-pill"></div></div>
     </div>
   </div>
 
-  <!-- Phone 3: 9:16 크레용 그림일기 & 한줄 일기 커스텀 -->
+  <!-- Phone 3: 원본 비율 100% 보존 + 자동 줄바꿈 적용된 그림일기장 -->
   <div class="phone-frame">
     <div class="phone-screen">
       <div class="android-status-bar">
-        <span>14:58 · SKT 5G</span>
+        <span>21:15 · SKT 5G</span>
         <div class="punch-hole"></div>
-        <span>🔊 🛜 🔋 98%</span>
+        <span>🔊 🛜 🔋 94%</span>
       </div>
       <iframe class="webview-container" src="index.html#diary" id="frame3"></iframe>
       <div class="android-nav-bar"><div class="gesture-pill"></div></div>
@@ -199,7 +197,9 @@
           f2.querySelector('.app-shell').style.maxHeight = 'none';
           f2.querySelector('.app-shell').style.borderRadius = '0';
           f2.body.style.padding = '0';
-          f2.getElementById('tabSoundBtn').click();
+          // 밤 시간대 테마 적용 시연
+          const nightChip = f2.querySelector('.theme-chip[data-theme="night"]');
+          if (nightChip) nightChip.click();
 
           const f3 = document.getElementById('frame3').contentDocument;
           f3.querySelector('.app-shell').style.border = 'none';
@@ -209,7 +209,7 @@
           f3.body.style.padding = '0';
           f3.getElementById('tabDiaryBtn').click();
         } catch (e) {}
-      }, 600);
+      }, 650);
     });
   </script>
 </body>
