@@ -1585,32 +1585,6 @@ body {
 }
 
 /* 최근 달성 업적 필 */
-.achievement-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.achieve-pill {
-  font-family: var(--font-doodle);
-  font-size: 0.95rem;
-  padding: 3px 10px;
-  border-radius: 12px;
-  border: 1.5px solid var(--crayon-border);
-  white-space: nowrap;
-}
-
-.achieve-pill.unlocked {
-  background: #FEF3C7;
-  color: #92400E;
-  border-color: #D97706;
-}
-
-.achieve-pill.locked {
-  background: #F3F4F6;
-  color: #9CA3AF;
-  border-style: dashed;
-}
 
 /* 스위치 토글 */
 .toggle-switch {
@@ -2069,4 +2043,100 @@ input:checked + .slider:before {
 .crayon-toast.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ========================================================
+   V5 추가: 작전 시간대 선택, 소품 상점, 7일 기록 차트
+   ======================================================== */
+.time-select {
+  background: #FFF;
+  border: 2px solid var(--crayon-border);
+  border-radius: var(--crayon-radius-pill);
+  padding: 3px 6px;
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  color: var(--ink-charcoal);
+  box-shadow: 1px 1px 0px var(--crayon-border);
+}
+
+.prop-toggle-btn.for-sale {
+  border-style: dashed;
+  background: #FFF9DB;
+}
+.prop-toggle-btn.for-sale .prop-btn-icon {
+  filter: grayscale(0.7);
+  opacity: 0.7;
+}
+
+.week-chart {
+  background: #FFF;
+  border: 2px solid var(--crayon-border);
+  border-radius: 16px;
+  padding: 10px 12px 8px;
+  margin-bottom: 10px;
+  box-shadow: 2px 3px 0px var(--crayon-border);
+}
+.week-legend {
+  display: flex;
+  gap: 12px;
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  color: #555;
+  margin-bottom: 6px;
+}
+.week-legend i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+.week-bars {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  align-items: end;
+}
+.week-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.week-stack {
+  height: 90px;
+  width: 60%;
+  max-width: 26px;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  border-bottom: 1.5px solid #CFC8BB;
+}
+.week-seg {
+  display: block;
+  width: 100%;
+  min-height: 3px;
+}
+.week-stack .week-seg:last-child {
+  border-radius: 4px 4px 0 0;
+}
+.week-total {
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  color: #444;
+  min-height: 1em;
+}
+.week-label {
+  font-family: var(--font-doodle);
+  font-size: 0.85rem;
+  color: #777;
+}
+
+.records-empty {
+  font-family: var(--font-doodle);
+  font-size: 1.05rem;
+  color: #777;
+  text-align: center;
+  padding: 14px 8px;
 }

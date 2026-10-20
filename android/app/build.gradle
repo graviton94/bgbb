@@ -2,6 +2,25 @@ plugins {
     id 'com.android.application'
 }
 
+// 웹 앱(저장소 루트)을 빌드 때마다 APK 안으로 복사한다. CI 스크립트에서 손으로 cp 할 필요 없음.
+def webRoot = rootProject.file('..')
+def generatedDir = layout.buildDirectory.dir('generated/bgbb')
+
+def syncWebAssets = tasks.register('syncWebAssets', Sync) {
+    from(webRoot) {
+        include 'index.html', 'index.css', 'app.js', 'assets/**'
+    }
+    into generatedDir.map { it.dir('assets/public') }
+}
+
+// 알람용 효과음은 res/raw 로도 필요하다 (앱이 꺼져 있을 때 MediaPlayer 가 재생).
+def syncRawSounds = tasks.register('syncRawSounds', Sync) {
+    from(new File(webRoot, 'assets/sounds')) {
+        include '*.m4a'
+    }
+    into generatedDir.map { it.dir('res/raw') }
+}
+
 android {
     namespace 'com.bgbb.tamagotchi'
     compileSdk 34
@@ -10,8 +29,15 @@ android {
         applicationId "com.bgbb.tamagotchi"
         minSdk 26
         targetSdk 34
-        versionCode 6
-        versionName "4.1.1"
+        versionCode 7
+        versionName "5.0.0"
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += generatedDir.get().dir('assets').asFile
+            res.srcDirs += generatedDir.get().dir('res').asFile
+        }
     }
 
     buildTypes {
@@ -30,6 +56,10 @@ android {
     }
 }
 
+tasks.named('preBuild') {
+    dependsOn syncWebAssets, syncRawSounds
+}
+
 dependencies {
-    // 100% Pure Android SDK (API 26+) - 외부 의존성 충돌 제로
+    // 순수 Android SDK (API 26+) - 외부 의존성 없음
 }

@@ -3,6 +3,7 @@ name: Build Android APK
 on:
   push:
     branches: [ "main", "master" ]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -25,45 +26,37 @@ jobs:
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
-      - name: Prepare Web Assets and Raw Sounds for Android Package
-        run: |
-          mkdir -p android/app/src/main/assets/public
-          cp index.html index.css app.js android/app/src/main/assets/public/
-          cp -r assets android/app/src/main/assets/public/
-          mkdir -p android/app/src/main/res/raw
-          cp assets/sounds/*.wav android/app/src/main/res/raw/
-          mkdir -p android/app/src/main/res/drawable
-          cp assets/collectibles/acorn.png android/app/src/main/res/drawable/ic_launcher_hamster.png
-
       - name: Setup Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Build Debug APK (with Foreground Service & 9 Real WAV Assets)
+      # 웹 앱과 효과음은 gradle 의 syncWebAssets / syncRawSounds 태스크가 APK 에 넣는다.
+      - name: Build Debug APK
         working-directory: ./android
         run: gradle assembleDebug
 
       - name: Copy APK to root with clean name
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk ./banggu-bboong-v4-debug.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk ./banggu-bboong-debug.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: banggu-bboong-v4-debug-apk
-          path: ./banggu-bboong-v4-debug.apk
+          name: banggu-bboong-debug-apk
+          path: ./banggu-bboong-debug.apk
 
-      - name: Publish APK to GitHub Release (latest-apk)
+      - name: Publish APK to GitHub Release
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v4.1.1-apk
-          name: "방구뿡 (Bang-gu Bboong) V4.1.1 Android APK"
+          tag_name: v5.0.0-apk
+          name: "방구뿡 (Bang-gu Bboong) V5.0.0 Android APK"
           body: |
-            ### 🐹 방구뿡 V4.1.1 Android APK 빌드 완료
-            - **시간대별 배경/소품 색 톤 변화 & 모닥불 야간 3중 불빛 파장 탑재**
-            - **리얼 물리 음향 효과음 9종 (`res/raw/*.wav`) 내장**
-            - **Android Foreground Service (`PocketSecretService`) + WakeLock 탑재**
-          files: ./banggu-bboong-v4-debug.apk
+            ### 🐹 방구뿡 V5.0.0
+            - 불시 작전이 진짜로 "하루 N회, 작전 시간대 안에서만" 울림 (AlarmManager)
+            - 상주 서비스·WakeLock 제거 → 대기 중 배터리 소모 거의 0
+            - 앱이 꺼져 있을 때 울린 기록도 앱을 열면 대담/소심/꾹참으로 집계
+          files: ./banggu-bboong-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

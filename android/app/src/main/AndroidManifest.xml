@@ -3,21 +3,17 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 3초 DIY 녹음 버튼을 누를 때만 요청 -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-
-    <!-- 주머니 속 화면 꺼짐(슬립) 상태에서도 불시 작전 타이머가 작동하도록 포그라운드 서비스 & WakeLock 설정 -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- 재부팅 후 불시 작전 알람 복구 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher_hamster"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
@@ -32,12 +28,17 @@
             </intent-filter>
         </activity>
 
-        <!-- 주머니 속 다마고치 비밀 작전 포그라운드 서비스 -->
-        <service
-            android:name=".PocketSecretService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
+        <!-- 불시 작전: AlarmManager 가 깨울 때만 잠깐 실행됨 (상주 서비스/WakeLock 없음) -->
+        <receiver
+            android:name=".PrankReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
     </application>
 
