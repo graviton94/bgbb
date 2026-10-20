@@ -9,7 +9,7 @@ import {
   bond, levelOf, stats, streak, takeNewTreasures, getDiy, setDiy
 } from './store.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow } from './schedule.js';
-import { play, playFriend, forget } from './audio.js';
+import { play, playFriend, forget, setAmbient } from './audio.js';
 import { World } from './world.js';
 import { drawDiary } from './diary.js';
 
@@ -24,6 +24,9 @@ const errors = [];
 const keepError = msg => { errors.push(`${new Date().toISOString()} ${msg}`); if (errors.length > 5) errors.shift(); };
 addEventListener('error', e => keepError(`${e.message} @${e.filename?.split('/').pop()}:${e.lineno}`));
 addEventListener('unhandledrejection', e => keepError(`promise: ${e.reason?.message || e.reason}`));
+
+// 짧은 손맛 진동 (앱에서만; 브라우저 미리보기는 조용히 무시)
+const haptic = ms => { if (native) navigator.vibrate?.(ms); };
 
 // ---------------------------------------------------------- 토스트 (최신 3개까지 순서대로)
 const toasts = [];
@@ -52,7 +55,9 @@ const world = new World($('world'), {
   onPetTap(id) {
     if (state.frozen) return;
     world.react(id, pickLine(charById(id)));
+    world.burst(id, { hamster: 'toot', tit: 'notes', cat: 'hearts' }[id]);
     playFriend(id, state.friends[id].style, getDiy(), 0.7);
+    haptic(12);
     openFriend(id);
   },
   onPropTap(id) {
@@ -64,7 +69,9 @@ const world = new World($('world'), {
     const line = L(propById(propId).line);
     if (!rewarded) { world.say(charId, line); return; }
     const got = grantTapAcorns(2);
-    world.say(charId, got ? `${line} +${got}🌰` : line);
+    world.say(charId, line);
+    world.burst(charId, 'sparkle');
+    if (got) world.burst(charId, 'coin', `+${got}🌰`);
     playFriend(charId, propById(propId).style, null, 0.6);
     if (got) play('ui_coin', 0.5);
     commit();
@@ -79,8 +86,10 @@ function celebrate(events) {
   const last = events[events.length - 1];
   const mode = MODES[last.mode] ? last.mode : 'hold';
   const who = charById(last.char) ? last.char : 'hamster';
+  world.burst(who, { loud: 'bigToot', soft: 'bubbles', hold: 'sweat' }[mode]);
   if (events.length === 1) {
-    world.react(who, `${L(MODES[mode].line)} +${MODES[mode].reward}🌰`);
+    world.react(who, L(MODES[mode].line));
+    world.burst(who, 'coin', `+${MODES[mode].reward}🌰`);
     toast(`${L(charById(who).name)}: ${L(MODES[mode].line)}`);
   } else {
     const gain = Object.keys(sum).reduce((n, m) => n + sum[m] * MODES[m].reward, 0);
@@ -112,11 +121,13 @@ function drainNative() {
 
 // ---------------------------------------------------------- 렌더
 const resolvedTheme = () => (state.theme === 'auto' ? timeTheme() : state.theme);
+const shown = {};   // 화면에 보이던 오늘 숫자 (바뀌면 톡 튀게)
 
 function render() {
   for (const tr of takeNewTreasures()) {
     toast(t('treasure.found', { name: L(tr.name) }), 3000);
-    play('ui_coin', 0.6);
+    play('ui_treasure', 0.6);
+    CHARACTERS.forEach(c => world.burst(c.id, 'sparkle'));
   }
   const today = day();
   const acorns = $('acorns');
@@ -138,9 +149,13 @@ function render() {
   // 아지트
   const theme = resolvedTheme();
   world.setScene(theme, state.placed);
+  // 배경 소리: 켜 두었고, 아지트가 보이고, 긴급탈출 중이 아닐 때만
+  const amb = { meadow: 'amb_day', sunset: 'amb_day', night: 'amb_night', city: 'amb_night', room: 'amb_room' }[theme];
+  setAmbient(state.ambient && screen === 'home' && !state.frozen && !document.hidden ? amb : null);
   $('themeChip').textContent = `${state.theme === 'auto' ? '⏰ ' : ''}${THEMES[theme].icon} ${L(THEMES[theme].name)}`;
   $('today').innerHTML = Object.entries(MODES).map(([m, v]) =>
-    `<div class="${m}">${v.icon} ${t('home.today', { mode: L(v.name) })}<strong>${today[m]}</strong></div>`).join('');
+    `<div class="${m}">${v.icon} ${t('home.today', { mode: L(v.name) })}<strong class="${shown[m] !== undefined && shown[m] !== today[m] ? 'bump' : ''}">${today[m]}</strong></div>`).join('');
+  Object.assign(shown, { loud: today.loud, soft: today.soft, hold: today.hold });
   const freeze = $('freeze');
   freeze.classList.toggle('on', state.frozen);
   freeze.textContent = t(state.frozen ? 'home.unfreeze' : 'home.freeze');
@@ -274,7 +289,7 @@ function renderFriend() {
   const c = charById(friendId);
   const f = state.friends[c.id];
   const lv = levelOf(f.bond);
-  $('friendImg').src = c.sprites.react;
+  $('friendImg').src = c.portrait;
   $('friendName').textContent = L(c.name);
   $('friendIntro').textContent = L(c.intro);
   $('friendLevel').textContent = lv >= 10 ? t('friend.levelMax') : t('friend.level', { n: lv });
@@ -293,15 +308,23 @@ function interact(kind) {
   if (kind === 'feed') {
     state.fed = true;
     got = grantTapAcorns(3);
-    world.react(c.id, `${t('friend.yum', { food: c.food.icon })}${got ? ` +${got}🌰` : ''}`);
+    world.react(c.id, t('friend.yum', { food: c.food.icon }));
+    world.burst(c.id, 'crumbs');
   } else {
     got = grantTapAcorns(1);
-    world.react(c.id, `${t('friend.happy')}${got ? ` +${got}🌰` : ''}`);
+    world.react(c.id, t('friend.happy'));
+    world.burst(c.id, 'hearts');
     if (c.id === 'cat') play('cat_soft', 0.7);
   }
+  if (got) world.burst(c.id, 'coin', `+${got}🌰`);
   play(got ? 'ui_coin' : 'ui_pop', 0.5);
+  haptic(8);
   const up = bond(c.id);
-  if (up) toast(t('friend.levelUp', { name: L(c.name), n: up }));
+  if (up) {
+    toast(t('friend.levelUp', { name: L(c.name), n: up }));
+    play('ui_levelup', 0.7);
+    world.burst(c.id, 'sparkle');
+  }
   commit();
 }
 
@@ -398,7 +421,7 @@ $('props').addEventListener('click', e => {
     state.acorns -= p.price;
     state.owned.push(p.id);
     state.placed.push(p.id);
-    play('ui_coin', 0.6);
+    play('ui_buy', 0.7);
     toast(t('decor.bought', { name: L(p.name) }));
   } else {
     state.placed = state.placed.includes(p.id) ? state.placed.filter(x => x !== p.id) : [...state.placed, p.id];
@@ -410,6 +433,7 @@ $('props').addEventListener('click', e => {
 // ---------------------------------------------------------- 설정 시트
 function renderSettings() {
   $('opOn').checked = state.schedule.on;
+  $('ambientOn').checked = state.ambient;
   $('winStart').value = state.schedule.start;
   $('winEnd').value = state.schedule.end;
   $('freqs').innerHTML = Object.entries(FREQUENCIES).map(([k, f]) =>
@@ -428,6 +452,10 @@ for (const id of ['winStart', 'winEnd']) {
     syncSchedule(previewOperation);
   });
 }
+$('ambientOn').addEventListener('change', e => {
+  state.ambient = e.target.checked;
+  commit();
+});
 $('opOn').addEventListener('change', e => {
   state.schedule.on = e.target.checked;
   toast(t(e.target.checked ? 'op.started' : 'op.paused'));
@@ -513,8 +541,8 @@ window.bgbbOnTipsOwned = json => {
   state.tips = owned;
   if (fresh.length) {
     toast(t('support.thanks'), 3500);
-    play('ui_coin', 0.7);
-    CHARACTERS.forEach(c => world.react(c.id, '💛'));
+    play('ui_treasure', 0.7);
+    CHARACTERS.forEach(c => { world.react(c.id, '💛'); world.burst(c.id, 'hearts'); });
   }
   commit();
 };
@@ -568,7 +596,7 @@ window.bgbbOnNativeResume = () => {
 };
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) return;
+  if (document.hidden) { setAmbient(null); return; }
   drainNative();
   armWebTimer();
   render();   // 시간이 지나 '시간 따라' 테마나 날짜가 바뀌었을 수 있다

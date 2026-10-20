@@ -20,6 +20,7 @@ function initial() {
     diary: { weather: 0, note: '', saves: 0 },   // weather 는 WEATHERS 의 번호
     seenTreasures: [],
     tips: [],             // 응원한 상품 ID (Google Play 가 확인해 준 것만)
+    ambient: false,       // 아지트 배경 소리 (회의 중에 앱을 열 수도 있으니 기본은 끔)
     plan: null,           // 웹 미리보기용 작전 일정 { day, times }
     sentConfig: ''        // 마지막으로 적용한 작전 설정
   };

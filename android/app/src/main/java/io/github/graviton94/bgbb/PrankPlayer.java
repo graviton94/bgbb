@@ -84,7 +84,11 @@ final class PrankPlayer {
                 mp.setDataSource(diy.getAbsolutePath());
             } else {
                 String style = "soft".equals(sound) || "loud".equals(sound) ? sound : "main";
-                int res = c.getResources().getIdentifier(charId + "_" + style, "raw", c.getPackageName());
+                // 같은 소리도 매번 조금씩 다르게: <캐릭터>_<스타일>, _2, _3 중 하나
+                int take = 1 + RANDOM.nextInt(3);
+                String name = charId + "_" + style + (take == 1 ? "" : "_" + take);
+                int res = c.getResources().getIdentifier(name, "raw", c.getPackageName());
+                if (res == 0) res = c.getResources().getIdentifier(charId + "_" + style, "raw", c.getPackageName());
                 if (res == 0) throw new IllegalStateException("no sound " + charId + "_" + style);
                 try (AssetFileDescriptor afd = c.getResources().openRawResourceFd(res)) {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());

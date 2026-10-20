@@ -99,11 +99,71 @@ function verdict(d) {
   return { title: L(v.title), stamp: L(v.stamp), color: v.color };
 }
 
+// 손그림 장식: 그림 칸 모서리 마스킹테이프, 여백의 별·하트, 대담한 날엔 주인공 옆 방구 구름
+function doodles(g, d) {
+  const tape = (x, y, rot) => {
+    g.save();
+    g.translate(x, y);
+    g.rotate(rot);
+    g.fillStyle = 'rgba(255, 212, 59, 0.55)';
+    g.fillRect(-70, -18, 140, 36);
+    g.strokeStyle = 'rgba(200, 150, 0, 0.35)';
+    g.setLineDash([6, 6]);
+    g.strokeRect(-70, -18, 140, 36);
+    g.restore();
+  };
+  tape(120, 380, -0.5);
+  tape(W - 120, 380, 0.5);
+
+  const star = (x, y, r, color) => {
+    g.save();
+    g.strokeStyle = color;
+    g.lineWidth = 5;
+    g.lineJoin = 'round';
+    g.beginPath();
+    for (let i = 0; i <= 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const rr = i % 2 ? r * 0.45 : r;
+      g[i ? 'lineTo' : 'moveTo'](x + Math.cos(a) * rr + (Math.random() - 0.5) * 2, y + Math.sin(a) * rr + (Math.random() - 0.5) * 2);
+    }
+    g.stroke();
+    g.restore();
+  };
+  star(70, 250, 26, '#FFB703');
+  star(W - 66, 300, 20, '#FF8FAB');
+  g.save();
+  g.font = '54px sans-serif';
+  g.textAlign = 'center';
+  g.fillText('💗', W - 150, 470);
+  g.restore();
+
+  if (d.loud > 0) {
+    // 크레용 방구 구름 + 글씨
+    g.save();
+    g.fillStyle = '#BFE8CF';
+    g.strokeStyle = '#5E9C7A';
+    g.lineWidth = 10;   // 외곽선 먼저, 채우기는 위에 → 바깥 테두리만
+    const cx = W / 2 + 215, cy = 560;   // 주인공 오른쪽 위 (옆 친구 머리 위)
+    g.beginPath();
+    [[0, 0, 42], [44, -22, 34], [80, 6, 38], [36, 22, 30]].forEach(([dx, dy, r]) => {
+      g.moveTo(cx + dx + r, cy + dy);
+      g.arc(cx + dx, cy + dy, r, 0, Math.PI * 2);
+    });
+    g.stroke();
+    g.fill();
+    g.fillStyle = INK;
+    g.font = '46px Jua, sans-serif';
+    g.textAlign = 'center';
+    g.fillText(t('world.bigToot'), cx + 40, cy - 64);
+    g.restore();
+  }
+}
+
 /** data: { day: {loud,soft,hold}, weather, note, hero (캐릭터 id), acorns } */
 export async function drawDiary(canvas, data) {
   const hero = CHARACTERS.find(c => c.id === data.hero) || CHARACTERS[0];
   const others = CHARACTERS.filter(c => c !== hero);
-  const [heroImg, ...otherImgs] = await Promise.all([hero, ...others].map(c => loadImage(c.sprites.base)));
+  const [heroImg, ...otherImgs] = await Promise.all([hero, ...others].map(c => loadImage(c.portrait)));
   await document.fonts?.ready;
 
   canvas.width = W;
@@ -153,6 +213,7 @@ export async function drawDiary(canvas, data) {
   put(otherImgs[1], W - 270, 860, 230);
   put(heroImg, W / 2, 900, 380);
   g.restore();
+  doodles(g, d);
 
   // 칭호
   crayonBox(g, 90, 970, W - 180, 100, '#FFF4C2', 24);

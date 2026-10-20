@@ -15,10 +15,11 @@ export const CHARACTERS = [
       ko: ['뿌우웅! 💨', '헤헤, 들켰나?', '배에서 꾸르륵...', '뽀옹~ 💨'],
       en: ['Pfffft! 💨', 'Hehe, caught me?', 'Tummy rumbling...', 'Toot~ 💨']
     },
-    sprites: {
-      base: 'assets/hamster.webp',
+    portrait: 'assets/hamster.webp',   // 큰 그림 (그림일기·친구 창)
+    sprites: {                         // 아지트용: tools/prepare_sprites.py 가 같은 크기로 맞춘 동작 그림
+      idle: 'assets/sprites/hamster_idle.webp',
       walk: 'assets/sprites/hamster_walk.webp',
-      react: 'assets/sprites/hamster_jump.webp',
+      react: 'assets/sprites/hamster_react.webp',
       sleep: 'assets/sprites/hamster_sleep.webp'
     },
     height: 0.2,          // 월드 높이 대비 키
@@ -39,12 +40,12 @@ export const CHARACTERS = [
       ko: ['짹짹! 🎵', '쮸리릿?', '포로롱~', '파닥파닥 🪶'],
       en: ['Tweet! 🎵', 'Tsirrup?', 'Flutter~', 'Flap flap 🪶']
     },
-    sprites: {
-      base: 'assets/tit.webp',
-      walk: 'assets/sprites/tit_hop.webp',
-      react: 'assets/sprites/tit_sing.webp',
-      fly: 'assets/sprites/tit_fly.webp',
-      sleep: 'assets/tit.webp'
+    portrait: 'assets/tit.webp',   // 큰 그림 (그림일기·친구 창)
+    sprites: {                         // 아지트용: tools/prepare_sprites.py 가 같은 크기로 맞춘 동작 그림
+      idle: 'assets/sprites/tit_idle.webp',
+      walk: 'assets/sprites/tit_walk.webp',
+      react: 'assets/sprites/tit_react.webp',
+      fly: 'assets/sprites/tit_fly.webp'
     },
     height: 0.15,
     lane: [0.2, 0.8],
@@ -64,11 +65,12 @@ export const CHARACTERS = [
       ko: ['...냥.', '귀찮다옹 🐾', '츄르 가져왔냥?', '냐아앙~'],
       en: ['...meow.', 'Not now 🐾', 'Got treats?', 'Mrrrow~']
     },
-    sprites: {
-      base: 'assets/cat.webp',
+    portrait: 'assets/cat.webp',   // 큰 그림 (그림일기·친구 창)
+    sprites: {                         // 아지트용: tools/prepare_sprites.py 가 같은 크기로 맞춘 동작 그림
+      idle: 'assets/sprites/cat_idle.webp',
       walk: 'assets/sprites/cat_walk.webp',
-      react: 'assets/sprites/cat_play.webp',
-      sleep: 'assets/sprites/cat_sit.webp'
+      react: 'assets/sprites/cat_react.webp',
+      sleep: 'assets/sprites/cat_sleep.webp'
     },
     height: 0.24,
     lane: [0.5, 0.96],

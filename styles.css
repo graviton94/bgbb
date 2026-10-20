@@ -8,7 +8,7 @@
   --card: #FFFFFF;
   --ink: #282523;
   --line: #3A3532;
-  --muted: #7C766E;
+  --muted: #625C54;   /* 종이색 위 대비 5:1 이상 */
   --yellow: #FED36A;
   --mint: #95D5B2;
   --red: #FF5A5F;
@@ -36,7 +36,7 @@ button { cursor: pointer; }
 h2 { font: 1.35rem var(--title); margin: 4px 2px 10px; }
 h3 { font: 1.1rem var(--title); margin-bottom: 8px; }
 b { font-family: var(--title); font-weight: normal; }
-.muted { color: var(--muted); font-size: 0.92em; }
+.muted { color: var(--muted); font-size: 0.95em; }
 
 /* ---------- 앱 틀 ---------- */
 .app {
@@ -139,9 +139,11 @@ main { flex: 1; min-height: 0; position: relative; }
 .today .loud strong { color: var(--loud); }
 .today .soft strong { color: var(--soft); }
 .today .hold strong { color: var(--hold); }
+.today strong.bump { animation: bump 0.5s ease-out; }
+@keyframes bump { 30% { transform: scale(1.5) rotate(-6deg); } }
 
 .home-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
-.hint { text-align: center; color: var(--muted); font-size: 0.9rem; min-height: 1.3em; }
+.hint { text-align: center; color: var(--muted); font: 0.8rem/1.4 var(--title); min-height: 1.3em; }
 
 /* ---------- 버튼 & 칩 ---------- */
 .btn {
@@ -197,6 +199,7 @@ main { flex: 1; min-height: 0; position: relative; }
 }
 .tab span { font: 0.8rem var(--title); }
 .tab.active { opacity: 1; }
+.tab.active span { background: linear-gradient(transparent 62%, var(--yellow) 62% 92%, transparent 92%); padding: 0 3px; }
 
 /* ---------- 카드 (기록) ---------- */
 .card {
@@ -227,7 +230,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .week .stack i { display: block; min-height: 3px; }
 .week .stack i:last-child { border-radius: 4px 4px 0 0; }
 .week .n { font: 0.8rem var(--title); min-height: 1.1em; }
-.week .d { font-size: 0.8rem; color: var(--muted); }
+.week .d { font: 0.72rem var(--title); color: var(--muted); }
 
 .shelf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .treasure {
@@ -240,7 +243,7 @@ main { flex: 1; min-height: 0; position: relative; }
 }
 .treasure img { width: 52px; height: 52px; object-fit: contain; display: block; margin: 0 auto 4px; }
 .treasure.locked { border-style: dashed; color: var(--muted); }
-.treasure.locked img { filter: grayscale(1) brightness(1.4) opacity(0.5); }
+.treasure.locked img { filter: brightness(0) opacity(0.18); }   /* 무엇인지 모르게 실루엣만 */
 
 .best { list-style: none; display: grid; gap: 6px; }
 .best li { display: flex; align-items: center; gap: 10px; border-bottom: 1px dashed #DDD3C0; padding: 4px 0; }
@@ -279,6 +282,15 @@ main { flex: 1; min-height: 0; position: relative; }
 .sheet[open] { animation: up 0.18s ease-out; }
 @keyframes up { from { transform: translateY(30px); opacity: 0; } }
 .sheet-body { padding: 16px 16px calc(16px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
+.sheet:not(.small) .sheet-body::before {
+  content: '';
+  justify-self: center;
+  width: 44px;
+  height: 5px;
+  border-radius: 999px;
+  background: #CFC4AE;
+  margin: -6px 0 2px;
+}
 .sheet-body.center { text-align: center; justify-items: center; }
 .row {
   display: flex;
@@ -355,7 +367,7 @@ main { flex: 1; min-height: 0; position: relative; }
 .prop.sale img { filter: grayscale(0.7); }
 
 .treasure-img { width: 120px; height: 120px; object-fit: contain; }
-.treasure-img.locked { filter: grayscale(1) opacity(0.4); }
+.treasure-img.locked { filter: brightness(0) opacity(0.2); }
 .cond { font-family: var(--title); background: #FFF; border: 2px dashed var(--line); border-radius: 12px; padding: 4px 12px; }
 .welcome-modes { list-style: none; text-align: left; display: grid; gap: 4px; background: #FFF; border: 2px solid var(--line); border-radius: 14px; padding: 8px 14px; }
 

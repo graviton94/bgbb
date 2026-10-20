@@ -79,6 +79,7 @@ const STR = {
     'settings.title': '⚙️ 작전 설정',
     'settings.rules': '작전 시간대 안에서 하루 몇 번, 친구 하나가 <b>불시에</b> 소리를 내요.<br>그 순간 폰이 <b>🔊소리</b>면 대담 · <b>📳진동</b>이면 소심 · <b>🤫무음</b>이면 꾹참!',
     'settings.op': '불시 작전',
+    'settings.ambient': '아지트 배경 소리',
     'settings.window': '작전 시간대',
     'settings.freq': '하루 횟수',
     'settings.freqChip': '{name} · 하루 {lo}~{hi}번',
@@ -123,6 +124,7 @@ const STR = {
     'world.flap': '파닥파닥 🐤',
     'world.loaf': '식빵 굽는 중... 💤',
     'world.toot': '뽀옹! 💨',
+    'world.bigToot': '뿌웅!',
     'world.freeze': '흡! 숨 참기 🤐',
     'world.thaw': '휴~ 살았다! 💨'
   },
@@ -199,6 +201,7 @@ const STR = {
     'settings.title': '⚙️ Prank settings',
     'settings.rules': 'A few times a day, within your hours, a friend makes a sound <b>by surprise</b>.<br>If the phone is on <b>🔊sound</b> it\'s bold · <b>📳vibrate</b> shy · <b>🤫silent</b> held in!',
     'settings.op': 'Surprise pranks',
+    'settings.ambient': 'Hideout ambience',
     'settings.window': 'Prank hours',
     'settings.freq': 'Times a day',
     'settings.freqChip': '{name} · {lo}–{hi} a day',
@@ -243,6 +246,7 @@ const STR = {
     'world.flap': 'Flap flap 🐤',
     'world.loaf': 'Loafing... 💤',
     'world.toot': 'Toot! 💨',
+    'world.bigToot': 'BRAAP!',
     'world.freeze': 'Holding my breath 🤐',
     'world.thaw': 'Phew~ 💨'
   }

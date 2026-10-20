@@ -29,7 +29,9 @@ src/
   diary.js                 1080×1920 그림일기 카드
   main.js                  화면 연결
 assets/                    그림(WebP) · 효과음(WAV) · 글꼴(woff2, OFL)
-tools/bake_sounds.py       효과음 12종 합성기 (numpy)
+tools/bake_sounds.py       효과음 합성기 (numpy): 친구 소리 9종×3가지, UI 6종, 배경 소리 3종
+tools/prepare_sprites.py   캐릭터 그림 손질 (흰 테두리 제거, 동작 그림 크기 맞추기)
+tools/make_icons.py        앱 아이콘 (햄찌 + 방구 구름)
 tools/subset_fonts.py      글꼴을 자주 쓰는 한글 2,350자로 줄이기
 tools/store_images.mjs     Play 스토어 스크린샷 · 대표 그림 만들기
 docs/store/                스토어 등록 글 · 데이터 보안 답 · 이미지

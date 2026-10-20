@@ -6,7 +6,8 @@ assets/sounds/ 에 22.05kHz 모노 16bit WAV 를 굽는다. 필요한 건 numpy 
 WAV 는 모든 브라우저·WebView·Android MediaPlayer 가 코덱 걱정 없이 재생하고,
 22.05kHz 모노라 1초에 44KB 남짓이다.
 
-캐릭터 소리는 <캐릭터>_<스타일>.wav (main / soft / loud), UI 소리는 ui_*.wav.
+캐릭터 소리는 <캐릭터>_<스타일>.wav (main / soft / loud) + 다른 버전 _2 · _3,
+UI 소리는 ui_*.wav, 아지트 배경 소리(끊김 없는 반복)는 amb_*.wav.
 같은 시드로 구우므로 매번 같은 소리가 나온다.
 """
 import os
@@ -100,13 +101,14 @@ def env_adsr(t, attack, release, total=None):
     return e
 
 
-def master(x, rms_db=-16.0, peak_db=-1.0):
-    """DC 제거 → 끝 클릭 방지 페이드 → 체감 음량 맞춤 → 부드러운 리미터."""
+def master(x, rms_db=-16.0, peak_db=-1.0, loop=False):
+    """DC 제거 → 끝 클릭 방지 페이드(반복 소리는 생략) → 체감 음량 맞춤 → 부드러운 리미터."""
     x = x - np.mean(x)
-    fade_in = min(len(x), int(0.003 * SR))
-    fade_out = min(len(x), int(0.02 * SR))
-    x[:fade_in] *= np.linspace(0, 1, fade_in)
-    x[-fade_out:] *= np.linspace(1, 0, fade_out)
+    if not loop:
+        fade_in = min(len(x), int(0.003 * SR))
+        fade_out = min(len(x), int(0.02 * SR))
+        x[:fade_in] *= np.linspace(0, 1, fade_in)
+        x[-fade_out:] *= np.linspace(1, 0, fade_out)
     rms = np.sqrt(np.mean(x ** 2)) + 1e-9
     x = x * (10 ** (rms_db / 20) / rms)
     peak = 10 ** (peak_db / 20)
@@ -337,16 +339,117 @@ def ui_freeze(rng):
     return shh + glass
 
 
+# ---------------------------------------------------------------- UI (축하 소리)
+
+def ui_levelup(rng):
+    # 도-미-솔-도 올라가는 실로폰
+    t = t_axis(0.62)
+    x = np.zeros_like(t)
+    for i, f in enumerate((523.3, 659.3, 784.0, 1046.5)):
+        d = np.clip(t - i * 0.09, 0, None)
+        x += (t >= i * 0.09) * (np.sin(2 * np.pi * f * d) + 0.3 * np.sin(2 * np.pi * f * 3.01 * d) * np.exp(-d / 0.03)) * np.exp(-d / 0.16)
+    return x
+
+
+def ui_treasure(rng):
+    # 반짝이는 보물 상자: 빠른 아르페지오 + 끝의 맑은 화음
+    t = t_axis(0.95)
+    x = np.zeros_like(t)
+    notes = (784.0, 987.8, 1174.7, 1568.0, 1975.5)
+    for i, f in enumerate(notes):
+        d = np.clip(t - i * 0.055, 0, None)
+        x += (t >= i * 0.055) * np.sin(2 * np.pi * f * d) * np.exp(-d / 0.12) * 0.7
+    d = np.clip(t - 0.3, 0, None)
+    for f in (1046.5, 1318.5, 1568.0):
+        x += (t >= 0.3) * np.sin(2 * np.pi * f * d) * np.exp(-d / 0.4) * 0.45
+    shimmer = highpass(rng.standard_normal(len(t)), 6500) * np.exp(-t / 0.35) * 0.08
+    return x + shimmer
+
+
+def ui_buy(rng):
+    # 짤랑! 동전 두 번 + 서랍 닫히는 톡
+    t = t_axis(0.5)
+    x = np.zeros_like(t)
+    for start, f in ((0.0, 2093.0), (0.08, 2637.0)):
+        d = np.clip(t - start, 0, None)
+        x += (t >= start) * (np.sin(2 * np.pi * f * d) + 0.5 * np.sin(2 * np.pi * f * 2.4 * d)) * np.exp(-d / 0.09)
+    thud = lowpass(rng.standard_normal(len(t)), 300) * np.exp(-np.clip(t - 0.2, 0, None) / 0.02) * (t >= 0.2) * 2.5
+    return x + thud
+
+
+# ---------------------------------------------------------------- 아지트 배경 소리 (끊김 없이 반복)
+
+def seamless(fn, dur, xf=0.4):
+    """dur+xf 만큼 만들고 끝부분을 앞부분에 겹쳐서 이음매 없는 반복 소리로."""
+    def make(rng):
+        x = fn(rng, t_axis(dur + xf))
+        n, k = int(dur * SR), int(xf * SR)
+        out = x[:n].copy()
+        ramp = np.linspace(0, 1, k)
+        out[:k] = out[:k] * ramp + x[n:n + k] * (1 - ramp)
+        return out
+    return make
+
+
+def _day(rng, t):
+    # 산들바람 + 멀리서 지저귀는 새
+    wind = lowpass(rng.standard_normal(len(t)), 500, stages=2) * (0.6 + 0.4 * np.sin(2 * np.pi * t / 2.7))
+    leaves = lowpass(bandpass(rng.standard_normal(len(t)), 2400, q=0.7), 5000) * (0.75 + 0.25 * np.sin(2 * np.pi * t / 2.5 + 1)) * 0.025
+    birds = sum(chirp(t, s, 0.06, 6200 + 400 * k, 4600, level=0.12) for k, s in enumerate((0.7, 0.8, 2.6, 3.9, 4.0)))
+    return wind * 0.5 + leaves + birds
+
+
+def _night(rng, t):
+    # 귀뚜라미 두 마리 (찌르르 3번씩) + 아주 작은 밤바람
+    x = lowpass(rng.standard_normal(len(t)), 300, stages=2) * 0.12
+    for f, period, offset, lvl in ((4600, 0.55, 0.0, 0.5), (4150, 0.71, 0.23, 0.35)):
+        tt = (t + offset) % period
+        for k in range(3):
+            d = tt - k * 0.032
+            x += np.where((d > 0) & (d < 0.018), np.sin(2 * np.pi * f * t) * np.sin(np.pi * np.clip(d / 0.018, 0, 1)), 0) * lvl
+    return x
+
+
+def _room(rng, t):
+    # 째깍째깍 벽시계 + 조용한 방 울림
+    x = lowpass(rng.standard_normal(len(t)), 200) * 0.05
+    for k in range(int(t[-1]) + 1):
+        for start, fc in ((k, 3200), (k + 0.5, 2100)):
+            d = t - start
+            x += np.where(d > 0, bandpass(rng.standard_normal(len(t)), fc, q=6) * np.exp(-np.clip(d, 0, None) / 0.008), 0) * 0.9
+    return x
+
+
 SOUNDS = {
     "hamster_main": hamster_main, "hamster_soft": hamster_soft, "hamster_loud": hamster_loud,
     "tit_main": tit_main, "tit_soft": tit_soft, "tit_loud": tit_loud,
     "cat_main": cat_main, "cat_soft": cat_soft, "cat_loud": cat_loud,
-    "ui_pop": ui_pop, "ui_coin": ui_coin, "ui_freeze": ui_freeze,
 }
+UI = {"ui_pop": ui_pop, "ui_coin": ui_coin, "ui_freeze": ui_freeze,
+      "ui_levelup": ui_levelup, "ui_treasure": ui_treasure, "ui_buy": ui_buy}
+AMBIENT = {"amb_day": seamless(_day, 5.0), "amb_night": seamless(_night, 4.95), "amb_room": seamless(_room, 4.0)}
 
-QUIET_UI = {"ui_pop", "ui_coin", "ui_freeze"}
+# 스타일별 체감 음량: 소심 < 기본 < 우렁찬
+LOUDNESS = {"soft": -20.0, "main": -16.0, "loud": -13.0}
+TAKES = 3   # 같은 소리라도 매번 조금씩 다르게: 시드와 음높이를 바꾼 3가지
+
+
+def pitch_shift(x, factor):
+    """재표본화로 음높이(와 길이)를 살짝 바꾼다."""
+    n = int(len(x) / factor)
+    return np.interp(np.arange(n) * factor, np.arange(len(x)), x)
+
 
 if __name__ == "__main__":
     for i, (name, fn) in enumerate(SOUNDS.items()):
-        rng = np.random.default_rng(1000 + i)
-        save(name, fn(rng), rms_db=-24.0 if name in QUIET_UI else -16.0)
+        rms = LOUDNESS[name.split("_")[1]]
+        for take in range(TAKES):
+            rng = np.random.default_rng(1000 + i * 10 + take)
+            x = fn(rng)
+            if take:
+                x = pitch_shift(x, (0.94, 1.06)[take - 1])
+            save(name if take == 0 else f"{name}_{take + 1}", x, rms_db=rms)
+    for i, (name, fn) in enumerate(UI.items()):
+        save(name, fn(np.random.default_rng(2000 + i)), rms_db=-24.0)
+    for i, (name, fn) in enumerate(AMBIENT.items()):
+        save(name, fn(np.random.default_rng(3000 + i)), rms_db=-30.0, loop=True)
