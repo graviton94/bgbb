@@ -1,0 +1,11 @@
+{
+  "name": "banggu-bboong-app",
+  "version": "4.0.0",
+  "description": "방구뿡 - 주머니 속 다마고치 비밀 다이어리 (Android Foreground Service 지원)",
+  "main": "app.js",
+  "scripts": {
+    "start": "npx serve ."
+  },
+  "author": "BangguBboong Team",
+  "license": "MIT"
+}

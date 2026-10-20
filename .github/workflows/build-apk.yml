@@ -1,0 +1,57 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build Debug APK (with Foreground Service & 9 Real WAV Assets)
+        working-directory: ./android
+        run: gradle assembleDebug --stacktrace
+
+      - name: Copy APK to root with clean name
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk ./banggu-bboong-v4-debug.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: banggu-bboong-v4-debug-apk
+          path: ./banggu-bboong-v4-debug.apk
+
+      - name: Publish APK to GitHub Release (latest-apk)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v4.0.0-apk
+          name: "방구뿡 (Bang-gu Bboong) V4.0 Android APK"
+          body: |
+            ### 🐹 방구뿡 V4.0 Android APK 빌드 완료
+            - **리얼 물리 음향 효과음 9종 (`res/raw/*.wav`) 내장**
+            - **Android Foreground Service (`PocketSecretService`) + WakeLock 탑재**: 화면을 끄고 주머니에 넣어도 불시 작전 타이머가 작동하며 상단 알림바에서 원터치 `[🚨 긴급탈출]` 제어가 가능합니다.
+            - **코어 1·2단계**: 아지트 10종 소품 터치 상호작용, `localStorage` 영구 저장, 실시간 전국 참음왕 순위 연동, 9:16 크레용 그림일기 공유 지원.
+          files: ./banggu-bboong-v4-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

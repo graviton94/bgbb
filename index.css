@@ -259,11 +259,16 @@ body {
   position: absolute;
   top: 10px;
   left: 10px;
+  right: 10px;
   z-index: 300;
   pointer-events: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.world-theme-badge {
+.world-theme-badge,
+.world-acorn-badge {
   background: rgba(255, 255, 255, 0.94);
   border: 1.5px solid var(--crayon-border);
   border-radius: var(--crayon-radius-pill);
@@ -275,6 +280,12 @@ body {
   box-shadow: 1px 2px 0px var(--crayon-border);
   white-space: nowrap;
   display: inline-block;
+}
+
+.world-acorn-badge {
+  background: #FEF3C7;
+  color: #B45309;
+  border-color: #D97706;
 }
 
 /* 2. 월드 테마별 배경 스타일 (초원, 노을, 밤하늘, 미니룸, 도시) */
@@ -493,11 +504,22 @@ body {
 .decor-prop {
   position: absolute;
   filter: drop-shadow(2px 5px 0px rgba(40, 37, 35, 0.22));
-  transition: transform 0.2s;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   user-select: none;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.decor-prop:hover {
+  transform: scale(1.1);
+}
+
+.decor-prop:active,
+.decor-prop.prop-active-bounce {
+  transform: scale(1.22) translateY(-4px);
 }
 
 .decor-prop.hidden {
@@ -1719,6 +1741,197 @@ input:checked + .slider:before {
 .rank-item.gold { background: #FFF9DB; border-color: #F59F00; }
 .rank-item.silver { background: #F1F3F5; border-color: #868E96; }
 .rank-item.bronze { background: #FFF4E6; border-color: #D9480F; }
-.rank-num { font-family: var(--font-title); font-size: 1.15rem; width: 20px; text-align: center; }
+.rank-item.me-highlight { background: #ECFDF5; border-color: #10B981; box-shadow: 2px 3px 0px #059669; }
+.rank-num { font-family: var(--font-title); font-size: 1.15rem; width: 24px; text-align: center; }
 .rank-avatar { font-size: 1.35rem; }
-.rank-badge { font-family: var(--font-title); font-size: 0.78rem; padding: 2px 6px; background: #FFF; border: 1px solid var(--crayon-border); border-radius: 8px; }
+.rank-badge { font-family: var(--font-title); font-size: 0.78rem; padding: 2px 6px; background: #FFF; border: 1px solid var(--crayon-border); border-radius: 8px; white-space: nowrap; }
+
+/* 그림일기 커스텀 컨트롤 */
+.diary-custom-controls {
+  max-width: 300px;
+  width: 100%;
+  margin: 0 auto 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.diary-weather-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: center;
+}
+
+.diary-ctrl-label {
+  font-family: var(--font-title);
+  font-size: 0.82rem;
+  color: #444;
+  margin-right: 2px;
+}
+
+.weather-chip {
+  background: #FFF;
+  border: 1.5px solid var(--crayon-border);
+  border-radius: var(--crayon-radius-pill);
+  padding: 3px 8px;
+  font-family: var(--font-doodle);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.weather-chip.active {
+  background: var(--hamster-yellow);
+  box-shadow: 1px 2px 0px var(--crayon-border);
+  transform: translateY(-1px);
+}
+
+.diary-note-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 2px solid var(--crayon-border);
+  border-radius: 12px;
+  font-family: var(--font-doodle);
+  font-size: 1rem;
+  font-weight: 700;
+  background: #FFF;
+  color: var(--ink-charcoal);
+  box-shadow: 1px 2px 0px rgba(40, 37, 35, 0.15);
+}
+
+/* 사운드 카드 버튼 그룹 & DIY 녹음 확장 */
+.sound-card-btns {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.btn-equip-sound {
+  background: #FFF;
+  border: 1.5px solid var(--crayon-border);
+  border-radius: var(--crayon-radius-pill);
+  padding: 5px 9px;
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  cursor: pointer;
+  box-shadow: 1px 2px 0px var(--crayon-border);
+}
+
+.btn-equip-sound.equipped {
+  background: var(--fart-mint);
+  color: #065F46;
+}
+
+.crayon-card.diy-recorder-card {
+  background: #FFF9EE;
+  border: 2px solid var(--crayon-border);
+  border-radius: var(--crayon-radius-card);
+  padding: 12px;
+  box-shadow: 2px 3px 0px var(--crayon-border);
+}
+
+.crayon-title {
+  font-family: var(--font-title);
+  font-size: 1rem;
+}
+
+.recorder-desc {
+  font-family: var(--font-doodle);
+  font-size: 0.95rem;
+  color: #666;
+  margin: 4px 0 8px;
+}
+
+.recorder-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-record.recording {
+  background: #10B981;
+  animation: pulseRed 0.8s infinite;
+}
+
+.recorded-preview {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1.5px dashed rgba(40, 37, 35, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.recorded-label {
+  font-family: var(--font-doodle);
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #D9480F;
+}
+
+.recorded-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-micro.equip-diy {
+  background: var(--hamster-yellow);
+  font-weight: 700;
+}
+
+/* 설정 시트 타이머 & 리셋 버튼 */
+.test-trigger-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.next-trigger-info {
+  text-align: center;
+  font-family: var(--font-doodle);
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #047857;
+  background: #ECFDF5;
+  border: 1.5px dashed #10B981;
+  border-radius: 10px;
+  padding: 5px 8px;
+}
+
+.reset-data-btn {
+  align-self: center;
+  color: #888;
+  border-style: dashed;
+  margin-top: 2px;
+}
+
+/* 토스트 알림 배너 */
+.crayon-toast {
+  position: absolute;
+  top: 58px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: #282523;
+  color: #FFFDF8;
+  border: 2.5px solid var(--hamster-yellow);
+  border-radius: var(--crayon-radius-pill);
+  padding: 7px 16px;
+  font-family: var(--font-title);
+  font-size: 0.88rem;
+  box-shadow: 3px 4px 0px rgba(0, 0, 0, 0.35);
+  z-index: 2000;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.crayon-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}

@@ -55,14 +55,15 @@
         <!-- 대형 다마고치 미니홈피 아지트 (Hero Living World) -->
         <div class="tamagotchi-world meadow" id="tamagotchiWorld">
           
-          <!-- 월드 상단 상태 HUD (테마 뱃지) -->
+          <!-- 월드 상단 상태 HUD (테마 뱃지 & 도토리 카운터) -->
           <div class="minihompy-hud-header">
             <span class="world-theme-badge" id="worldThemeBadge">🌿 산들바람 초원</span>
+            <span class="world-acorn-badge" id="worldAcornBadge" title="보유 도토리">🌰 185</span>
           </div>
 
           <!-- 월드 상단 보조 터치 가이드 팁 -->
           <div class="world-hint-tip">
-            <span>👆 캐릭터를 콕 찌르면 개별 소리 &amp; 리액션!</span>
+            <span>👆 캐릭터나 아지트 소품을 콕 찌르면 리액션 &amp; 도토리!</span>
           </div>
 
           <!-- 하늘 & 벽면 배경 레이어 (테마별 동적 전환) -->
@@ -158,7 +159,20 @@
       <section class="tab-content" id="tab-diary">
         <div class="diary-header">
           <h2>📖 오늘의 비밀 방귀 일기장</h2>
-          <p class="diary-subtitle">저녁이 되면 오늘 비밀 작전이 그림일기로 완성돼요 🎨</p>
+          <p class="diary-subtitle">오늘의 한줄 일기와 날씨를 고르면 그림일기가 완성돼요 🎨</p>
+        </div>
+
+        <div class="diary-custom-controls">
+          <div class="diary-weather-row">
+            <span class="diary-ctrl-label">날씨:</span>
+            <button class="weather-chip active" data-weather="💨 뿡뿡">💨 뿡뿡</button>
+            <button class="weather-chip" data-weather="☀️ 맑음">☀️ 맑음</button>
+            <button class="weather-chip" data-weather="🌩️ 꾸르륵">🌩️ 꾸르륵</button>
+            <button class="weather-chip" data-weather="🌈 평화">🌈 평화</button>
+          </div>
+          <div class="diary-input-row">
+            <input type="text" id="diaryCustomNote" class="diary-note-input" maxlength="28" placeholder="오늘의 비밀 한줄 일기를 적어보세요! (최대 28자)" value="주머니 속에서 완벽하게 위장 성공! 아무도 몰랐다 헤헤">
+          </div>
         </div>
 
         <div class="story-canvas-wrapper" id="storyCanvasWrapper">
@@ -167,7 +181,7 @@
 
         <div class="story-actions-dock">
           <button class="btn-share instagram" id="btnShareStory">
-            <span>📸</span> 9:16 인스타 스토리 저장
+            <span>📸</span> 9:16 스토리 저장/공유
           </button>
           <button class="btn-share refresh" id="btnRedrawCanvas">
             <span>🔄</span> 손글씨 다시 쓰기
@@ -179,44 +193,119 @@
       <section class="tab-content" id="tab-sound">
         <div class="sound-lab-header">
           <h2>🎙️ 소리 보관함 & DIY 녹음</h2>
-          <p class="sound-lab-subtitle">친구들의 소리를 들어보거나 3초 목소리를 녹음해 보세요 🎙️</p>
+          <p class="sound-lab-subtitle">캐릭터별 9종 리얼 합성음을 들어보거나 3초 목소리를 녹음해 장착하세요!</p>
         </div>
 
         <div class="sound-pack-list" id="soundPackList">
-          <div class="sound-card" data-sound="fart1">
+          <!-- 햄찌 3종 -->
+          <div class="sound-card" data-char-id="hamster" data-style="main">
             <span class="sound-icon">💨</span>
             <div class="sound-info">
-              <span class="sound-title">시원한 뿡!</span>
-              <span class="sound-char">방구 햄찌 전용</span>
+              <span class="sound-title">시원한 오리지널 뿡!</span>
+              <span class="sound-char">방구 햄찌 · 기본음 (저음 진동+버블)</span>
             </div>
-            <button class="btn-play-sound">▶ 재생</button>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
           </div>
 
-          <div class="sound-card" data-sound="fart2">
+          <div class="sound-card" data-char-id="hamster" data-style="soft">
             <span class="sound-icon">🫧</span>
             <div class="sound-info">
-              <span class="sound-title">소심한 삐용</span>
-              <span class="sound-char">방구 햄찌 전용</span>
+              <span class="sound-title">소심한 삐용 피식~</span>
+              <span class="sound-char">방구 햄찌 · 소심음 (고주파 바람새는 소리)</span>
             </div>
-            <button class="btn-play-sound">▶ 재생</button>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
           </div>
 
-          <div class="sound-card" data-sound="bird">
+          <div class="sound-card" data-char-id="hamster" data-style="loud">
+            <span class="sound-icon">💥</span>
+            <div class="sound-info">
+              <span class="sound-title">우렁찬 대폭발 부르르릉!</span>
+              <span class="sound-char">방구 햄찌 · 우렁찬음 (2단 중저음 리플)</span>
+            </div>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
+          </div>
+
+          <!-- 오목눈이 3종 -->
+          <div class="sound-card" data-char-id="tit" data-style="main">
             <span class="sound-icon">🐤</span>
             <div class="sound-info">
-              <span class="sound-title">포로롱 짹짹</span>
-              <span class="sound-char">오목눈이 전용</span>
+              <span class="sound-title">포로롱 짹짹! (2연타)</span>
+              <span class="sound-char">오목눈이 · 기본음 (맑은 휘파람 지저귐)</span>
             </div>
-            <button class="btn-play-sound">▶ 재생</button>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
           </div>
 
-          <div class="sound-card" data-sound="cat">
+          <div class="sound-card" data-char-id="tit" data-style="soft">
+            <span class="sound-icon">🪶</span>
+            <div class="sound-info">
+              <span class="sound-title">파닥파닥 깃털 날개짓</span>
+              <span class="sound-char">오목눈이 · 소심음 (부드러운 공기 마찰음)</span>
+            </div>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
+          </div>
+
+          <div class="sound-card" data-char-id="tit" data-style="loud">
+            <span class="sound-icon">🔊</span>
+            <div class="sound-info">
+              <span class="sound-title">비명 째애액! (호출음)</span>
+              <span class="sound-char">오목눈이 · 우렁찬음 (고음 트릴 비명)</span>
+            </div>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
+          </div>
+
+          <!-- 뚱냥이 3종 -->
+          <div class="sound-card" data-char-id="cat" data-style="main">
             <span class="sound-icon">🐱</span>
             <div class="sound-info">
-              <span class="sound-title">시크한 냐옹</span>
-              <span class="sound-char">시크 뚱냥이 전용</span>
+              <span class="sound-title">시크한 냐아옹~</span>
+              <span class="sound-char">시크 뚱냥 · 기본음 (포먼트 억양 울음)</span>
             </div>
-            <button class="btn-play-sound">▶ 재생</button>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
+          </div>
+
+          <div class="sound-card" data-char-id="cat" data-style="soft">
+            <span class="sound-icon">💤</span>
+            <div class="sound-info">
+              <span class="sound-title">그르릉 골골송</span>
+              <span class="sound-char">시크 뚱냥 · 소심음 (25Hz 저음 진동)</span>
+            </div>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
+          </div>
+
+          <div class="sound-card" data-char-id="cat" data-style="loud">
+            <span class="sound-icon">💢</span>
+            <div class="sound-info">
+              <span class="sound-title">캬아악! 매운 하악질</span>
+              <span class="sound-char">시크 뚱냥 · 우렁찬음 (화이트노이즈 하악)</span>
+            </div>
+            <div class="sound-card-btns">
+              <button class="btn-play-sound">▶ 재생</button>
+              <button class="btn-equip-sound">장착</button>
+            </div>
           </div>
         </div>
 
@@ -224,7 +313,7 @@
           <div class="card-header">
             <span class="crayon-title">🔴 나만의 3초 비밀 소리 녹음</span>
           </div>
-          <p class="recorder-desc">친구 이름, 엽기 웃음소리, 기침 소리를 3초 동안 녹음해 보세요!</p>
+          <p class="recorder-desc">내 목소리나 진짜 방구/웃음소리를 녹음해 캐릭터 불시 소리로 장착하세요!</p>
           
           <div class="recorder-controls">
             <button class="btn-record" id="btnRecord">
@@ -236,8 +325,11 @@
             </div>
           </div>
           <div class="recorded-preview" id="recordedPreview" style="display:none;">
-            <span class="recorded-label">내 녹음: "비밀 녹음 1"</span>
-            <button class="btn-micro" id="btnPlayRecorded">▶ 들어보기</button>
+            <span class="recorded-label" id="recordedLabel">내 녹음: "비밀 녹음 완료"</span>
+            <div class="recorded-actions">
+              <button class="btn-micro" id="btnPlayRecorded">▶ 들어보기</button>
+              <button class="btn-micro equip-diy" id="btnEquipRecorded">🎯 현재 캐릭터에 장착</button>
+            </div>
           </div>
         </div>
       </section>
@@ -579,11 +671,16 @@
             </div>
 
             <div class="test-trigger-dock">
+              <div class="next-trigger-info" id="nextTriggerStatus">⏱️ 다음 불시 신호 대기 중...</div>
               <button class="btn-doodle" id="btnSimulateTrigger">🎲 불시 타이머 1회 즉시 발생시키기</button>
+              <button class="btn-micro reset-data-btn" id="btnResetData">🗑️ 저장된 데이터 초기화</button>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 토스트 알림 배너 -->
+      <div class="crayon-toast" id="crayonToast">🎉 업적 달성!</div>
 
       <!-- MODAL 4: 수집품 상세 정보 팝업 -->
       <div class="tamagotchi-modal-overlay" id="collectibleModalOverlay">

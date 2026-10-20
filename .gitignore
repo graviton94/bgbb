@@ -1,5 +1,11 @@
 # Third-party / Sub-tools
 .ui-ux-pro-max/
+node_modules/
+www/
+android/.gradle/
+android/app/build/
+android/build/
+local.properties
 
 # Python cache
 __pycache__/
