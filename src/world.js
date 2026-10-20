@@ -1,6 +1,7 @@
 // 아지트 월드: 캔버스 하나에 하늘·땅·소품·친구들을 그린다.
 // 화면에 보일 때만 30fps 로 돌고, 탭을 옮기거나 앱이 백그라운드면 완전히 멈춘다.
 import { CHARACTERS, PROPS, propById } from './data.js';
+import { t } from './i18n.js';
 
 const FPS = 30;
 const WALK_SPEED = 0.11;      // 화면 너비/초
@@ -69,7 +70,7 @@ export class World {
       p.goal = null;
       p.mode = 'idle';
       p.timer = 1;
-      if (announce) this.say(p.id, on ? '흡! 숨 참기 🤐' : '휴~ 살았다! 💨', 2.5);
+      if (announce) this.say(p.id, t(on ? 'world.freeze' : 'world.thaw'), 2.5);
     });
     this.kick();
   }
@@ -103,7 +104,7 @@ export class World {
     p.tx = Math.min(0.94, Math.max(0.06, prop.x + (prop.x > 0.5 ? -0.09 : 0.09)));
     p.td = Math.max(0, prop.depth - 0.06);
     p.facing = p.tx > p.x ? 1 : -1;
-    if (rewarded) this.say(p.id, '우와! 달려간다~ 🐾', 1.2);
+    if (rewarded) this.say(p.id, t('world.run'), 1.2);
     this.kick();
   }
 
@@ -198,9 +199,9 @@ export class World {
     }
     if (r < 0.85) { p.mode = 'idle'; p.timer = rand(2, 5); return; }
     // 캐릭터별 특기
-    if (p.c.special === 'fly') { p.mode = 'fly'; p.timer = rand(2.5, 4); this.say(p.id, '파닥파닥 🐤'); }
-    else if (p.c.special === 'sleep') { p.mode = 'sleep'; p.timer = rand(5, 9); this.say(p.id, '식빵 굽는 중... 💤', 3); }
-    else { p.mode = 'react'; p.timer = 1; this.say(p.id, '뽀옹! 💨'); }
+    if (p.c.special === 'fly') { p.mode = 'fly'; p.timer = rand(2.5, 4); this.say(p.id, t('world.flap')); }
+    else if (p.c.special === 'sleep') { p.mode = 'sleep'; p.timer = rand(5, 9); this.say(p.id, t('world.loaf'), 3); }
+    else { p.mode = 'react'; p.timer = 1; this.say(p.id, t('world.toot')); }
   }
 
   // ---------------------------------------------------------- 그리기

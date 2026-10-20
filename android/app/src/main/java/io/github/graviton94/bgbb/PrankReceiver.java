@@ -1,4 +1,4 @@
-package com.bgbb.tamagotchi;
+package io.github.graviton94.bgbb;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -9,7 +9,7 @@ import org.json.JSONObject;
 /** 작전 알람, 재부팅, 앱 업데이트, 시간 변경 때 깨어난다. */
 public class PrankReceiver extends BroadcastReceiver {
 
-    static final String ACTION_FIRE = "com.bgbb.tamagotchi.ACTION_FIRE";
+    static final String ACTION_FIRE = "io.github.graviton94.bgbb.ACTION_FIRE";
 
     @Override
     public void onReceive(Context context, Intent intent) {

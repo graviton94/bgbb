@@ -1,5 +1,6 @@
 // 9:16 크레용 그림일기 카드 (1080×1920). 인스타 스토리에 바로 올릴 수 있는 크기.
 import { CHARACTERS, MODES } from './data.js';
+import { t, L, LANG } from './i18n.js';
 
 const W = 1080, H = 1920;
 const INK = '#282523';
@@ -70,24 +71,32 @@ function stamp(g, x, y, title, sub, color) {
   g.restore();
 }
 
+// 한국어는 글자 단위, 영어는 단어 단위로 줄을 나눈다
 function wrap(g, text, maxWidth) {
+  const units = LANG === 'ko' ? [...text] : text.split(/(?<= )/);
   const lines = [];
   let line = '';
-  for (const ch of text) {
-    if (g.measureText(line + ch).width > maxWidth && line) { lines.push(line); line = ch; }
-    else line += ch;
+  for (const u of units) {
+    if (g.measureText(line + u).width > maxWidth && line) { lines.push(line.trimEnd()); line = u.trimStart(); }
+    else line += u;
   }
   if (line) lines.push(line);
   return lines;
 }
 
+const VERDICTS = {
+  peace:  { title: { ko: '평화로운 하루 🌈', en: 'A peaceful day 🌈' }, stamp: { ko: ['휴전 중', '오늘은 쉬는 날'], en: ['Ceasefire', 'Day off'] }, color: '#4C6EF5' },
+  master: { title: { ko: '인내의 화신 🧘', en: 'Master of patience 🧘' }, stamp: { ko: ['완벽한 범죄', '참음 마스터'], en: ['Perfect crime', 'Hold-it master'] }, color: MODES.hold.color },
+  loud:   { title: { ko: '확성기 방구 대장 📢', en: 'Megaphone tooter 📢' }, stamp: { ko: ['냄새주의!', '대담한 폭격기'], en: ['Caution!', 'Bold bomber'] }, color: MODES.loud.color },
+  sneaky: { title: { ko: '은밀한 가스 암살자 🕵️', en: 'Silent gas assassin 🕵️' }, stamp: { ko: ['참 잘 참았어요', '인내 수련 중'], en: ['Well held', 'In training'] }, color: '#E03131' },
+  close:  { title: { ko: '들킬 듯 말 듯 💦', en: 'Almost caught 💦' }, stamp: { ko: ['아슬아슬!', '심장 쫄깃'], en: ['Close call!', 'Heart racing'] }, color: '#E8590C' }
+};
+
 function verdict(d) {
   const all = d.loud + d.soft + d.hold;
-  if (all === 0) return { title: '평화로운 하루 🌈', stamp: ['휴전 중', '오늘은 쉬는 날'], color: '#4C6EF5' };
-  if (d.hold >= 5) return { title: '인내의 화신 🧘', stamp: ['완벽한 범죄', '참음 마스터'], color: MODES.hold.color };
-  if (d.loud >= 4) return { title: '확성기 방구 대장 📢', stamp: ['냄새주의!', '대담한 폭격기'], color: MODES.loud.color };
-  if (d.hold >= d.loud) return { title: '은밀한 가스 암살자 🕵️', stamp: ['참 잘 참았어요', '인내 수련 중'], color: '#E03131' };
-  return { title: '들킬 듯 말 듯 💦', stamp: ['아슬아슬!', '심장 쫄깃'], color: '#E8590C' };
+  const v = all === 0 ? VERDICTS.peace : d.hold >= 5 ? VERDICTS.master : d.loud >= 4 ? VERDICTS.loud
+    : d.hold >= d.loud ? VERDICTS.sneaky : VERDICTS.close;
+  return { title: L(v.title), stamp: L(v.stamp), color: v.color };
 }
 
 /** data: { day: {loud,soft,hold}, weather, note, hero (캐릭터 id), acorns } */
@@ -119,14 +128,14 @@ export async function drawDiary(canvas, data) {
   g.font = '48px Gaegu, cursive';
   g.textBaseline = 'alphabetic';
   g.textAlign = 'left';
-  g.fillText(`${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일`, 90, 140);
+  g.fillText(t('card.date', { y: now.getFullYear(), m: now.getMonth() + 1, d: now.getDate() }), 90, 140);
   g.textAlign = 'right';
-  g.fillText(`날씨: ${data.weather}`, W - 90, 140);
+  g.fillText(t('card.weather', { w: data.weather }), W - 90, 140);
   crayonLine(g, 80, 172, W - 80, 172, INK, 5);
 
   g.textAlign = 'center';
   g.font = '84px Jua, sans-serif';
-  g.fillText('나의 비밀 방구 일기', W / 2, 290);
+  g.fillText(t('card.heading'), W / 2, 290, W - 160);
   crayonLine(g, W / 2 - 330, 322, W / 2 + 330, 322, '#FED36A', 12);
 
   // 그림 칸
@@ -149,20 +158,20 @@ export async function drawDiary(canvas, data) {
   crayonBox(g, 90, 970, W - 180, 100, '#FFF4C2', 24);
   g.fillStyle = INK;
   g.font = '46px Jua, sans-serif';
-  g.fillText(`오늘의 칭호: ${v.title}`, W / 2, 1036, W - 240);
+  g.fillText(t('card.titleLine', { title: v.title }), W / 2, 1036, W - 240);
 
   // 오늘 기록
   crayonBox(g, 90, 1110, W - 180, 360, '#FFFFFF', 26);
   g.textAlign = 'left';
   g.font = '50px Gaegu, cursive';
-  [['loud', '대담하게 발사'], ['soft', '소심하게 피식'], ['hold', '눈치 보며 꾹']].forEach(([m, label], i) => {
+  ['loud', 'soft', 'hold'].forEach((m, i) => {
     const y = 1210 + i * 105;
     g.fillStyle = MODES[m].color;
     g.beginPath();
     g.arc(160, y - 16, 22, 0, Math.PI * 2);
     g.fill();
     g.fillStyle = INK;
-    g.fillText(`${label} : ${d[m]}번 ${MODES[m].icon}`, 205, y, 560);
+    g.fillText(t('card.count', { label: t(`card.${m}`), n: d[m], icon: MODES[m].icon }), 205, y, 560);
   });
   stamp(g, W - 245, 1290, v.stamp[0], v.stamp[1], v.color);
 
@@ -170,10 +179,10 @@ export async function drawDiary(canvas, data) {
   crayonBox(g, 90, 1510, W - 180, 270, '#FFFCEB', 24);
   g.fillStyle = '#8A847C';
   g.font = '36px Jua, sans-serif';
-  g.fillText('✏️ 오늘의 비밀 한 줄', 135, 1575);
+  g.fillText(t('card.noteLabel'), 135, 1575);
   g.fillStyle = INK;
   g.font = '50px Gaegu, cursive';
-  const note = data.note.trim() || '오늘도 주머니 속에서 평화를 지켰다!';
+  const note = data.note.trim() || t('card.noteDefault');
   wrap(g, `"${note}"`, W - 290).slice(0, 2).forEach((line, i) => {
     const y = 1660 + i * 76;
     g.fillText(line, 135, y);
@@ -183,5 +192,5 @@ export async function drawDiary(canvas, data) {
   g.textAlign = 'center';
   g.fillStyle = '#9A948C';
   g.font = '38px Gaegu, cursive';
-  g.fillText(`#방구뿡  #도토리${data.acorns}개  #주머니속다마고치`, W / 2, H - 70);
+  g.fillText(t('card.tags', { n: data.acorns }), W / 2, H - 70, W - 120);
 }

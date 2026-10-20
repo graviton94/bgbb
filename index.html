@@ -6,9 +6,7 @@
   <meta name="theme-color" content="#FFF6E5">
   <title>방구뿡</title>
   <meta name="description" content="주머니 속 다마고치 - 하루 몇 번, 친구들이 불시에 소리를 낸다. 소리면 대담, 진동이면 소심, 무음이면 꾹참!">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&display=swap">
+  <link rel="preload" href="assets/fonts/jua.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="src/main.js"></script>
 </head>
@@ -17,60 +15,60 @@
     <header class="topbar">
       <button class="status" id="status" type="button">
         <span class="dot" id="statusDot"></span>
-        <span id="statusText">작전 준비 중…</span>
+        <span id="statusText" data-i18n="status.preparing"></span>
       </button>
       <span class="acorns" id="acorns">🌰 0</span>
-      <button class="icon-btn" id="openSettings" type="button" aria-label="작전 설정">⚙️</button>
+      <button class="icon-btn" id="openSettings" type="button" data-i18n-attr="aria-label:settings.title">⚙️</button>
     </header>
 
     <main>
       <!-- 아지트 -->
       <section class="screen active" id="screen-home">
         <div class="world">
-          <canvas id="world" aria-label="친구들이 노는 아지트. 친구나 소품을 눌러보세요."></canvas>
+          <canvas id="world" role="img" data-i18n-attr="aria-label:home.worldLabel"></canvas>
           <button class="world-chip" id="themeChip" type="button"></button>
         </div>
         <div class="today" id="today"></div>
         <div class="home-actions">
-          <button class="btn" id="openDecor" type="button">🎨 꾸미기</button>
-          <button class="btn freeze" id="freeze" type="button">🚨 긴급탈출</button>
+          <button class="btn" id="openDecor" type="button" data-i18n="home.decor"></button>
+          <button class="btn freeze" id="freeze" type="button"></button>
         </div>
         <p class="hint" id="homeHint"></p>
       </section>
 
       <!-- 기록 -->
       <section class="screen" id="screen-records">
-        <h2>🏆 나의 참음왕 기록</h2>
+        <h2 data-i18n="records.title"></h2>
         <div class="card summary" id="summary"></div>
         <div class="card">
-          <h3>최근 7일</h3>
+          <h3 data-i18n="records.week"></h3>
           <div class="legend" id="legend"></div>
           <div class="week" id="week" role="img"></div>
         </div>
         <div class="card">
-          <h3>비밀 보물 <span class="muted" id="treasureCount"></span></h3>
+          <h3><span data-i18n="records.treasures"></span> <span class="muted" id="treasureCount"></span></h3>
           <div class="shelf" id="shelf"></div>
         </div>
         <div class="card">
-          <h3>꾹참 명예의 전당</h3>
+          <h3 data-i18n="records.best"></h3>
           <ol class="best" id="best"></ol>
         </div>
       </section>
 
       <!-- 일기 -->
       <section class="screen" id="screen-diary">
-        <h2>📖 오늘의 그림일기</h2>
+        <h2 data-i18n="diary.title"></h2>
         <div class="chips" id="weather"></div>
-        <input class="note" id="note" maxlength="28" placeholder="오늘의 비밀 한 줄 (28자)" autocomplete="off">
+        <input class="note" id="note" maxlength="28" autocomplete="off" data-i18n-attr="placeholder:diary.placeholder">
         <div class="paper"><canvas id="diary" width="1080" height="1920"></canvas></div>
-        <button class="btn primary wide" id="shareDiary" type="button">📸 저장하고 공유하기</button>
+        <button class="btn primary wide" id="shareDiary" type="button" data-i18n="diary.share"></button>
       </section>
     </main>
 
     <nav class="tabbar">
-      <button class="tab active" data-screen="home" type="button">🏡<span>아지트</span></button>
-      <button class="tab" data-screen="records" type="button">🏆<span>기록</span></button>
-      <button class="tab" data-screen="diary" type="button">📖<span>일기</span></button>
+      <button class="tab active" data-screen="home" type="button">🏡<span data-i18n="tab.home"></span></button>
+      <button class="tab" data-screen="records" type="button">🏆<span data-i18n="tab.records"></span></button>
+      <button class="tab" data-screen="diary" type="button">📖<span data-i18n="tab.diary"></span></button>
     </nav>
   </div>
 
@@ -87,59 +85,76 @@
       </div>
       <div class="actions3">
         <button class="btn" id="feed" type="button"></button>
-        <button class="btn" id="pat" type="button">🤲 쓰다듬기</button>
-        <button class="btn" id="listen" type="button">🔊 들어보기</button>
+        <button class="btn" id="pat" type="button" data-i18n="friend.pat"></button>
+        <button class="btn" id="listen" type="button" data-i18n="friend.listen"></button>
       </div>
       <label class="row">
-        <span>불시 작전에 참여</span>
+        <span data-i18n="friend.on"></span>
         <input type="checkbox" class="switch" id="friendOn">
       </label>
-      <div class="row-label">작전 때 낼 소리</div>
+      <div class="row-label" data-i18n="friend.sound"></div>
       <div class="chips" id="styles"></div>
       <div class="diy">
-        <button class="btn" id="record" type="button">🎙️ 내 목소리 3초 녹음</button>
+        <button class="btn" id="record" type="button" data-i18n="friend.record"></button>
         <span class="muted" id="recordState"></span>
       </div>
-      <button class="btn ghost wide" data-close type="button">닫기</button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
   <!-- 꾸미기 시트 -->
   <dialog class="sheet" id="decorSheet">
     <div class="sheet-body">
-      <h3>🎨 아지트 꾸미기</h3>
-      <div class="row-label">배경</div>
+      <h3 data-i18n="decor.title"></h3>
+      <div class="row-label" data-i18n="decor.bg"></div>
       <div class="chips" id="themes"></div>
-      <div class="row-label">소품 <span class="muted">(누르면 배치/치우기 · 🌰 표시는 구매)</span></div>
+      <div class="row-label"><span data-i18n="decor.props"></span> <span class="muted" data-i18n="decor.propsHint"></span></div>
       <div class="props" id="props"></div>
-      <button class="btn ghost wide" data-close type="button">닫기</button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
   <!-- 설정 시트 -->
   <dialog class="sheet" id="settingsSheet">
     <div class="sheet-body">
-      <h3>⚙️ 작전 설정</h3>
-      <p class="rules">작전 시간대 안에서 하루 몇 번, 친구 하나가 <b>불시에</b> 소리를 내요.<br>
-        그 순간 폰이 <b>🔊소리</b>면 대담 · <b>📳진동</b>이면 소심 · <b>🤫무음</b>이면 꾹참!</p>
+      <h3 data-i18n="settings.title"></h3>
+      <p class="rules" data-i18n-html="settings.rules"></p>
       <label class="row">
-        <span>불시 작전</span>
+        <span data-i18n="settings.op"></span>
         <input type="checkbox" class="switch" id="opOn">
       </label>
       <div class="row">
-        <span>작전 시간대</span>
-        <span class="time"><select id="winStart" aria-label="시작"></select> ~ <select id="winEnd" aria-label="끝"></select></span>
+        <span data-i18n="settings.window"></span>
+        <span class="time"><select id="winStart" aria-label="start"></select> ~ <select id="winEnd" aria-label="end"></select></span>
       </div>
-      <div class="row-label">하루 횟수</div>
+      <div class="row-label" data-i18n="settings.freq"></div>
       <div class="chips" id="freqs"></div>
       <div id="previewBox">
-        <div class="row-label">미리보기 폰 상태 <span class="muted">(브라우저는 진짜 폰 상태를 못 읽어요)</span></div>
+        <div class="row-label"><span data-i18n="settings.preview"></span> <span class="muted" data-i18n="settings.previewHint"></span></div>
         <div class="chips" id="previewModes"></div>
       </div>
       <p class="muted" id="scheduleInfo"></p>
-      <button class="btn wide" id="fireNow" type="button">🎲 지금 바로 1회 작전</button>
-      <button class="btn ghost wide danger" id="reset" type="button">🗑️ 모든 기록 지우기</button>
-      <button class="btn ghost wide" data-close type="button">닫기</button>
+      <button class="btn wide" id="fireNow" type="button" data-i18n="settings.fireNow"></button>
+      <button class="btn primary wide" id="openSupport" type="button" data-i18n="settings.support"></button>
+      <button class="btn wide" id="feedback" type="button" data-i18n="settings.feedback"></button>
+      <button class="btn ghost wide danger" id="reset" type="button" data-i18n="settings.reset"></button>
+      <p class="links">
+        <a href="https://graviton94.github.io/bgbb/privacy/" id="privacyLink" target="_blank" rel="noopener" data-i18n="settings.privacy"></a> ·
+        <a href="https://graviton94.github.io/bgbb/#credits" id="creditsLink" target="_blank" rel="noopener" data-i18n="settings.licenses"></a> ·
+        <span id="version"></span>
+      </p>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 응원하기 -->
+  <dialog class="sheet small" id="supportSheet">
+    <div class="sheet-body center">
+      <h3 data-i18n="support.title"></h3>
+      <p data-i18n="support.body"></p>
+      <div class="tips" id="tips"></div>
+      <p class="muted" data-i18n="support.note"></p>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
@@ -150,22 +165,22 @@
       <h3 id="treasureName"></h3>
       <p id="treasureLore"></p>
       <p class="cond" id="treasureCond"></p>
-      <button class="btn wide" data-close type="button">확인</button>
+      <button class="btn wide" data-close type="button" data-i18n="common.ok"></button>
     </div>
   </dialog>
 
   <!-- 첫 실행 안내 -->
   <dialog class="sheet small" id="welcome">
     <div class="sheet-body center">
-      <h3>🐹 방구뿡에 온 걸 환영해요</h3>
-      <p>햄찌·오목눈이·뚱냥이가 당신 주머니에 숨어 있어요.<br>정해둔 시간대에 하루 몇 번, <b>불시에</b> 소리를 내요.</p>
+      <h3 data-i18n="welcome.title"></h3>
+      <p data-i18n-html="welcome.body"></p>
       <ul class="welcome-modes">
-        <li>🔊 소리 모드 → <b>💥 대담</b> (진짜 소리 남!)</li>
-        <li>📳 진동 모드 → <b>🫧 소심</b> (부르르 진동만)</li>
-        <li>🤫 무음 모드 → <b>🤫 꾹참</b> (도토리 더 많이!)</li>
+        <li data-i18n-html="welcome.loud"></li>
+        <li data-i18n-html="welcome.soft"></li>
+        <li data-i18n-html="welcome.hold"></li>
       </ul>
-      <p class="muted">회의·시험 땐 🚨 긴급탈출 한 번이면 전부 멈춰요.</p>
-      <button class="btn primary wide" data-close type="button">작전 시작!</button>
+      <p class="muted" data-i18n="welcome.freeze"></p>
+      <button class="btn primary wide" data-close type="button" data-i18n="welcome.start"></button>
     </div>
   </dialog>
 

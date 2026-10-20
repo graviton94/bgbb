@@ -1,4 +1,4 @@
-package com.bgbb.tamagotchi;
+package io.github.graviton94.bgbb;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -116,7 +116,7 @@ final class PrankScheduler {
         return now >= start && now <= start + windowLength(cfg) + HOUR / 2;
     }
 
-    private static List<Long> planDay(JSONObject cfg, long start, long now) {
+    static List<Long> planDay(JSONObject cfg, long start, long now) {
         int count;
         switch (cfg.optString("freq", "normal")) {
             case "quiet": count = 1 + RANDOM.nextInt(2); break;   // 1~2
@@ -133,7 +133,7 @@ final class PrankScheduler {
     }
 
     /** now 가 속한 작전일의 시작 시각. 22~02시처럼 자정을 넘는 시간대도 처리한다. */
-    private static long windowStart(JSONObject cfg, long now) {
+    static long windowStart(JSONObject cfg, long now) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now);
         cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 9));
@@ -148,7 +148,7 @@ final class PrankScheduler {
         return start;
     }
 
-    private static long windowLength(JSONObject cfg) {
+    static long windowLength(JSONObject cfg) {
         int hours = ((cfg.optInt("end", 18) - cfg.optInt("start", 9)) % 24 + 24) % 24;
         return (hours == 0 ? 24 : hours) * HOUR;
     }

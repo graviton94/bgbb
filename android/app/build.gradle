@@ -9,6 +9,7 @@ def generated = layout.buildDirectory.dir('generated/bgbb')
 def syncWeb = tasks.register('syncWeb', Sync) {
     from(webRoot) {
         include 'index.html', 'styles.css', 'src/**', 'assets/**'
+        exclude 'assets/fonts/*.txt'
     }
     into generated.map { it.dir('assets/public') }
 }
@@ -21,16 +22,22 @@ def syncRaw = tasks.register('syncRaw', Sync) {
     into generated.map { it.dir('res/raw') }
 }
 
+// 출시 서명: 환경변수(CI) 또는 android/keystore.properties (저장소에 올리지 않음)
+def signing = new Properties()
+def signingFile = rootProject.file('keystore.properties')
+if (signingFile.exists()) signingFile.withInputStream { signing.load(it) }
+def sign = { String key, String env -> System.getenv(env) ?: signing.getProperty(key) }
+
 android {
-    namespace 'com.bgbb.tamagotchi'
-    compileSdk 34
+    namespace 'io.github.graviton94.bgbb'
+    compileSdk 36
 
     defaultConfig {
-        applicationId "com.bgbb.tamagotchi"
+        applicationId 'io.github.graviton94.bgbb'
         minSdk 26
-        targetSdk 34
-        versionCode 8
-        versionName "6.0.0"
+        targetSdk 36
+        versionCode 1
+        versionName '1.0.0'
     }
 
     sourceSets {
@@ -40,13 +47,29 @@ android {
         }
     }
 
+    signingConfigs {
+        release {
+            def store = sign('storeFile', 'BGBB_KEYSTORE')
+            if (store) {
+                storeFile file(store)
+                storePassword sign('storePassword', 'BGBB_KEYSTORE_PASSWORD')
+                keyAlias sign('keyAlias', 'BGBB_KEY_ALIAS')
+                keyPassword sign('keyPassword', 'BGBB_KEY_PASSWORD')
+            }
+        }
+    }
+
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            // 효과음은 이름으로 찾으므로(getIdentifier) 리소스 줄이기는 끈다
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (signingConfigs.release.storeFile) signingConfig signingConfigs.release
         }
         debug {
-            applicationIdSuffix ".debug"
-            versionNameSuffix "-debug"
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
         }
     }
 
@@ -54,8 +77,18 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
 }
 
 tasks.named('preBuild') {
     dependsOn syncWeb, syncRaw
+}
+
+dependencies {
+    implementation 'com.android.billingclient:billing:8.0.0'
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.json:json:20240303'
 }

@@ -1,4 +1,8 @@
 /* 방구뿡 - 크레용 낙서장 스타일 */
+
+/* 글꼴은 앱에 들어 있다 (인터넷 없이도 같은 글씨). SIL Open Font License 1.1 */
+@font-face { font-family: 'Jua'; src: url('assets/fonts/jua.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Gaegu'; src: url('assets/fonts/gaegu.woff2') format('woff2'); font-display: swap; }
 :root {
   --paper: #FFF6E5;
   --card: #FFFFFF;
@@ -378,3 +382,25 @@ main { flex: 1; min-height: 0; position: relative; }
   text-align: center;
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- 설정 아래 링크 · 응원하기 ---------- */
+.links { text-align: center; font-size: 0.9rem; color: var(--muted); }
+.links a { color: var(--muted); }
+.tips { display: grid; gap: 8px; width: 100%; }
+.tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  font-family: var(--title);
+  background: #FFF;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  padding: 10px 14px;
+  text-align: left;
+}
+.tip .price { color: var(--loud); white-space: nowrap; }
+.tip[disabled] { opacity: 0.7; box-shadow: none; }
+.acorns.supporter { background: #FFF4C2; }

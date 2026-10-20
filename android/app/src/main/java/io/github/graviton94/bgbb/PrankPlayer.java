@@ -1,4 +1,4 @@
-package com.bgbb.tamagotchi;
+package io.github.graviton94.bgbb;
 
 import android.app.NotificationManager;
 import android.content.Context;

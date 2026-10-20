@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build
 
 on:
   push:
@@ -10,11 +10,18 @@ permissions:
   contents: write
 
 jobs:
-  build-apk:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Web tests (schedule rules)
+        run: npm test
 
       - uses: actions/setup-java@v4
         with:
@@ -25,26 +32,34 @@ jobs:
         run: yes | timeout 180 $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null || true
 
       - uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.7'
 
-      # 웹 앱·효과음은 gradle 의 syncWeb / syncRaw 태스크가 APK 에 넣는다
-      - name: Build debug APK
+      - name: Unit tests + debug APK
         working-directory: android
-        run: gradle assembleDebug
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
 
-      - run: cp android/app/build/outputs/apk/debug/app-debug.apk banggu-bboong-debug.apk
+      # 서명 키가 등록돼 있으면 서명된 AAB, 없으면 서명 안 된 AAB (빌드 확인용)
+      - name: Release bundle
+        working-directory: android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.BGBB_KEYSTORE_BASE64 }}
+          BGBB_KEYSTORE_PASSWORD: ${{ secrets.BGBB_KEYSTORE_PASSWORD }}
+          BGBB_KEY_ALIAS: ${{ secrets.BGBB_KEY_ALIAS }}
+          BGBB_KEY_PASSWORD: ${{ secrets.BGBB_KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            export BGBB_KEYSTORE="$RUNNER_TEMP/upload.jks"
+          fi
+          ./gradlew --no-daemon bundleRelease
+
+      - name: Collect outputs
+        run: |
+          mkdir out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/bgbb-debug.apk
+          cp android/app/build/outputs/bundle/release/app-release.aab out/bgbb-release.aab
+          cp android/app/build/outputs/mapping/release/mapping.txt out/mapping.txt || true
 
       - uses: actions/upload-artifact@v4
         with:
-          name: banggu-bboong-debug-apk
-          path: banggu-bboong-debug.apk
-
-      - name: Publish to GitHub Release
-        if: github.ref == 'refs/heads/main'
-        continue-on-error: true
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v6.0.0-apk
-          name: 방구뿡 V6 Android APK
-          files: banggu-bboong-debug.apk
+          name: bgbb-build
+          path: out/
