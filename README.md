@@ -1,4 +1,6 @@
-# 방구뿡 (Bang-gu Bboong)
+# 방구뿡 · Pocket Toot
+
+Google Play 패키지 `io.github.graviton94.bgbb` · 소개 https://graviton94.github.io/bgbb/ · 개인정보처리방침 https://graviton94.github.io/bgbb/privacy/
 
 **주머니 속 다마고치.** 작전 시간대 안에서 하루 몇 번, 방구 햄찌·솜뭉치 오목눈이·시크 뚱냥이 중
 하나가 **불시에** 소리를 낸다. 그 순간 폰 상태가 결과를 정한다.
@@ -17,15 +19,21 @@
 ```
 index.html  styles.css     화면 틀과 스타일 (빌드 도구 없음)
 src/
+  i18n.js                  한국어 / English (폰 언어를 따라감)
   data.js                  캐릭터·소품·보물·테마 등 고정 데이터
+  plan.js                  작전 일정 계산 (순수 함수, tests/ 에서 검사)
   store.js                 상태 하나 + 저장 + 변경 알림, 기록 집계
   schedule.js              불시 작전 일정 (네이티브 연동 / 브라우저 미리보기)
   audio.js                 효과음 (WAV 1회 디코딩 후 재사용)
   world.js                 아지트 캔버스 (보일 때만 30fps)
   diary.js                 1080×1920 그림일기 카드
   main.js                  화면 연결
-assets/                    그림(WebP)과 효과음(WAV)
+assets/                    그림(WebP) · 효과음(WAV) · 글꼴(woff2, OFL)
 tools/bake_sounds.py       효과음 12종 합성기 (numpy)
+tools/subset_fonts.py      글꼴을 자주 쓰는 한글 2,350자로 줄이기
+tools/store_images.mjs     Play 스토어 스크린샷 · 대표 그림 만들기
+docs/store/                스토어 등록 글 · 데이터 보안 답 · 이미지
+docs/RELEASE.md            서명 · Play Console · 실기기 확인 순서
 android/                   WebView 껍데기 + 불시 작전 엔진
 ```
 
@@ -42,12 +50,18 @@ android/                   WebView 껍데기 + 불시 작전 엔진
 
 > 앱을 오래 안 열면 Android 가 앱을 "드물게 사용" 버킷으로 내려 알람 횟수를 줄일 수 있다.
 
-## 실행
+- `Support` – 응원하기: Google Play 일회성 상품(`tip_seeds` · `tip_churu` · `tip_feast`). 잠긴 기능은 없다.
+
+앱은 인터넷에서 아무것도 불러오지 않는다 (글꼴·그림·소리 모두 APK 안). 계정·광고·분석 도구 없음.
+
+## 실행 · 테스트
 
 ```bash
-npx serve .                         # 브라우저 미리보기 (ES 모듈이라 file:// 로는 안 열림)
-python3 tools/bake_sounds.py        # 효과음 다시 굽기
-cd android && gradle assembleDebug  # APK
+npm start                               # 브라우저 미리보기 (ES 모듈이라 file:// 로는 안 열림)
+npm test                                # 일정 규칙 테스트
+cd android && ./gradlew testDebugUnitTest assembleDebug
+python3 tools/bake_sounds.py            # 효과음 다시 굽기
 ```
 
-`main` 에 푸시하거나 PR 을 열면 GitHub Actions 가 디버그 APK 를 빌드한다.
+`main` 에 푸시하거나 PR 을 열면 GitHub Actions 가 테스트 → 디버그 APK → 출시용 AAB 를 만든다.
+출시는 [docs/RELEASE.md](docs/RELEASE.md).
