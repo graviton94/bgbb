@@ -34,8 +34,8 @@ src/
 assets/                    그림(WebP) · 효과음(WAV) · 글꼴(woff2, OFL)
 tools/fetch_sounds.py      실제 녹음 후보 받기 (Freesound CC0 · Wikimedia Commons, GitHub Actions 에서)
 tools/build_sounds.py      고른 녹음을 잘라 효과음 만들기 → assets/sounds/ (출처: tools/sound_credits.json)
-tools/prepare_sprites.py   캐릭터 그림 손질 (흰 테두리 제거, 동작 그림 크기 맞추기)
-tools/make_icons.py        앱 아이콘 (햄찌 + 방구 구름)
+tools/prepare_faces.py     원화 표정 7종 × 3친구 (1024 PNG) → assets/faces/*.webp, 선글라스 (같은 눈 좌표라 그대로 겹침)
+tools/make_icons.py        앱 아이콘 (멍한 햄찌 + 방구 구름)
 tools/subset_fonts.py      글꼴(Black Han Sans)을 자주 쓰는 한글 2,350자로 줄이기
 tools/store_images.mjs     Play 스토어 스크린샷 · 대표 그림 만들기
 docs/store/                스토어 등록 글 · 데이터 보안 답 · 이미지

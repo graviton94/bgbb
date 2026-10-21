@@ -17,14 +17,14 @@ const CAPTIONS = {
     ['home', '평소엔 조용함.<br>언제 터질지는 아무도 모름'],
     ['burst', '터지면 그 순간이<br>속보가 됨'],
     ['card', '칭호 받으면<br>스토리에 바로 퍼뜨리기'],
-    ['dex', '회의실 테러범부터<br>새벽의 암살자까지 40개'],
+    ['dex', '회의실 테러범부터<br>새벽의 암살자까지 45개'],
     ['hold', '무음이면 참음.<br>소리 모드면… 진짜 남']
   ],
   en: [
     ['home', 'Quiet most of the time.<br>Nobody knows when'],
     ['burst', 'When it goes off,<br>it’s breaking news'],
     ['card', 'Earn a title,<br>post the news card'],
-    ['dex', '40 titles.<br>Collect them all'],
+    ['dex', '45 titles.<br>Collect them all'],
     ['hold', 'Silent? Held in.<br>Sound mode? It’s real']
   ]
 };
@@ -120,7 +120,7 @@ async function captureScreens(lang) {
       ev: { t: d.getTime(), char: 'hamster', mode: 'loud' },
       title: document.documentElement.lang === 'ko' ? '회의실 테러범' : 'Meeting Room Menace',
       rarity: document.documentElement.lang === 'ko' ? '레전드' : 'Legend',
-      owned: 12, all: 40, nth: 2, streak: 7,
+      owned: 12, all: 45, nth: 2, streak: 7,
       headline: document.documentElement.lang === 'ko' ? '햄찌, 끝내 참지 못해' : 'Hammy finally lets one go',
       caption: document.documentElement.lang === 'ko' ? '방금 그거 뭐임' : 'what was that'
     });
@@ -151,7 +151,7 @@ async function compose(lang, shots) {
   // 대표 그림 1024×500
   await page.setViewportSize({ width: 1024, height: 500 });
   const f = FEATURE[lang];
-  const pic = n => `${base}/assets/${n}.webp`;
+  const pic = n => `${base}/assets/faces/${n}.webp`;
   await page.setContent(`<style>${font}
     body{margin:0;width:1024px;height:500px;background:#D7FF3D;font-family:BHS;position:relative;overflow:hidden}
     h1{position:absolute;left:60px;top:60px;margin:0;font-weight:normal;font-size:120px;color:#fff;-webkit-text-stroke:8px #111;paint-order:stroke fill}
@@ -159,9 +159,9 @@ async function compose(lang, shots) {
     p::before{content:'${lang === 'ko' ? '속보' : 'NEWS'}';position:absolute;left:0;top:0;bottom:0;width:120px;background:#E8261C;color:#fff;display:flex;align-items:center;justify-content:center}
     img{position:absolute;bottom:40px;filter:drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff)}
   </style><h1>${f.title}</h1><p>${f.sub}</p>
-    <img src="${pic('tit')}" style="left:640px;height:140px;bottom:280px">
-    <img src="${pic('hamster')}" style="left:700px;height:230px">
-    <img src="${pic('cat')}" style="left:850px;height:190px;bottom:220px">`);
+    <img src="${pic('tit_whistle')}" style="left:600px;height:210px;bottom:250px">
+    <img src="${pic('hamster_thumbs_up')}" style="left:660px;height:320px;bottom:-10px">
+    <img src="${pic('cat_shameless')}" style="left:820px;height:250px;bottom:190px">`);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(OUT, lang, 'feature.png') });

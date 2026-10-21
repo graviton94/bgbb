@@ -14,8 +14,6 @@ export const CHARACTERS = [
       ko: ['ㅇㅇ 참는 중', '근데 곧 나옴', '배에서 소리 남', '지금 아님. 아마도.'],
       en: ['holding it. yes.', 'but it’s coming', 'tummy noises', 'not now. probably.']
     },
-    portrait: 'assets/hamster.webp',
-    sprites: { idle: 'assets/sprites/hamster_idle.webp', react: 'assets/sprites/hamster_react.webp' }
   },
   {
     id: 'tit',
@@ -30,8 +28,6 @@ export const CHARACTERS = [
       ko: ['짹. 아님 뿡.', '날아갈 준비 됨', '곧 노래함 (뿡)', '아무 일 없음'],
       en: ['tweet. or toot.', 'ready to fly', 'about to sing (toot)', 'nothing to see']
     },
-    portrait: 'assets/tit.webp',
-    sprites: { idle: 'assets/sprites/tit_idle.webp', react: 'assets/sprites/tit_react.webp' }
   },
   {
     id: 'cat',
@@ -46,12 +42,17 @@ export const CHARACTERS = [
       ko: ['건들지 마', '참는 중. 말 걸지 마.', '귀찮음', '…'],
       en: ['don’t.', 'holding it. go away.', 'can’t be bothered', '…']
     },
-    portrait: 'assets/cat.webp',
-    sprites: { idle: 'assets/sprites/cat_idle.webp', react: 'assets/sprites/cat_react.webp' }
   }
 ];
 
 export const charById = id => CHARACTERS.find(c => c.id === id);
+
+// 원화 표정 7종 (tools/prepare_faces.py). 셋 다 같은 눈 자리라 선글라스를 그대로 겹친다.
+export const EXPRESSIONS = ['blank', 'eng', 'shameless', 'hold', 'burst', 'whistle', 'thumbs_up'];
+export const face = (charId, expr = 'blank') => `assets/faces/${charId}_${expr}.webp`;
+
+// 터지는 순간 표정: 냄 = 터짐, 진동 = 모른 척 휘파람, 참음 = 뻔뻔 (+ 선글라스), 잭팟 = 엄지척 (+ 선글라스), 연습 = 엥?
+export const BURST_FACE = { loud: 'burst', soft: 'whistle', hold: 'shameless', jackpot: 'thumbs_up', practice: 'eng' };
 
 export const STYLE_NAMES = {
   main: { ko: '기본', en: 'Normal' },

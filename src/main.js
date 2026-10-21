@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, charById } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -8,7 +8,7 @@ import {
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow } from './schedule.js';
 import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
-import { pixelUrl, FACE } from './pixels.js';
+import { pixelUrl, SHADES_BOX, SHADES_URL } from './pixels.js';
 import { startFx, stopFx } from './fx.js';
 
 const $ = id => document.getElementById(id);
@@ -112,18 +112,15 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   dlg.style.setProperty('--accent', mode.color);
   $('burstWord').textContent = L(mode.word);
   $('burstWord').classList.toggle('long', [...L(mode.word)].length > 2);
-  // 효과: 참음 = 선글라스 내려옴 (정면 그림), 냄 = 방구 구름, 진동 = 거품, 잭팟 = 머니건 + 지폐 비 + 선글라스
+  // 효과: 참음 = 뻔뻔 + 선글라스 내려옴, 냄 = 터짐 + =3, 진동 = 휘파람 + 거품, 잭팟 = 엄지척 + 선글라스 + 머니건 + 지폐 비
   const jackpot = result && titleById(result.title).rarity === 'jackpot';
   const cool = ev.mode === 'hold' || jackpot;
-  $('burstImg').src = cool ? c.portrait : c.sprites.react;
-  if (cool) {
-    const f = FACE[c.id], sh = $('shades');
-    sh.src = pixelUrl('shades', 8);
-    sh.style.width = `${f.w * 100}%`;
-    sh.style.left = `${(f.x - f.w / 2) * 100}%`;
-    sh.style.top = `${f.y * 100}%`;
-    sh.style.marginTop = `${-f.w * 100 * 5 / 26 / 2}%`;   // 세로 % 여백은 너비 기준 → 안경 높이의 절반만큼 위로
-  }
+  $('burstImg').src = face(c.id, BURST_FACE[jackpot ? 'jackpot' : result ? ev.mode : 'practice']);
+  const sh = $('shades');
+  sh.src = SHADES_URL;
+  Object.assign(sh.style, {
+    left: `${SHADES_BOX.x * 100}%`, top: `${SHADES_BOX.y * 100}%`, width: `${SHADES_BOX.w * 100}%`
+  });
   $('moneygun').src = pixelUrl('moneygun', 8);
   dlg.classList.toggle('cool', cool);
   dlg.classList.toggle('rich', !!jackpot);
@@ -218,8 +215,13 @@ function renderHome() {
   const c = charById(heroId());
   if ($('heroImg').dataset.id !== c.id) {
     $('heroImg').dataset.id = c.id;
-    $('heroImg').src = c.portrait;
     newBubbles();
+  }
+  // 작전 중엔 웃참, 멈춤이면 모른 척, 그 밖엔 멍
+  const mood = state.frozen ? 'whistle' : isActive() && inWindow() ? 'hold' : 'blank';
+  if (!heroBusy && $('heroImg').dataset.mood !== `${c.id}:${mood}`) {
+    $('heroImg').dataset.mood = `${c.id}:${mood}`;
+    $('heroImg').src = face(c.id, mood);
   }
   $('hero').setAttribute('aria-label', t('home.heroLabel', { name: L(c.name) }));
   const latest = state.recent[0];
@@ -229,9 +231,14 @@ function renderHome() {
   $('freeze').classList.toggle('on', state.frozen);
 }
 
+let heroBusy = 0;
 $('hero').addEventListener('click', () => {
   const id = heroId();
   playFriend(id, state.friends[id].style, getDiy(), 0.7);
+  // 누르면 잠깐 터지는 얼굴
+  clearTimeout(heroBusy);
+  $('heroImg').src = face(id, 'burst');
+  heroBusy = setTimeout(() => { heroBusy = 0; $('heroImg').dataset.mood = ''; renderHome(); }, 900);
   $('hero').classList.remove('wiggle');
   void $('hero').offsetWidth;
   $('hero').classList.add('wiggle');
@@ -345,7 +352,7 @@ function renderSettings() {
   $('friends').innerHTML = CHARACTERS.map(c => {
     const f = state.friends[c.id];
     return `<div class="friend ${f.on ? '' : 'off'}">
-      <label class="row"><span class="friend-name"><img src="${c.sprites.idle}" alt="">${esc(L(c.name))}</span>
+      <label class="row"><span class="friend-name"><img src="${face(c.id)}" alt="">${esc(L(c.name))}</span>
         <input type="checkbox" class="switch" data-on="${c.id}" ${f.on ? 'checked' : ''}></label>
       <div class="chips">${styles.map(s => `<button class="chip ${f.style === s ? 'on' : ''}" data-c="${c.id}" data-s="${s}" type="button">${L(STYLE_NAMES[s])}${s === 'diy' ? '' : ` · ${esc(L(c.styles[s]))}`}</button>`).join('')}</div>
     </div>`;

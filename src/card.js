@@ -1,7 +1,7 @@
 // 9:16 속보 자랑 카드 (1080×1920). 인스타 스토리에 바로 올릴 수 있는 크기.
-import { charById, MODES } from './data.js';
+import { charById, MODES, BURST_FACE, face } from './data.js';
 import { t, L } from './i18n.js';
-import { pixelCanvas, FACE } from './pixels.js';
+import { pixelCanvas, SHADES_BOX, SHADES_URL } from './pixels.js';
 
 const W = 1080, H = 1920;
 const DISPLAY = '"Black Han Sans", sans-serif';
@@ -46,7 +46,8 @@ export async function drawCard(canvas, data) {
   const c = charById(data.ev.char) || charById('hamster');
   const mode = MODES[data.ev.mode] || MODES.hold;
   const cool = data.ev.mode === 'hold' || data.jackpot;
-  const img = await loadImage(cool ? c.portrait : c.sprites.react);
+  const img = await loadImage(face(c.id, BURST_FACE[data.jackpot ? 'jackpot' : data.ev.mode]));
+  const shades = cool ? await loadImage(SHADES_URL) : null;
   await document.fonts?.load?.(`80px "Black Han Sans"`);
   canvas.width = W;
   canvas.height = H;
@@ -75,17 +76,14 @@ export async function drawCard(canvas, data) {
       .forEach(([x, y, r], i) => dot(i % 2 ? 'bill' : 'bill2', x, y, 14, r));
   }
   if (img) {
-    const h = 760, w = h * img.naturalWidth / img.naturalHeight;
+    const h = 860, w = h * img.naturalWidth / img.naturalHeight;
     g.save();
-    g.translate(W / 2, 260 + h / 2);
+    g.translate(W / 2, 200 + h / 2);
     g.rotate(-0.05);
     g.drawImage(img, -w / 2, -h / 2, w, h);
-    if (cool) {
-      const f = FACE[c.id];
-      const sh = pixelCanvas('shades', 1);
-      const sw = f.w * w, shh = sw * sh.height / sh.width;
+    if (shades) {
       g.imageSmoothingEnabled = false;
-      g.drawImage(sh, -w / 2 + (f.x - f.w / 2) * w, -h / 2 + f.y * h - shh / 2, sw, shh);
+      g.drawImage(shades, -w / 2 + SHADES_BOX.x * w, -h / 2 + SHADES_BOX.y * h, SHADES_BOX.w * w, SHADES_BOX.h * h);
     }
     g.restore();
   }

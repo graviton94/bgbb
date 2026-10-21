@@ -31,7 +31,7 @@ def puff(size, scale):
 
 
 def hamster(box):
-    im = Image.open(os.path.join(ROOT, "assets/hamster.webp")).convert("RGBA")
+    im = Image.open(os.path.join(ROOT, "assets/faces/hamster_blank.webp")).convert("RGBA")
     s = box / max(im.size)
     return im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
 

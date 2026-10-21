@@ -1,4 +1,4 @@
-// 도트 그림 (선글라스 · 머니건 · 지폐 · 방구 구름 · 거품). 글자 지도를 캔버스에 칸 단위로 찍는다.
+// 도트 그림 (머니건 · 지폐 · =3 · 거품). 선글라스는 원화 그림(assets/faces/sunglasses.png). 글자 지도를 캔버스에 칸 단위로 찍는다.
 // 파일 없이 코드로 그려서 어떤 크기로 키워도 도트가 또렷하다 (image-rendering: pixelated).
 
 const PALETTE = {
@@ -11,12 +11,7 @@ const PALETTE = {
   n: '#B7D6A3', N: '#56854A', o: '#8DAE7B', u: '#EBD488', U: '#9C8233', q: '#CDB463'
 };
 
-const lens = ['kkkwwkkkkkk', '.kkkkwwkkkk', '..kkkkkkkk.', '...kkkkkk..'];
-
 export const PIXELS = {
-  // "Deal with it" 선글라스 26×5
-  shades: ['k'.repeat(26), ...lens.map(r => `${r}....${r}`)],
-
   // 머니건 24×12: 빨간 박스 몸통, 옆면 반짝이 글씨 띠, 오른쪽 위 지폐 나오는 입구
   moneygun: [
     '....RRRRRRRRRRRRRRRRRRRR',
@@ -98,9 +93,6 @@ export function pixelCanvas(name, scale = 8) {
 
 export const pixelUrl = (name, scale) => pixelCanvas(name, scale).toDataURL('image/png');
 
-// 선글라스를 씌울 자리: 정면 그림(portrait) 기준 눈 가운데와 안경 너비 (그림 너비 대비)
-export const FACE = {
-  hamster: { x: 0.485, y: 0.27, w: 0.62 },
-  tit: { x: 0.33, y: 0.31, w: 0.52 },
-  cat: { x: 0.40, y: 0.33, w: 0.52 }
-};
+// 원화 선글라스 자리 (1024×1024 기준 x, y, 너비, 높이). 표정 그림과 같은 비율로 겹치면 눈에 딱 맞는다.
+export const SHADES_BOX = { x: 246 / 1024, y: 380 / 1024, w: 533 / 1024, h: 113 / 1024 };
+export const SHADES_URL = 'assets/faces/sunglasses.png';
