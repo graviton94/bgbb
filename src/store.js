@@ -19,6 +19,7 @@ function initial() {
     titles: {},           // 칭호 id → { n, first, last: { t, char, mode } }
     recent: [],           // 최근 터진 기록 [{ t, char, mode, title }]
     cushion: 0,           // 방석 모드에 걸린 횟수
+    rerolls: { day: '', n: 0 },   // 오늘 짤 다시 뽑기 쓴 횟수 (하루 3번)
     tips: [],             // 응원한 상품 ID (Google Play 가 확인해 준 것만)
     plan: null,           // 웹 미리보기용 작전 일정 { day, times }
     sentConfig: ''        // 마지막으로 적용한 작전 설정

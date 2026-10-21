@@ -2,6 +2,7 @@
 //  - 조립형: 배경 · 캐릭터 자리와 크기 · 문구(상황 + 한 방) · 문구 자리 · 소품을 매번 랜덤으로
 //  - 캐릭터에 붙는 것(선글라스 = 얼굴, 방구 구름 = 엉덩이 옆, 머니건 = 손)은 캐릭터 상자 기준 좌표
 //  - 레어 이상 칭호는 유니크 짤을 실사 사진으로 (assets/faces_real, 아래가 잘린 사진이라 바닥에 세운다)
+//  - 레전드 짤 (구린 PPT · 유튜브 썸네일 · 모집 포스터 · 검정 슬라이드 감성): 그라데이션 배경 + 워드아트 글자 + 누끼 사진
 //  - 유니크 짤 (엥? · 스티커+안경 · 참은 나 vs 뀐 나 · 들어갈 때 vs 나올 때 · 범인은 이 안에 · 현자 타임 · 상자 · 잭팟 돈)은 미리 만든 틀
 // 결과는 spec (칸 대비 % 좌표 목록) 이라 화면(DOM)과 자랑 카드(canvas)가 같은 짤을 그린다.
 import { face } from './data.js';
@@ -78,7 +79,7 @@ function awkward(s) {
 // 글자 폭 어림 (한글 1em, 영문 0.62em) → 칸에 들어가는 글자 크기 (칸 너비 대비 %)
 const BASE = { sfx: 14, impact: 11.5, display: 8.6, thin: 18, small: 5, bubble: 4.4, label: 7.2 };
 function fit(text, w, base) {
-  const em = Math.max(...text.split('\n').map(line => [...line].reduce((n, c) => n + (/[ㄱ-힝]/.test(c) ? 1 : c === ' ' ? 0.3 : 0.62), 0)));
+  const em = Math.max(...text.split('\n').map(line => [...line].reduce((n, c) => n + (/[ㄱ-힝]/.test(c) ? 1 : c === ' ' ? 0.3 : /[A-Z]/.test(c) ? 0.8 : 0.62), 0)));
   return Math.min(base, (w * 0.94) / Math.max(1, em));
 }
 const textItem = (s, x, y, w, style, extra = {}) => ({ k: 'text', s, x, y, w, style, size: fit(s, w, BASE[style]), ...extra });
@@ -250,20 +251,106 @@ function assemble({ id, mode, t, title, rarity, practice, real }) {
   return { bg, items, fx: { x: (c.x + c.w / 2) / 100, y: (c.y + c.w * 0.6) / 100 } };
 }
 
-/**
- * 짤 하나. ctx = { id, mode, t, title(칭호 이름), rarity, practice }
- * 잭팟 = 돈 짤, 레어 · 레전드 = 유니크 짤 (둘 다 실사 사진 특전), 그 밖엔 35% 유니크 짤 · 65% 조립형 (가끔 20% 실사).
- */
-export const REAL_RARITIES = ['rare', 'legend', 'jackpot'];
-export function composeMeme(ctx) {
-  const real = REAL_RARITIES.includes(ctx.rarity);
-  if (ctx.rarity === 'jackpot') return { name: 'money', real, ...UNIQUE.money({ ...ctx, real }) };
-  if (real) {
-    const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
-    return { name, real, ...UNIQUE[name]({ ...ctx, real }) };
+// ---------------------------------------------------------------- 레전드 짤: 일부러 구린 디자인 (2010년대 PPT · 썸네일 · 포스터)
+const RAINBOW = ['#FF00C8', '#FF2E2E', '#FFE600', '#2EFF6A', '#22C8FF', '#8A2BFF'];
+const grad = (angle, stops) => ({ grad: { angle, stops }, bg: `linear-gradient(${angle}deg, ${stops.join(', ')})` });
+/** 워드아트 글자. o = { font, weight, fill (색 또는 [위, 가운데, 아래] 그라데이션), stroke, sw, shadow [dx, dy, 색], colors (줄마다), chars (글자마다), underline, circled, reflect, align, lh, r } */
+const art = (s, x, y, w, size, o = {}) => ({ k: 'art', s, x, y, w, size: o.circled ? size : Math.min(size, fit(s, w, size)), ...o });   // 칸보다 길면 줄인다
+const GOLD = ['#FFF6B0', '#E3B320', '#7A5600'];
+const hm = t => { const d = new Date(t); return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const WL = {
+  thumbTop: { ko: ['가지고있는 칭호명', '오늘의 방구'], en: ['YOUR TITLE HERE', "TODAY'S TOOT"] },
+  thumbBig: { ko: ['제목', '뿡', '방구'], en: ['TITLE', 'TOOT'] },
+  thumbSub: { ko: ['소제목*^^*', '실화냐*^^*', '방구 맞음*^^*'], en: ['Subtitle*^^*', 'For real*^^*'] },
+  thumbFoot: { ko: ['구독과 좋아요해줄거지?', '자랑하기 눌러줄거지?'], en: ['Like and subscribe ok?', 'You will share this right?'] },
+  pptTitle: { ko: ['성공하는 방\n구란?', '좋은 방구\n란?'], en: ['What Makes\na Great Toot?'] },
+  pptBody: {
+    ko: ['좋은 방구란 소리와 냄', '새, 타이밍 등이 명확한 레', '이아웃 컨셉을 지니고 적', '절하게 배치가 잘 된 방구', '를 말합니다.'],
+    en: ['A good toot has a clear', 'layout concept of sound,', 'smell and timing, with', 'proper place-', 'ment.']
+  },
+  posterBanner: { ko: '방구뿡과 함께할', en: 'Join Pocket Toot' },
+  posterBig: { ko: '방구장인 모집', en: 'TOOTERS WANTED' },
+  posterWish: { ko: '희망사항', en: 'WISH' },
+  posterReq: { ko: ['괄약근, 엉덩이 능력자', '무음 모드 가능자 우대♥'], en: ['Clench & butt skills', 'Silent mode a plus♥'] },
+  posterRows: { ko: [['접수기간', '☞ 오늘 {hm}'], ['근무조건', '☞ 개별문의'], ['지원방법', '☞ 그냥 뀌기']], en: [['Apply', '☞ today {hm}'], ['Terms', '☞ ask'], ['How', '☞ just toot']] },
+  slideTitle: { ko: ['방구를 참는 방법 2', '방구를 괴롭히는 방법 2'], en: ['How to Hold It In 2'] },
+  slideBody: {
+    ko: ['방구를 잘 참기 위해서는 각 근', '육의 조화를 맞추는 것이 중요합', '니다. 호흡, 자세, 표정, 엉덩이', '의 각도, 배치 등이 조화롭게 이', '루어질 때 좋은 참기가 만들어지', '는 것입니다.'],
+    en: ['To hold it in well, the harmony', 'of each muscle is important.', 'Breathing, posture, face, the', 'angle of the butt and layout', 'must come together to make', 'a good hold.']
   }
-  const now = { ...ctx, real: chance(0.2) };
-  if (chance(0.35)) {
+};
+
+export const LEGEND = {
+  // 유튜브 썸네일: 무지개 배경, 노랑+빨강 비스듬 윗글, 파랑 큰 제목, 흰 소제목*^^*, 빨간 작은 구독 부탁
+  thumb: ({ id, title }) => ({
+    ...grad(115, RAINBOW),
+    items: [charItem(id, pick(['blank', 'eng', 'shameless']), -10, 0, 64, { real: true, floor: 100 }),
+      art(title && chance(0.5) ? title : pick(L(WL.thumbTop)), 10, 6, 84, 8.2, { fill: '#FFE600', stroke: '#E0262B', sw: 1.4, r: -5, align: 'center' }),
+      art(pick(L(WL.thumbBig)), 40, 20, 60, 27, { fill: '#2238FF', stroke: '#FF1E1E', sw: 2, shadow: [1.2, 1.2, '#FFFFFF'], align: 'center' }),
+      art(pick(L(WL.thumbSub)), 30, 58, 70, 11, { font: 'body', weight: 900, fill: '#FFFFFF', shadow: [0.8, 0.8, '#333333'], align: 'center' }),
+      art(pick(L(WL.thumbFoot)), 50, 90, 48, 3.6, { font: 'body', weight: 500, fill: '#D10000', align: 'center' })],
+    fx: { x: 0.25, y: 0.7 }
+  }),
+  // 금색 워드아트 PPT: 회색 그라데이션, 반사 그림자 제목, 줄마다 색 다른 말풍선, 엄지척 누끼 (흰 테두리 지글지글)
+  ppt: ({ id }) => ({
+    ...grad(180, ['#3A3A3A', '#9A9A9A', '#2E2E2E']),
+    items: [{ k: 'img', src: deco('stars'), x: 2, y: 3, w: 13 }, { k: 'img', src: deco('stars'), x: 85, y: 3, w: 13, flip: true },
+      art(pick(L(WL.pptTitle)), 4, 4, 92, 12.5, { fill: GOLD, stroke: '#4A3600', sw: 0.5, reflect: true, align: 'center', lh: 1.05 }),
+      { k: 'rect', x: 3, y: 50, w: 64, h: 40, color: '#FFFFFF', line: '#8A2BE2', lw: 0.7, rad: 5 },
+      art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: 'body', weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
+      charItem(id, 'thumbs_up', 56, 0, 48, { real: true, floor: 100, sticker: true })],
+    fx: { x: 0.8, y: 0.75 }
+  }),
+  // 모집 포스터: 무지개, 노란 화살표 띠, 글자마다 색 다른 큰 제목, 동그라미 글자, 밑줄 조건, 노란 표
+  poster: ({ id, t }) => ({
+    ...grad(135, ['#22C8FF', '#2EFF6A', '#FFE600', '#FF7A2E', '#FF00C8']),
+    items: [{ ...charItem(id, 'blank', 52, -6, 52, { real: true }), alpha: 0.45 },
+      { k: 'rect', x: 3, y: 4, w: 52, h: 8.5, color: '#FFF200', line: '#111111', lw: 0.4, rad: 0 },
+      art(L(WL.posterBanner), 5, 5.6, 48, 4.6, { font: 'serif', weight: 700, fill: '#111111' }),
+      art(L(WL.posterBig), 3, 15, 94, 12.5, { chars: ['#E0262B', '#11A83B', '#1E5BFF', '#111111'], stroke: '#FFFFFF', sw: 1.2, shadow: [0.6, 0.6, '#111111'], r: -3 }),
+      art(L(WL.posterWish), 46, 31, 50, 3.6, { font: 'body', weight: 800, circled: '#111111', align: 'right' }),
+      art(L(WL.posterReq)[0], 18, 40, 79, 5, { font: 'body', weight: 600, fill: '#111111', underline: '#111111', align: 'right' }),
+      art(L(WL.posterReq)[1], 10, 50, 87, 4.6, { font: 'body', weight: 800, fill: '#E0262B', align: 'right' }),
+      { k: 'rect', x: 4, y: 62, w: 92, h: 34, color: '#FFF200', line: '#E0262B', lw: 0.6, rad: 0 },
+      ...L(WL.posterRows).flatMap(([a, b], i) => [
+        art(a, 7, 65 + i * 10, 34, 6.2, { font: 'serif', weight: 700, fill: '#111111' }),
+        art(b.replace('{hm}', hm(t)), 42, 66.6 + i * 10, 52, 4.4, { font: 'body', weight: 500, fill: '#111111' })])],
+    fx: { x: 0.7, y: 0.25 }
+  }),
+  // 검정 슬라이드: 밑줄 하늘색 제목, 명조 본문, 그 위를 덮어버린 흰 사진 상자 + 클립아트
+  slide: ({ id }) => ({
+    bg: '#000000',
+    items: [{ k: 'rect', x: 1.5, y: 30, w: 0.8, h: 40, color: '#FF00C8' }, { k: 'rect', x: 2.6, y: 30, w: 0.8, h: 40, color: '#FFE600' },
+      art(pick(L(WL.slideTitle)), 5, 4, 92, 8.4, { font: 'body', weight: 500, fill: '#9BEFFF', underline: '#9BEFFF' }),
+      art(L(WL.slideBody).join('\n'), 6, 24, 90, 4.6, { font: 'serif', weight: 400, fill: '#FFFFFF', lh: 1.9 }),
+      { k: 'rect', x: 58, y: 34, w: 40, h: 54, color: '#FFFFFF' },
+      charItem(id, pick(['eng', 'hold', 'burst']), 58, 0, 40, { real: true, floor: 88 }),
+      { k: 'img', src: deco(pick(['tree', 'sunflower', 'carrot'])), x: 2, y: 66, w: 32, r: -6 }],
+    fx: { x: 0.78, y: 0.6 }
+  })
+};
+
+/**
+ * 짤 하나. ctx = { id, mode, t, title(새 칭호 이름 또는 없음 = 꽝), rarity(새 칭호 등급), practice }
+ * 잭팟 = 실사 돈 짤. 그 밖엔 등급(꽝이면 none)에 따라 레전드 짤 · 유니크 짤 · 조립형, 그리고 실사 사진일 확률이 다르다.
+ * 다시 뽑기(하루 3번)로 노릴 수 있다.
+ */
+export const ODDS = {
+  //          레전드 짤  유니크 짤(나머지 중)  실사
+  none: { legend: 0.02, unique: 0.25, real: 0.08 },
+  normal: { legend: 0.04, unique: 0.3, real: 0.12 },
+  rare: { legend: 0.15, unique: 0.45, real: 0.35 },
+  legend: { legend: 0.5, unique: 0.5, real: 0.7 }
+};
+export function composeMeme(ctx) {
+  if (ctx.rarity === 'jackpot') return { name: 'money', real: true, ...UNIQUE.money({ ...ctx, real: true }) };
+  const odds = ODDS[ctx.rarity] || ODDS.none;
+  if (!ctx.practice && chance(odds.legend)) {
+    const name = pick(Object.keys(LEGEND));
+    return { name, real: true, legend: true, ...LEGEND[name](ctx) };
+  }
+  const now = { ...ctx, real: chance(odds.real) };
+  if (chance(odds.unique)) {
     const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
     return { name, real: now.real, ...UNIQUE[name](now) };
   }
@@ -275,15 +362,34 @@ const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;
 const turn = it => (it.flip || it.r ? `transform:${it.flip ? 'scaleX(-1) ' : ''}${it.r ? `rotate(${it.flip ? -it.r : it.r}deg)` : ''};` : '');
 const CLASS = { sfx: 'm-sfx', impact: 'm-impact', display: 'm-display', thin: 'm-thin', small: 'm-small', bubble: 'm-bubble' };
 
+const FAMILY = { display: 'var(--display)', body: 'var(--body)', serif: "'Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif" };
+const cssFill = f => (Array.isArray(f) ? `background:linear-gradient(180deg, ${f.join(', ')});-webkit-background-clip:text;background-clip:text;color:transparent;` : f ? `color:${f};` : '');
+function artHtml(it) {
+  const lines = it.s.split('\n');
+  const deco = [
+    it.underline ? `text-decoration:underline ${it.underline};text-decoration-thickness:0.4cqw;text-underline-offset:0.8cqw;` : '',
+    it.shadow ? `text-shadow:${it.shadow[0]}cqw ${it.shadow[1]}cqw 0 ${it.shadow[2]};` : ''
+  ].join('');
+  const body = lines.map((line, i) => {
+    const color = it.colors ? it.colors[i % it.colors.length] : it.fill;
+    if (it.chars) return [...line].map((ch, j) => `<span style="color:${it.chars[j % it.chars.length]}">${esc(ch)}</span>`).join('');
+    if (it.circled) return [...line].map(ch => `<span class="m-circ" style="border-color:${it.circled}">${esc(ch)}</span>`).join('');
+    return `<span style="${cssFill(color)}${deco}">${esc(line)}</span>`;
+  }).join('\n');
+  const stroke = it.stroke ? `-webkit-text-stroke:${it.sw}cqw ${it.stroke};paint-order:stroke fill;` : '';
+  return `<div class="m-el m-art${it.reflect ? ' m-reflect' : ''}" style="${pos(it)}${turn(it)}font-size:${it.size}cqw;line-height:${it.lh || 1.1};font-family:${FAMILY[it.font || 'display']};font-weight:${it.weight || 400};text-align:${it.align || 'left'};${stroke}${it.chars ? deco : ''}">${body}</div>`;
+}
+
 export function renderMeme(el, spec) {
   el.style.setProperty('--meme-bg', spec.bg);
   el.innerHTML = spec.items.map(it => {
     if (it.k === 'char') {
       const shades = it.shades
         ? `<img class="m-shades" src="${SHADES_URL}" style="left:${SHADES_BOX.x * 100}%;top:${SHADES_BOX.y * 100}%;width:${SHADES_BOX.w * 100}%" alt="">` : '';
-      return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
+      return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}${it.alpha ? `opacity:${it.alpha};` : ''}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
     }
-    if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color}"></div>`;
+    if (it.k === 'art') return artHtml(it);
+    if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color};${it.line ? `border:${it.lw}cqw solid ${it.line};box-sizing:border-box;` : ''}${it.rad ? `border-radius:${it.rad}cqw;` : ''}"></div>`;
     if (it.k === 'img') return `<img class="m-el ${it.cls || ''}" src="${it.src}" style="${pos(it)}${turn(it)}" alt="">`;
     if (it.k === 'label') return `<div class="m-el m-label" style="${pos(it)}${turn(it)}font-size:${it.size}cqw">${esc(it.s)}</div>`;
     return `<div class="m-el m-text ${CLASS[it.style]}" style="${pos(it)}${turn(it)}font-size:${it.size}cqw;${it.color ? `color:${it.color};` : ''}${it.align ? `text-align:${it.align};` : ''}">${esc(it.s)}</div>`;
@@ -305,6 +411,69 @@ function loadImage(src) {
   return images.get(src);
 }
 
+/** 흰 실루엣 (스티커 테두리용), 그림마다 한 번 */
+const silhouettes = new Map();
+function silhouette(im) {
+  if (!silhouettes.has(im)) {
+    const c = document.createElement('canvas');
+    c.width = im.naturalWidth;
+    c.height = im.naturalHeight;
+    const g = c.getContext('2d');
+    g.drawImage(im, 0, 0);
+    g.globalCompositeOperation = 'source-in';
+    g.fillStyle = '#fff';
+    g.fillRect(0, 0, c.width, c.height);
+    silhouettes.set(im, c);
+  }
+  return silhouettes.get(im);
+}
+
+const CANVAS_FAMILY = { display: '"Black Han Sans", sans-serif', body: 'system-ui, sans-serif', serif: '"Batang", "Nanum Myeongjo", "Noto Serif KR", serif' };
+/** 워드아트 글자를 (0, 0) 기준 글자 칸 안에 그린다 (돌리기 · 반사는 바깥에서) */
+function drawArt(g, it, px, w) {
+  const size = px(it.size), lh = size * (it.lh || 1.1);
+  g.font = `${it.weight || 400} ${size}px ${CANVAS_FAMILY[it.font || 'display']}`;
+  g.textBaseline = 'top';
+  g.textAlign = 'left';
+  g.lineJoin = 'round';
+  const lines = it.s.split('\n');
+  lines.forEach((line, i) => {
+    const chars = [...line];
+    const cw = it.circled ? chars.map(() => size * 1.4) : chars.map(ch => g.measureText(ch).width);
+    const total = it.circled || it.chars ? cw.reduce((a, b) => a + b, 0) : g.measureText(line).width;
+    let x0 = it.align === 'center' ? (w - total) / 2 : it.align === 'right' ? w - total : 0;
+    const y0 = i * lh;
+    const paint = (text, x, color) => {
+      if (it.shadow) { g.fillStyle = it.shadow[2]; g.fillText(text, x + px(it.shadow[0]), y0 + px(it.shadow[1])); }
+      if (it.stroke) { g.strokeStyle = it.stroke; g.lineWidth = px(it.sw); g.strokeText(text, x, y0); }
+      if (Array.isArray(color)) {
+        const gr = g.createLinearGradient(0, y0, 0, y0 + size);
+        color.forEach((c, k) => gr.addColorStop(k / (color.length - 1), c));
+        g.fillStyle = gr;
+      } else g.fillStyle = color || '#111';
+      g.fillText(text, x, y0);
+    };
+    if (it.circled) {
+      chars.forEach(ch => {
+        g.strokeStyle = it.circled;
+        g.lineWidth = px(0.35);
+        g.beginPath();
+        g.arc(x0 + size * 0.7, y0 + size * 0.55, size * 0.62, 0, Math.PI * 2);
+        g.stroke();
+        g.fillStyle = it.circled;
+        g.fillText(ch, x0 + (size * 1.4 - g.measureText(ch).width) / 2, y0 + size * 0.05);
+        x0 += size * 1.4;
+      });
+    } else if (it.chars) {
+      chars.forEach((ch, j) => { paint(ch, x0, it.chars[j % it.chars.length]); x0 += cw[j]; });
+    } else {
+      paint(line, x0, it.colors ? it.colors[i % it.colors.length] : it.fill);
+      if (it.underline) { g.fillStyle = it.underline; g.fillRect(x0, y0 + size * 1.08, total, px(0.4)); }
+    }
+  });
+  return lines.length * lh;
+}
+
 const FONT = {
   sfx: s => `${s}px "Black Han Sans", sans-serif`,
   impact: s => `${s}px "Black Han Sans", sans-serif`,
@@ -324,14 +493,42 @@ export async function drawMeme(g, spec, x, y, S) {
   g.beginPath();
   g.rect(x, y, S, S);
   g.clip();
-  g.fillStyle = spec.bg;
+  if (spec.grad) {   // CSS linear-gradient(angle) 와 같은 방향
+    const a = ((spec.grad.angle - 90) * Math.PI) / 180, cx = x + S / 2, cy = y + S / 2;
+    const r = (Math.abs(Math.cos(a)) + Math.abs(Math.sin(a))) * S / 2;
+    const gr = g.createLinearGradient(cx - Math.cos(a) * r, cy - Math.sin(a) * r, cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+    spec.grad.stops.forEach((c, k) => gr.addColorStop(k / (spec.grad.stops.length - 1), c));
+    g.fillStyle = gr;
+  } else g.fillStyle = spec.bg;
   g.fillRect(x, y, S, S);
   for (const it of spec.items) {
     g.save();
     const w = px(it.w);
     if (it.k === 'rect') {
       g.fillStyle = it.color;
-      g.fillRect(x + px(it.x), y + px(it.y), w, px(it.h));
+      g.beginPath();
+      g.roundRect(x + px(it.x), y + px(it.y), w, px(it.h), it.rad ? px(it.rad) : 0);
+      g.fill();
+      if (it.line) {
+        g.strokeStyle = it.line;
+        g.lineWidth = px(it.lw);
+        g.beginPath();
+        g.roundRect(x + px(it.x) + px(it.lw) / 2, y + px(it.y) + px(it.lw) / 2, w - px(it.lw), px(it.h) - px(it.lw), it.rad ? px(it.rad) : 0);
+        g.stroke();
+      }
+    } else if (it.k === 'art') {
+      g.translate(x + px(it.x), y + px(it.y));
+      const lh = px(it.size) * (it.lh || 1.1), hgt = it.s.split('\n').length * lh;
+      if (it.r) { g.translate(w / 2, hgt / 2); g.rotate((it.r * Math.PI) / 180); g.translate(-w / 2, -hgt / 2); }
+      drawArt(g, it, px, w);
+      if (it.reflect) {   // 워드아트 반사: 아래로 뒤집어 흐리게
+        g.save();
+        g.globalAlpha = 0.22;
+        g.translate(0, hgt * 2 - px(1));
+        g.scale(1, -1);
+        drawArt(g, it, px, w);
+        g.restore();
+      }
     } else if (it.k === 'char' || it.k === 'img') {
       const im = loaded.get(it.k === 'char' ? face(it.id, it.expr, it.real) : it.src);
       if (im) {
@@ -339,7 +536,12 @@ export async function drawMeme(g, spec, x, y, S) {
         g.translate(x + px(it.x) + w / 2, y + px(it.y) + h / 2);
         if (it.flip) g.scale(-1, 1);
         if (it.r) g.rotate(((it.flip ? -it.r : it.r) * Math.PI) / 180);
-        if (it.sticker) { g.shadowColor = 'rgba(0,0,0,.2)'; g.shadowBlur = px(2); g.shadowOffsetY = px(1.5); }
+        if (it.alpha) g.globalAlpha = it.alpha;
+        if (it.sticker) {   // 흰 테두리 (화면의 drop-shadow 네 방향과 같게) + 그림자
+          const sil = silhouette(im), o = px(1.2);
+          for (const [dx, dy] of [[o, 0], [-o, 0], [0, o], [0, -o], [o * 0.7, o * 0.7], [-o * 0.7, o * 0.7], [o * 0.7, -o * 0.7], [-o * 0.7, -o * 0.7]]) g.drawImage(sil, -w / 2 + dx, -h / 2 + dy, w, h);
+          g.shadowColor = 'rgba(0,0,0,.2)'; g.shadowBlur = px(2); g.shadowOffsetY = px(1.5);
+        }
         g.drawImage(im, -w / 2, -h / 2, w, h);
         g.shadowColor = 'transparent';
         const sh = it.shades && loaded.get(SHADES_URL);

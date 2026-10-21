@@ -55,12 +55,14 @@ function nextToast() {
 // ---------------------------------------------------------- 속보 문구 · 카드
 const headlineFor = ev => pick(L(MODES[ev.mode].headlines)).replaceAll('{nick}', L(charById(ev.char).nick));
 
+/** titleId 가 없으면 (이미 가진 칭호 = 꽝) 칭호 대신 한 줄 자막만 */
 function cardData(ev, titleId, headline = headlineFor(ev), caption = pick(L(MODES[ev.mode].captions))) {
-  const title = titleById(titleId);
+  const title = titleId && titleById(titleId);
   const d = day(dayKey(ev.t));
   return {
     ev, headline, caption,
-    title: L(title.name), rarity: L(RARITY[title.rarity].name), rarityColor: RARITY[title.rarity].color, isNew: state.titles[titleId]?.n === 1,
+    title: title ? L(title.name) : caption, rarity: title ? L(RARITY[title.rarity].name) : '', rarityColor: title ? RARITY[title.rarity].color : '#FFFFFF',
+    isNew: !!title && state.titles[titleId]?.n === 1,
     owned: ownedCount(), all: TITLES.length,
     nth: Math.max(1, d.loud + d.soft + d.hold), streak: Math.max(1, streak(ev.t))
   };
@@ -99,7 +101,7 @@ let burstCard = null;
 
 /** 여러 번 쌓였으면 새 칭호 > 높은 등급 > 마지막 순으로 하나를 크게 보여준다 */
 function headliner(results) {
-  const rank = r => { const x = titleById(r.title).rarity; return x === 'jackpot' ? 1000 : RARITY[x].weight * 10; };
+  const rank = r => ({ jackpot: 1000, legend: 30, rare: 20, normal: 10 })[titleById(r.title).rarity];
   const score = r => (r.isNew ? 100 : 0) + rank(r) + r.t / 1e13;
   return results.reduce((a, b) => (score(b) > score(a) ? b : a));
 }
@@ -109,10 +111,11 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   const dlg = $('burst');
   const headline = headlineFor(ev);
   const caption = pick(L(MODES[ev.mode].captions));
-  // 짤: 그 상황으로 조립 (잭팟 = 돈 짤, 가끔 유니크 짤). 자랑 카드도 같은 짤을 그린다.
-  const title = result && titleById(result.title);
+  // 이미 가진 칭호가 나오면 꽝: 칭호를 알리지 않는다 (모을수록 어려워지게)
+  const title = result?.isNew ? titleById(result.title) : null;
   const jackpot = title?.rarity === 'jackpot';
-  const meme = composeMeme({ id: c.id, mode: ev.mode, t: ev.t, title: title && L(title.name), rarity: title?.rarity, practice: !result });
+  memeCtx = { id: c.id, mode: ev.mode, t: ev.t, title: title && L(title.name), rarity: title?.rarity, practice: !result };
+  const meme = composeMeme(memeCtx);
   const box = $('meme');
   box.dataset.meme = meme.name;
   renderMeme(box, meme);
@@ -123,13 +126,12 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   $('chText').textContent = result ? headline : t('burst.practiceMeta');
   const info = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
   const box2 = dlg.querySelector('.unlock');
-  if (result) {
-    const own = state.titles[result.title];
+  if (title) {
     const rar = RARITY[title.rarity];
     box2.style.setProperty('--chip', rar.color);
     $('burstChip').hidden = false;
     $('burstChip').textContent = L(rar.name);
-    $('burstWhen').textContent = `${result.isNew ? t('burst.new') : t('burst.again', { n: own.n })} · ${info}`;
+    $('burstWhen').textContent = `${t('burst.new')} · ${info}`;
     $('burstTitle').textContent = L(title.name);
     $('burstBar').style.width = '0%';
     requestAnimationFrame(() => { $('burstBar').style.width = `${(ownedCount() / TITLES.length) * 100}%`; });
@@ -137,28 +139,60 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
     burstCard = { ...cardData(ev, result.title, headline, caption), meme };
   } else {
     $('burstChip').hidden = true;
-    $('burstWhen').textContent = t('burst.practice');
-    $('burstTitle').textContent = t('burst.practiceTitle');
+    $('burstWhen').textContent = result ? info : t('burst.practice');
+    $('burstTitle').textContent = result ? caption : t('burst.practiceTitle');
     $('burstBar').style.width = '0%';
     $('burstMeta').textContent = '';
-    burstCard = null;
+    burstCard = result ? { ...cardData(ev, null, headline, caption), meme } : null;
   }
   $('shareCard').hidden = !burstCard;
+  $('reroll').hidden = !result;
+  renderReroll();
   dlg.classList.remove('play');
   void dlg.offsetWidth;   // 애니메이션 다시 시작
   dlg.classList.add('play');
   if (!dlg.open) dlg.showModal();
   dlg.focus();
   haptic([18, 40, 30]);
-  // 효과는 짤 칸 안의 자리에서: 냄 = 방구 구름, 진동 = 거품, 잭팟 = 머니건에서 지폐
-  const kinds = jackpot ? ['rain'] : [];
-  if (result && !jackpot) kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
+  // 효과는 짤 칸 안의 자리에서: 냄 = 뿡 글자, 진동 = 거품, 잭팟 = 머니건에서 지폐
+  fxKinds = (jackpot ? ['rain'] : result ? [{ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]] : []).filter(Boolean);
+  runFx(meme);
+}
+
+let memeCtx = null, fxKinds = [];
+function runFx(meme) {
   requestAnimationFrame(() => {
-    const r = box.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const r = $('meme').getBoundingClientRect(), W = innerWidth, H = innerHeight;
     const at = p => ({ x: (r.left + p.x * r.width) / W, y: (r.top + p.y * r.height) / H });
-    startFx($('fx'), kinds.filter(Boolean), { from: at(meme.fx), gun: at(meme.fx) });
+    startFx($('fx'), fxKinds, { from: at(meme.fx), gun: at(meme.fx) });
   });
 }
+
+// ---------------------------------------------------------- 짤 다시 뽑기 (하루 3번): 실사 · 유니크 · 레전드 짤은 여기서 노린다
+const REROLLS = 3;
+const rerollsLeft = () => (state.rerolls.day === dayKey() ? REROLLS - state.rerolls.n : REROLLS);
+function renderReroll() {
+  const n = rerollsLeft();
+  $('reroll').disabled = n <= 0;
+  $('reroll').textContent = n > 0 ? t('burst.reroll', { n }) : t('burst.rerollNone');
+}
+$('reroll').addEventListener('click', () => {
+  if (!memeCtx || rerollsLeft() <= 0) return;
+  state.rerolls = { day: dayKey(), n: REROLLS - rerollsLeft() + 1 };
+  commit();
+  const meme = composeMeme(memeCtx);
+  const box = $('meme');
+  box.dataset.meme = meme.name;
+  renderMeme(box, meme);
+  if (burstCard) burstCard.meme = meme;
+  box.style.animation = 'none';
+  void box.offsetWidth;
+  box.style.animation = '';
+  play('ui_pop', 0.5);
+  haptic(12);
+  renderReroll();
+  runFx(meme);
+});
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
 $('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));

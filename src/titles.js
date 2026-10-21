@@ -6,9 +6,10 @@
 
 export const RARITY = {
   jackpot: { name: { ko: '잭팟', en: 'Jackpot' }, weight: 0, color: '#FFD400' },
-  legend: { name: { ko: '레전드', en: 'Legend' }, weight: 6, color: '#D7FF3D' },
+  // weight: 같은 상황에 후보가 여럿이면 이 비율로 뽑는다 (희귀할수록 덜 나옴)
+  legend: { name: { ko: '레전드', en: 'Legend' }, weight: 1, color: '#D7FF3D' },
   rare: { name: { ko: '레어', en: 'Rare' }, weight: 3, color: '#FFB3D9' },
-  normal: { name: { ko: '노멀', en: 'Normal' }, weight: 1, color: '#FFFFFF' }
+  normal: { name: { ko: '노멀', en: 'Normal' }, weight: 12, color: '#FFFFFF' }
 };
 
 const weekday = c => c.wd >= 1 && c.wd <= 5;
@@ -16,7 +17,7 @@ const meeting = c => weekday(c) && (c.hour === 10 || c.hour === 14 || c.hour ===
 const T = (id, rarity, ko, en, hint, how, test) => ({ id, rarity, name: { ko, en }, hint, how, test });
 
 export const TITLES = [
-  // ---- 잭팟: 상황과 상관없이 1% 확률 (JACKPOT)
+  // ---- 잭팟: 상황과 상관없이 0.5% 확률 (JACKPOT)
   T('jp_heritage', 'jackpot', '국가 지정 무형문화재', 'National Intangible Heritage',
     { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
   T('jp_lotto', 'jackpot', '로또보다 희귀한 뿡', 'Rarer Than the Lottery',
@@ -35,8 +36,8 @@ export const TITLES = [
     c => c.mode === 'loud' && meeting(c)),
   T('last_call', 'legend', '마감 직전 확성기', 'Last Call Megaphone',
     { ko: '문 닫기 직전', en: 'Right before closing' },
-    { ko: '21시 이후 소리 모드', en: 'Sound mode after 9pm' },
-    c => c.mode === 'loud' && c.hour >= 21),
+    { ko: '23시대 소리 모드', en: 'Sound mode in the 11pm hour' },
+    c => c.mode === 'loud' && c.hour === 23),
   T('hold5', 'legend', '인내의 화신', 'Avatar of Patience',
     { ko: '하루 종일 참기', en: 'Hold it all day' },
     { ko: '하루에 네 번 참기', en: 'Hold it in 4 times in a day' },
@@ -47,16 +48,16 @@ export const TITLES = [
     c => c.today.loud > 0 && c.today.soft > 0 && c.today.hold > 0),
   T('streak30', 'legend', '한 달 개근', 'Perfect Month',
     { ko: '꾸준함의 끝', en: 'The end of consistency' },
-    { ko: '30일 연속', en: '30 days in a row' },
-    c => c.streak >= 30),
+    { ko: '60일 연속', en: '60 days in a row' },
+    c => c.streak >= 60),
   T('total100', 'legend', '뿡 100회 클럽', 'The 100 Club',
     { ko: '세 자리 수', en: 'Three digits' },
-    { ko: '누적 100번', en: '100 in total' },
-    c => c.total >= 100),
+    { ko: '누적 300번', en: '300 in total' },
+    c => c.total >= 300),
   T('first_bell', 'legend', '오늘의 첫 종소리', 'First Bell',
     { ko: '하루의 시작을 알림', en: 'Announcing the day' },
-    { ko: '7시대 그날 첫 방이 소리 모드', en: 'The first one of the day, at 7am, on sound mode' },
-    c => c.mode === 'loud' && c.hour === 7 && c.nth === 1),
+    { ko: '6시대 그날 첫 방이 소리 모드', en: 'The first one of the day, at 6am, on sound mode' },
+    c => c.mode === 'loud' && c.hour === 6 && c.nth === 1),
 
   // ---- 레어
   T('meeting_soft', 'rare', '회의 중 진동 한 방', 'Buzz in the Meeting',
@@ -69,8 +70,8 @@ export const TITLES = [
     c => c.mode === 'hold' && meeting(c)),
   T('night_quiet', 'rare', '밤의 암살자', 'Night Assassin',
     { ko: '밤, 소리 없이', en: 'At night, without a sound' },
-    { ko: '21시 이후 진동이나 참기', en: 'Shy or held after 9pm' },
-    c => c.mode !== 'loud' && c.hour >= 21),
+    { ko: '22시 이후 진동이나 참기', en: 'Shy or held after 10pm' },
+    c => c.mode !== 'loud' && c.hour >= 22),
   T('monday', 'rare', '월요병 그 자체', 'Monday Blues Incarnate',
     { ko: '월요일 아침', en: 'Monday morning' },
     { ko: '월요일 6~11시', en: 'Monday 6–11am' },
@@ -105,12 +106,12 @@ export const TITLES = [
     c => c.mode === 'hold' && c.today.hold >= 3),
   T('streak7', 'rare', '일주일 개근', 'Perfect Week',
     { ko: '일주일 내내', en: 'All week long' },
-    { ko: '7일 연속', en: '7 days in a row' },
-    c => c.streak >= 7),
+    { ko: '14일 연속', en: '14 days in a row' },
+    c => c.streak >= 14),
   T('total50', 'rare', '뿡 50회 돌파', '50 and Counting',
     { ko: '반백', en: 'Half a hundred' },
-    { ko: '누적 50번', en: '50 in total' },
-    c => c.total >= 50),
+    { ko: '누적 100번', en: '100 in total' },
+    c => c.total >= 100),
   T('lunch_loud', 'rare', '식후 축포', 'After-Lunch Salute',
     { ko: '밥 먹고 나서', en: 'Right after lunch' },
     { ko: '12~13시에 소리 모드', en: 'Sound mode at 12–1pm' },
@@ -171,8 +172,8 @@ export const TITLES = [
     c => c.nth === 1),
   T('streak3', 'normal', '사흘 연속 범행', 'Three-Day Crime Spree',
     { ko: '사흘째', en: 'Third day' },
-    { ko: '3일 연속', en: '3 days in a row' },
-    c => c.streak >= 3),
+    { ko: '5일 연속', en: '5 days in a row' },
+    c => c.streak >= 5),
   T('hamster', 'normal', '해바라기씨 과다 섭취', 'Too Many Sunflower Seeds',
     { ko: '햄찌 차례', en: 'Hamster’s turn' },
     { ko: '햄찌가 낸 소리', en: 'The hamster went' },
@@ -202,23 +203,22 @@ const BASIC = { loud: 'loud_basic', soft: 'soft_basic', hold: 'hold_basic' };
 
 /**
  * 상황 c 에 맞는 칭호 하나. owned = { id: … } (가진 칭호).
- * 1% 는 상황과 상관없이 잭팟 (아직 없는 것 먼저). 기념 칭호(연속 · 누적)는 조건을 넘긴 첫 방에 무조건 주고, 그 뒤엔 다시 안 나온다 (계속 후보로 남아 레전드가 넘치지 않게). 나머지는 맞는 후보 중 아직 없는 칭호를 75% 확률로 먼저 보고, 그 안에서 레전드 > 레어 > 노멀 가중치로 뽑는다.
+ * 0.5% 는 상황과 상관없이 잭팟 5개 중 하나. 기념 칭호(연속 · 누적)는 조건을 넘긴 첫 방에 무조건 주고, 그 뒤엔 다시 안 나온다.
+ * 나머지는 맞는 후보 중 노멀 12 : 레어 3 : 레전드 1 로 뽑는다. 아직 없는 칭호를 먼저 보지 않는다:
+ * 이미 가진 칭호가 나오면 꽝 (화면에 칭호를 안 알림) → 모을수록 새 칭호 나오기가 어려워진다.
  */
-export const JACKPOT = 0.01;
+export const JACKPOT = 0.005;
 
 export function pickTitle(c, owned = {}, random = Math.random) {
   if (random() < JACKPOT) {
     const jp = TITLES.filter(x => x.rarity === 'jackpot');
-    const fresh = jp.filter(x => !owned[x.id]);
-    const pool = fresh.length ? fresh : jp;
-    return pool[Math.floor(random() * pool.length) % pool.length];
+    return jp[Math.floor(random() * jp.length) % jp.length];
   }
   const milestone = TITLES.find(x => MILESTONES.includes(x.id) && !owned[x.id] && x.test(c));
   if (milestone) return milestone;
   const cands = TITLES.filter(x => !MILESTONES.includes(x.id) && x.test(c));
   if (!cands.length) return titleById(BASIC[c.mode] || 'hold_basic');
-  const fresh = cands.filter(x => !owned[x.id]);
-  const pool = fresh.length && random() < 0.75 ? fresh : cands;
+  const pool = cands;
   const total = pool.reduce((n, x) => n + RARITY[x.rarity].weight, 0);
   let r = random() * total;
   for (const x of pool) {

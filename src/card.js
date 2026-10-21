@@ -76,14 +76,16 @@ export async function drawCard(canvas, data) {
 
   // 칭호: 등급 칩 + 큰 이름(등급 색) + 도감 진행 막대
   y = 1500;
-  g.font = `900 34px ${BODY}`;
-  const chipW = g.measureText(data.rarity).width + 48;
-  pill(g, 56, y, chipW, 58, data.rarityColor || '#fff');
-  g.fillStyle = '#111';
-  g.fillText(data.rarity, 80, y + 30);
-  g.fillStyle = '#9A9A95';
-  g.font = `600 34px ${BODY}`;
-  g.fillText(data.isNew ? t('burst.new') : t('card.titleLabel'), 56 + chipW + 20, y + 30);
+  if (data.rarity) {   // 꽝(이미 가진 칭호)이면 칩 없이 자막만
+    g.font = `900 34px ${BODY}`;
+    const chipW = g.measureText(data.rarity).width + 48;
+    pill(g, 56, y, chipW, 58, data.rarityColor || '#fff');
+    g.fillStyle = '#111';
+    g.fillText(data.rarity, 80, y + 30);
+    g.fillStyle = '#9A9A95';
+    g.font = `600 34px ${BODY}`;
+    g.fillText(data.isNew ? t('burst.new') : t('card.titleLabel'), 56 + chipW + 20, y + 30);
+  }
   g.fillStyle = data.rarityColor || '#fff';
   fitFont(g, data.title, DISPLAY, 128, W - 112);
   g.textBaseline = 'alphabetic';
