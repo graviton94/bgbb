@@ -1,4 +1,4 @@
-// 도트 그림 (머니건 · 지폐 · =3 · 거품). 선글라스는 원화 그림(assets/faces/sunglasses.png). 글자 지도를 캔버스에 칸 단위로 찍는다.
+// 도트 그림 (거품). 선글라스 · 방구 구름 · 지폐 · 머니건은 원화 (assets/faces, assets/deco). 글자 지도를 캔버스에 칸 단위로 찍는다.
 // 파일 없이 코드로 그려서 어떤 크기로 키워도 도트가 또렷하다 (image-rendering: pixelated).
 
 const PALETTE = {
@@ -12,32 +12,7 @@ const PALETTE = {
 };
 
 export const PIXELS = {
-  // 머니건 24×12: 빨간 박스 몸통, 옆면 반짝이 글씨 띠, 오른쪽 위 지폐 나오는 입구
-  moneygun: [
-    '....RRRRRRRRRRRRRRRRRRRR',
-    '...RpppppppppppppppppkkR',
-    '..RrrrrrrrrrrrrrrrrrrkkR',
-    '.RrraammssaammssaammrrrR',
-    'RrrraammssaammssaammrrrR',
-    'RrrrrrrrrrrrrrrrrrrrrrrR',
-    'RRRRRRRRRRrrrrrRRRRRRRR.',
-    '........RrrrrrR.........',
-    '.......RrrrrrR..........',
-    '......RrrrrrR...........',
-    '.....RrrrrrR............',
-    '.....RRRRRR.............'
-  ],
 
-  // 지폐 18×7: 만원 (초록), 오만원 (노랑)
-  bill: [
-    'NNNNNNNNNNNNNNNNNN',
-    'NnnnnnnnnnnnnnnnnN',
-    'NnoooonnnnnnnNnNnN',
-    'NnoNNonnnnnnnnnnnN',
-    'NnoooonnnnnnnNNNnN',
-    'NnnnnnnnnnnnnnnnnN',
-    'NNNNNNNNNNNNNNNNNN'
-  ],
   bill2: [
     'UUUUUUUUUUUUUUUUUU',
     'UuuuuuuuuuuuuuuuuU',
@@ -48,16 +23,6 @@ export const PIXELS = {
     'UUUUUUUUUUUUUUUUUU'
   ],
 
-  // 방구 "=3" 11×7
-  toot: [
-    '......kkkk.',
-    '.........kk',
-    'kkkkk....kk',
-    '......kkkk.',
-    'kkkkk....kk',
-    '.........kk',
-    '......kkkk.'
-  ],
 
   // 거품 7×7
   bubble: [

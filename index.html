@@ -66,17 +66,10 @@
     </nav>
   </div>
 
-  <!-- 터지는 순간: 짤 틀 4종 (data-frame = eng · label · vibe · deal) -->
+  <!-- 터지는 순간: 정사각형 짤 한 칸 (src/memes.js 에서 랜덤) -->
   <dialog class="burst" id="burst" tabindex="-1" aria-labelledby="burstTitle">
-    <div class="burst-pic" id="burstPic"><img id="burstImg" alt=""><img class="shades" id="shades" alt=""></div>
-    <img class="moneygun" id="moneygun" alt="">
+    <div class="meme" id="meme" role="img"></div>
     <canvas class="fx" id="fx" aria-hidden="true"></canvas>
-    <div class="f-eng" aria-hidden="true">엥?</div>
-    <div class="f-label" id="fLabel"></div>
-    <div class="f-bubble" id="fBubble"></div>
-    <div class="f-top" id="fTop"></div>
-    <div class="f-bottom" id="fBottom"></div>
-    <div class="f-caption" id="fCaption"></div>
     <div class="unlock">
       <span class="meta" id="burstWhen"></span>
       <strong id="burstTitle"></strong>

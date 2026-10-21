@@ -92,32 +92,6 @@ export const MODES = {
   }
 };
 
-// 터지는 화면 짤 틀: 냄 = 빨간 라벨, 진동 = 위아래 자막, 참음·잭팟 = 스티커 + 안경, 연습 = 엥?
-export const FRAME_OF = { loud: 'label', soft: 'vibe', hold: 'deal', jackpot: 'deal', practice: 'eng' };
-export const FRAMES = {
-  label: {
-    labels: { ko: ['해냈다', '터졌다', '실화냐', '멋지다'], en: ['Did it', 'It blew', 'For real?', 'Nice'] },
-    // 말풍선은 일부러 이상한 데서 줄을 바꾼다
-    bubbles: {
-      ko: ['참을 수 없\n는 육체', '말을 듣지 않\n는 엉덩이', '이건 내 의지\n가 아니었다', '조용한 데서\n만 나옴'],
-      en: ['a body that won\'t\nlisten', 'it was not my\nchoice', 'only in quiet\nrooms', 'the butt has\nspoken']
-    }
-  },
-  vibe: {
-    pairs: {
-      ko: [['아무도 모름', '나만 앎'], ['진동이라', '살았다'], ['소리 없음', '그냥 부르르'], ['참는 거 없음', '그냥 뿡함']],
-      en: [['NOBODY KNOWS', 'ONLY ME'], ['NO SOUND', 'JUST BZZT'], ['ON VIBRATE', 'SURVIVED'], ['NO STRESS', 'JUST TOOTING']]
-    }
-  },
-  deal: {
-    captions: {
-      ko: ['냄새?\n난 모르는 일', '참았음.\n아무 일 없었음', '무음 모드\n만세', '나 아님.\n진짜로'],
-      en: ['Smell?\nNot my problem', 'Held it.\nNothing happened', 'Long live\nsilent mode', 'Wasn\'t me.\nReally']
-    },
-    jackpot: { ko: ['돈 뿌리는\n엉덩이', '잭팟 터짐'], en: ['Make it rain', 'JACKPOT'] }
-  }
-};
-
 // 홈 화면 한 줄 (무표정)
 export const HOME_LINES = {
   ko: ['언제 터지는지는 나도 모름.\n그게 포인트임.', '주머니 조심.', '지금은 조용함.\n지금은.', '회의 있으면 멈춤 눌러.', '낼지 참을지는\n폰 모드가 정함.'],

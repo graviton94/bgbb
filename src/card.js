@@ -60,7 +60,7 @@ export async function drawCard(canvas, data) {
   g.fillStyle = mode.color;
   g.fillRect(0, 0, W, 1300);
 
-  // 도트 효과 (터지는 화면과 같은 규칙): 냄 = "=3", 진동 = 거품, 참음·잭팟 = 선글라스, 잭팟 = 머니건 + 지폐
+  // 효과 (터지는 화면과 같은 규칙): 냄 = 방구 구름, 진동 = 거품(도트), 참음·잭팟 = 선글라스, 잭팟 = 머니건 + 지폐
   g.imageSmoothingEnabled = false;
   const dot = (name, x, y, scale, rot = 0, flip = false) => {
     const im = pixelCanvas(name, scale);
@@ -71,9 +71,22 @@ export async function drawCard(canvas, data) {
     g.drawImage(im, -im.width / 2, -im.height / 2);
     g.restore();
   };
+  // 원화 소품 (assets/deco): 방구 구름 · 지폐 · 머니건
+  const [fart, bill, gun] = await Promise.all(['fart_bubble', 'money_bill', 'money_gun'].map(n => loadImage(`assets/deco/${n}.webp`)));
+  const art = (im, x, y, w, rot = 0, flip = false) => {
+    if (!im) return;
+    const h = w * im.naturalHeight / im.naturalWidth;
+    g.save();
+    g.translate(x, y);
+    g.rotate(rot);
+    if (flip) g.scale(-1, 1);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(im, -w / 2, -h / 2, w, h);
+    g.restore();
+  };
   if (data.jackpot) {
-    [[180, 300, 0.4], [820, 240, -0.3], [930, 520, 0.6], [140, 640, -0.5], [760, 900, 0.2], [300, 180, -0.1], [600, 160, 0.5]]
-      .forEach(([x, y, r], i) => dot(i % 2 ? 'bill' : 'bill2', x, y, 14, r));
+    [[180, 300, 0.4], [860, 240, -0.3], [930, 560, 0.6], [140, 640, -0.5], [780, 920, 0.2], [330, 170, -0.1], [620, 150, 0.5]]
+      .forEach(([x, y, r]) => art(bill, x, y, 240, r));
   }
   if (img) {
     const h = 860, w = h * img.naturalWidth / img.naturalHeight;
@@ -88,12 +101,11 @@ export async function drawCard(canvas, data) {
     g.restore();
   }
   if (data.ev.mode === 'loud' && !data.jackpot) {
-    dot('toot', 860, 860, 16, -0.1);
-    dot('toot', 960, 740, 11, -0.2);
-    dot('toot', 170, 760, 12, 0.1, true);
+    art(fart, 880, 900, 340, -0.1);
+    art(fart, 180, 760, 240, 0.1, true);
   }
   if (data.ev.mode === 'soft') [[180, 420, 14], [870, 360, 10], [930, 620, 16], [140, 820, 9], [820, 180, 8]].forEach(([x, y, s]) => dot('bubble', x, y, s));
-  if (data.jackpot) dot('moneygun', 200, 880, 14, -0.3);
+  if (data.jackpot) art(gun, 220, 900, 380, -0.2);
 
   // 화면 위: LIVE · 채널 · 날짜
   g.textBaseline = 'middle';

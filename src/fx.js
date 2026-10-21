@@ -1,5 +1,13 @@
-// 터지는 화면 위 도트 효과: 방구 구름 펑, 거품 보글, 지폐 비. 화면이 열려 있는 동안만 돈다.
+// 터지는 화면 위 효과: 방구 구름 뿅뿅 (원화), 거품 보글 (도트), 지폐 비 (원화). 화면이 열려 있는 동안만 돈다.
 import { pixelCanvas } from './pixels.js';
+
+// 원화 소품 (assets/deco). 처음 한 번만 받아 둔다.
+const IMAGES = {};
+for (const name of ['fart_bubble', 'money_bill']) {
+  const im = new Image();
+  im.src = `assets/deco/${name}.webp`;
+  IMAGES[name] = im;
+}
 
 let raf = 0;
 
@@ -22,17 +30,19 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
   const g = canvas.getContext('2d');
   g.imageSmoothingEnabled = false;
   const unit = Math.max(3, Math.round(W / 110));   // 도트 한 칸 크기
-  const sprite = name => pixelCanvas(name, unit * dpr);
+  // 크기: 도트 거품은 칸 단위, 원화는 화면 너비 비율
+  const SIZE = { toot: 0.24, bill: 0.2 };
+  const sprite = name => (name === 'bubble' ? pixelCanvas('bubble', unit * dpr) : IMAGES[name === 'toot' ? 'fart_bubble' : 'money_bill']);
   const parts = [];
   const rnd = (a, b) => a + Math.random() * (b - a);
   const t0 = performance.now();
 
-  // "=3" 이 엉덩이 쪽에서 옆으로 뿅뿅 날아간다 (오른쪽이 앞)
+  // 방구 구름이 엉덩이 쪽에서 옆으로 뿅뿅 날아간다 (오른쪽이 앞)
   const puff = (delay = 0) => {
     const dir = Math.random() < 0.7 ? 1 : -1;
     parts.push({
       kind: 'toot', x: from.x * W + dir * rnd(60, 110), y: from.y * H + rnd(-30, 110), vx: dir * rnd(180, 320), vy: rnd(-60, 30),
-      s: rnd(1, 1.6), grow: 0.1, life: rnd(1.1, 1.8), born: delay, flip: dir < 0
+      s: rnd(0.6, 1), grow: 0.15, life: rnd(1.1, 1.8), born: delay, flip: dir < 0
     });
   };
   const bubble = (delay = 0) => parts.push({
@@ -41,9 +51,9 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
   });
   // 총구에서 줄줄이 튀어나가 오른쪽 위로 날다가 팔랑팔랑 떨어진다
   const bill = (delay = 0, fromGun = false) => parts.push(fromGun
-    ? { kind: Math.random() < 0.5 ? 'bill' : 'bill2', x: gun.x * W, y: gun.y * H, vx: rnd(260, 420), vy: rnd(-420, -260), s: 1, life: 4, born: delay,
+    ? { kind: 'bill', x: gun.x * W, y: gun.y * H, vx: rnd(260, 420), vy: rnd(-420, -260), s: rnd(0.6, 0.9), life: 4, born: delay,
       rot: -0.5 + rnd(-0.2, 0.2), vr: rnd(-1.5, 1.5), gravity: 380, drag: 0.985, flap: rnd(0, 6) }
-    : { kind: Math.random() < 0.5 ? 'bill' : 'bill2', x: rnd(0, W), y: -30, vx: rnd(-30, 30), vy: rnd(60, 140), s: rnd(0.8, 1.1), life: 8, born: delay,
+    : { kind: 'bill', x: rnd(0, W), y: -30, vx: rnd(-30, 30), vy: rnd(60, 140), s: rnd(0.5, 0.8), life: 8, born: delay,
       rot: rnd(-0.6, 0.6), vr: rnd(-1.2, 1.2), gravity: 0, sway: rnd(0, 6), flap: rnd(0, 6) });
 
   if (kinds.includes('puff')) for (let i = 0; i < 6; i++) puff(0.15 + i * 0.22);
@@ -70,15 +80,19 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
       if (p.kind === 'toot') { p.vx *= 0.97; p.vy *= 0.97; }
       if (p.drag) { p.vx *= p.drag; if (p.vy > 120) p.vy = 120; }
       const img = sprite(p.kind);
+      if (!img.width) continue;   // 아직 안 받아진 그림
       const scale = p.s + (p.grow || 0) * a;
       const fade = p.flap !== undefined ? 1 : Math.min(1, (p.life - a) / 0.6);
       g.save();
       g.globalAlpha = Math.max(0, fade);
       g.translate(p.x * dpr, p.y * dpr);
       if (p.rot !== undefined) { p.rot += p.vr * dt; g.rotate(p.rot); }
-      // 지폐는 세로로 납작해졌다 펴지며 팔랑인다, "=3" 은 왼쪽으로 갈 땐 뒤집는다
+      // 지폐는 세로로 납작해졌다 펴지며 팔랑인다, 방구 구름은 왼쪽으로 갈 땐 뒤집는다
       g.scale(p.flip ? -scale : scale, p.flap !== undefined ? scale * Math.cos(age * 7 + p.flap) : scale);
-      g.drawImage(img, -img.width / 2, -img.height / 2);
+      if (SIZE[p.kind]) {
+        const w = SIZE[p.kind] * W * dpr, h = w * img.height / img.width;
+        g.drawImage(img, -w / 2, -h / 2, w, h);
+      } else g.drawImage(img, -img.width / 2, -img.height / 2);
       g.restore();
     }
     raf = requestAnimationFrame(frame);

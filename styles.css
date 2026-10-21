@@ -224,101 +224,75 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .tag.rare { background: #FFB3D9; }
 .tag.jackpot { background: #FFD400; }
 
-/* ---------------------------------------------------------- 터지는 순간: 대충 만든 척하는 짤 틀 */
+/* ---------------------------------------------------------- 터지는 순간: 정사각형 짤 한 칸 + 칭호 */
 .burst {
-  --frame-bg: #FFFFFF;
   width: 100%; max-width: 100%; height: 100%; max-height: 100%;
   margin: 0; padding: 0; border: 0;
-  background: var(--frame-bg);
-  color: #111;
+  background: var(--bg); color: var(--ink);
   overflow: hidden;
-  font-family: var(--body);
 }
-.burst::backdrop { background: var(--frame-bg); }
-.burst[open] { display: block; }
-.burst > * { position: absolute; }
-.burst[data-frame="vibe"] { --frame-bg: #B49E89; }
-.burst[data-frame="deal"] { --frame-bg: #F2F2F2; }
-.burst > .f-eng, .burst > .f-label, .burst > .f-bubble, .burst > .f-top, .burst > .f-bottom, .burst > .f-caption { display: none; }
-
-.burst-pic {
-  left: 50%; top: 20%;
-  width: min(88vw, 400px);
-  margin-left: calc(min(88vw, 400px) / -2);
+.burst::backdrop { background: var(--bg); }
+.burst[open] { display: flex; flex-direction: column; align-items: center; }
+.burst:focus { outline: none; }
+.meme {
+  position: relative; flex: none;
+  width: min(calc(100vw - 32px), 460px, calc(100vh - 290px));
+  aspect-ratio: 1; margin-top: calc(20px + var(--safe-top));
+  background: var(--meme-bg, #fff);
+  overflow: hidden; container-type: inline-size;
+  box-shadow: 0 1px 0 rgba(0,0,0,.06);
 }
-#burstImg { width: 100%; display: block; }
-.burst[data-frame="deal"] #burstImg {
-  filter: drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,.2));
+.m-el { position: absolute; }
+.m-char img { width: 100%; display: block; }
+.m-char.sticker img:first-child {
+  filter: drop-shadow(1.2cqw 0 0 #fff) drop-shadow(-1.2cqw 0 0 #fff) drop-shadow(0 1.2cqw 0 #fff) drop-shadow(0 -1.2cqw 0 #fff) drop-shadow(0 1.5cqw 2cqw rgba(0,0,0,.2));
 }
-.burst[data-frame="deal"] .burst-pic { transform: rotate(-4deg); }
-.burst .shades, .burst .moneygun { image-rendering: pixelated; }
-.burst .shades { position: absolute; display: none; }
-.burst.cool .shades { display: block; animation: dealwithit 1.1s 0.5s cubic-bezier(.5, 0, .6, 1) both; }
-@keyframes dealwithit { from { transform: translateY(-80vh); } 85% { transform: translateY(4px); } to { transform: none; } }
-.burst .moneygun { display: none; left: -2%; top: 48%; width: 40vw; max-width: 170px; transform: rotate(-18deg); }
-.burst.rich .moneygun { display: block; animation: recoil 0.18s 0.6s ease-in-out 10 alternate both; }
-@keyframes recoil { from { translate: 0 0; } to { translate: -6px 4px; } }
-.fx { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
-
-/* ① 엥? : 얼굴이 화면을 꽉 채우고 옆에 얇은 고딕 한 마디 */
-.burst[data-frame="eng"] .burst-pic { left: -22%; top: calc(-4% + var(--safe-top)); width: 144%; margin-left: 0; }
-.burst[data-frame="eng"] .f-eng {
-  display: block; right: 14px; top: calc(40px + var(--safe-top));
-  font-family: var(--body); font-weight: 400; font-size: clamp(72px, 24vw, 104px); line-height: 1; letter-spacing: -4px;
+.m-shades { position: absolute; image-rendering: pixelated; animation: dealwithit 1.1s 0.5s cubic-bezier(.5, 0, .6, 1) both; }
+@keyframes dealwithit { from { transform: translateY(-160cqw); } 85% { transform: translateY(0.6cqw); } to { transform: none; } }
+.m-text { color: #111; white-space: pre-line; line-height: 1.1; }
+.m-thin { white-space: nowrap; font-family: var(--body); font-weight: 400; font-size: 18cqw; letter-spacing: -0.06em; line-height: 1; text-align: right; }
+.m-impact { white-space: pre; font-family: var(--display); font-size: 10.5cqw; text-align: center; color: #fff; -webkit-text-stroke: 0.7cqw #111; paint-order: stroke fill; }
+.m-display { font-family: var(--display); font-size: 8.6cqw; }
+.m-white { color: #fff; }
+.m-left { text-align: left; }
+.m-nowrap { white-space: pre; }
+.m-small { font-family: var(--body); font-weight: 700; font-size: 5cqw; text-align: center; }
+.m-bubble { font-family: var(--body); font-weight: 700; font-size: 4.3cqw; line-height: 1.3; text-align: center; }
+.m-label {
+  display: flex; align-items: center; justify-content: center; aspect-ratio: 1.75;
+  border-radius: 50%; background: #D62B1F; color: #fff; font-weight: 700; font-size: 7.2cqw;
 }
-/* ② 빨간 타원 라벨 + 이상하게 줄바꿈된 말풍선 */
-.burst[data-frame="label"] .f-label {
-  display: flex; align-items: center; justify-content: center;
-  left: 6%; top: calc(9% + var(--safe-top)); width: 40%; aspect-ratio: 1.75;
-  border-radius: 50%; background: #D62B1F; color: #fff;
-  font-weight: 700; font-size: clamp(22px, 7.5vw, 32px); transform: rotate(-4deg);
-}
-.burst[data-frame="label"] .f-bubble {
-  display: block; right: 5%; top: calc(14% + var(--safe-top)); width: 40%;
-  padding: 20px 14px; border: 2px solid #111; border-radius: 50%; background: #fff;
-  font-weight: 700; font-size: clamp(16px, 5vw, 20px); line-height: 1.3; text-align: center; white-space: pre-line;
-}
-.burst[data-frame="label"] .burst-pic { top: 27%; }
-/* ③ 위아래 흰 자막 (NO STRESS JUST VIBING) */
-.burst[data-frame="vibe"] .f-top, .burst[data-frame="vibe"] .f-bottom {
-  display: block; left: 0; right: 0; text-align: center;
-  font-family: var(--display); font-size: clamp(42px, 15vw, 64px); line-height: 1.05;
-  color: #fff; -webkit-text-stroke: 3px #111; paint-order: stroke fill;
-}
-.burst[data-frame="vibe"] .f-top { top: calc(28px + var(--safe-top)); }
-.burst[data-frame="vibe"] .f-bottom { top: 62%; }
-.burst[data-frame="vibe"] .burst-pic { top: 14%; }
-/* ④ 스티커 + 도트 안경 + 손글씨 같은 한 줄 */
-.burst[data-frame="deal"] .f-caption {
-  display: block; left: 20px; right: 20px; top: calc(28px + var(--safe-top));
-  font-family: var(--display); font-size: clamp(32px, 10vw, 42px); line-height: 1.1; white-space: pre-line;
-}
-.burst[data-frame="deal"] .burst-pic { top: 22%; }
+.fx { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
 
 .unlock {
-  left: 20px; right: 20px; bottom: calc(100px + var(--safe-bottom));
+  width: min(calc(100vw - 32px), 460px);
+  margin-top: 16px;
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
 }
-.unlock .meta { font-size: 13px; color: #444; }
-.burst[data-frame="vibe"] .unlock .meta { color: #2A2118; }
+.unlock .meta { font-size: 13px; color: var(--muted); }
 .unlock strong {
   font-weight: 900; font-size: clamp(22px, 7vw, 28px); line-height: 1.2;
   background: linear-gradient(transparent 45%, #FFF200 45%, #FFF200 92%, transparent 92%);
   padding: 0 4px;
 }
 .burst-actions {
-  left: 20px; right: 20px; bottom: calc(28px + var(--safe-bottom));
+  width: min(calc(100vw - 32px), 460px);
+  margin-top: auto; margin-bottom: calc(24px + var(--safe-bottom));
   display: grid; grid-template-columns: 2fr 1fr; gap: 8px;
 }
 .burst-actions .btn { min-height: 50px; border-width: 1px; border-radius: 6px; font-weight: 700; }
+.burst-actions:has(> [hidden]) { grid-template-columns: 1fr; }
 
-.burst.play .burst-pic { animation: pop 0.5s cubic-bezier(.2, 1.5, .4, 1) both; }
-.burst.play .f-label, .burst.play .f-top { animation: stick 0.3s 0.35s both; }
-.burst.play .f-bubble, .burst.play .f-bottom, .burst.play .f-caption, .burst.play .f-eng { animation: stick 0.3s 0.55s both; }
-.burst.play .unlock, .burst.play .burst-actions { animation: up 0.35s 0.75s both; }
-@keyframes pop { from { scale: 0.3; opacity: 0; } to { scale: 1; opacity: 1; } }
+.burst.play .meme { animation: pop 0.45s cubic-bezier(.2, 1.4, .4, 1) both; }
+.burst.play .m-char { animation: shake 0.35s 0.45s ease 2; }
+.burst.play .m-text, .burst.play .m-label { animation: stick 0.3s 0.4s both; }
+.burst.play .unlock, .burst.play .burst-actions { animation: up 0.35s 0.6s both; }
+.burst.play .m-gun { animation: recoil 0.18s 0.6s ease-in-out 10 alternate both; }
+@keyframes recoil { from { translate: 0 0; } to { translate: -1.5cqw 1cqw; } }
+@keyframes pop { from { scale: 0.6; opacity: 0; } to { scale: 1; opacity: 1; } }
 @keyframes stick { from { opacity: 0; scale: 1.8; } to { opacity: 1; scale: 1; } }
 @keyframes up { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+@keyframes shake { 25% { translate: -1.5cqw 0; } 75% { translate: 1.5cqw 0; } }
 
 /* ---------------------------------------------------------- 방석 모드 */
 .cushion {
@@ -340,7 +314,6 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .c-armed { align-items: center; justify-content: flex-end !important; color: #161616; font-size: 12px; }
 .c-caught { text-align: center; align-items: stretch; }
 .c-caught .c-face { animation: pop 0.5s cubic-bezier(.2, 1.5, .4, 1) both, shake 0.4s 0.5s ease 3; }
-@keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
 
 /* ---------------------------------------------------------- 시트 */
 .sheet {
@@ -428,8 +401,6 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
-.burst:focus { outline: none; }
-.burst-actions:has(> [hidden]) { grid-template-columns: 1fr; }
 
 /* 키 작은 화면: 위아래 여백을 줄여 버튼이 한 화면에 들어오게 */
 @media (max-height: 700px) {
@@ -441,6 +412,4 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .hero { width: 46%; }
   .latest { min-height: 54px; padding: 6px 14px; }
   .btn { min-height: 48px; }
-  .burst-pic { width: min(72vw, 300px); margin-left: calc(min(72vw, 300px) / -2); }
-  .unlock { bottom: calc(88px + var(--safe-bottom)); }
 }

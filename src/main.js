@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, FRAMES, FRAME_OF, charById, face } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -8,9 +8,9 @@ import {
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow } from './schedule.js';
 import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
-import { pixelUrl, SHADES_BOX, SHADES_URL } from './pixels.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
+import { MEMES, pickMeme } from './memes.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -109,30 +109,15 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   const dlg = $('burst');
   const headline = headlineFor(ev);
   const caption = pick(L(MODES[ev.mode].captions));
-  // 짤 틀과 표정: 냄 = 빨간 라벨 + 터짐, 진동 = 위아래 자막 + 휘파람, 참음 = 스티커 + 뻔뻔 + 안경,
-  // 잭팟 = 스티커 + 엄지척 + 안경 + 머니건 + 지폐 비, 연습 = 엥?
+  // 짤은 랜덤 (잭팟만 돈 틀). 표정은 결과에 맞춰: 냄 = 터짐, 진동 = 휘파람, 참음 = 뻔뻔
   const jackpot = result && titleById(result.title).rarity === 'jackpot';
-  const kind = jackpot ? 'jackpot' : result ? ev.mode : 'practice';
-  const frame = FRAME_OF[kind];
-  dlg.dataset.frame = frame;
-  $('burstImg').src = face(c.id, BURST_FACE[kind]);
-  const cool = frame === 'deal';
-  const sh = $('shades');
-  sh.src = SHADES_URL;
-  Object.assign(sh.style, { left: `${SHADES_BOX.x * 100}%`, top: `${SHADES_BOX.y * 100}%`, width: `${SHADES_BOX.w * 100}%` });
-  $('moneygun').src = pixelUrl('moneygun', 8);
-  dlg.classList.toggle('cool', cool);
-  dlg.classList.toggle('rich', !!jackpot);
-  if (frame === 'label') {
-    $('fLabel').textContent = pick(L(FRAMES.label.labels));
-    $('fBubble').textContent = pick(L(FRAMES.label.bubbles));
-  } else if (frame === 'vibe') {
-    const [top, bottom] = pick(L(FRAMES.vibe.pairs));
-    $('fTop').textContent = top;
-    $('fBottom').textContent = bottom;
-  } else if (frame === 'deal') {
-    $('fCaption').textContent = pick(L(jackpot ? FRAMES.deal.jackpot : FRAMES.deal.captions));
-  }
+  const name = pickMeme(jackpot);
+  const meme = MEMES[name]({ id: c.id, expr: BURST_FACE[ev.mode] });
+  const box = $('meme');
+  box.dataset.meme = name;
+  box.style.setProperty('--meme-bg', meme.bg);
+  box.innerHTML = meme.html;
+  box.setAttribute('aria-label', box.textContent.replace(/\s+/g, ' ').trim());
   const d = new Date(ev.t);
   const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
   $('burstWhen').textContent = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
@@ -155,9 +140,14 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   if (!dlg.open) dlg.showModal();
   dlg.focus();
   haptic([18, 40, 30]);
+  // 효과는 짤 칸 안의 자리에서: 냄 = 방구 구름, 진동 = 거품, 잭팟 = 머니건에서 지폐
   const kinds = jackpot ? ['rain'] : [];
-  if (result) kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
-  requestAnimationFrame(() => startFx($('fx'), kinds.filter(Boolean), { from: { x: 0.5, y: 0.4 }, gun: { x: 0.33, y: 0.5 } }));
+  if (result && !jackpot) kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
+  requestAnimationFrame(() => {
+    const r = box.getBoundingClientRect(), W = innerWidth, H = innerHeight;
+    const at = p => ({ x: (r.left + p.x * r.width) / W, y: (r.top + p.y * r.height) / H });
+    startFx($('fx'), kinds.filter(Boolean), { from: at(meme.fx), gun: at({ x: 0.3, y: 0.62 }) });
+  });
 }
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
