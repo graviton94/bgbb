@@ -11,9 +11,27 @@ import { L } from './i18n.js';
 import { SHADES_BOX, SHADES_URL } from './pixels.js';
 
 const deco = name => `assets/deco/${name}.webp`;
-const rnd = (a, b) => a + Math.random() * (b - a);
-const pick = list => list[Math.floor(Math.random() * list.length)];
-const chance = p => Math.random() < p;
+// 랜덤은 한 군데서: 칭호 짤은 칭호마다 같은 시드로 뽑아 언제 다시 그려도 똑같은 짤이 나온다
+let R = Math.random;
+function seeded(seed) {   // mulberry32
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6D2B79F5) >>> 0;
+    let x = a;
+    x = Math.imul(x ^ (x >>> 15), x | 1);
+    x ^= x + Math.imul(x ^ (x >>> 7), x | 61);
+    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const hash = s => [...String(s)].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261) >>> 0;
+function withSeed(seed, fn) {
+  const prev = R;
+  R = seed == null ? Math.random : seeded(seed);
+  try { return fn(); } finally { R = prev; }
+}
+const rnd = (a, b) => a + R() * (b - a);
+const pick = list => list[Math.floor(R() * list.length)];
+const chance = p => R() < p;
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 
 // ---------------------------------------------------------------- 문구
@@ -530,32 +548,77 @@ const ORIGINAL_LEGEND = {
 Object.assign(UNIQUE, ORIGINAL_UNIQUE);
 Object.assign(LEGEND, ORIGINAL_LEGEND);
 
-/**
- * 짤 하나. ctx = { id, mode, t, title(새 칭호 이름 또는 없음 = 꽝), rarity(새 칭호 등급), practice }
- * 잭팟 = 실사 돈 짤. 그 밖엔 등급(꽝이면 none)에 따라 레전드 짤 · 유니크 짤 · 조립형, 그리고 실사 사진일 확률이 다르다.
- * 다시 뽑기(하루 3번)로 노릴 수 있다.
- */
-export const ODDS = {
-  //          레전드 짤  유니크 짤(나머지 중)  실사
-  none: { legend: 0.02, unique: 0.25, real: 0.08 },
-  normal: { legend: 0.04, unique: 0.3, real: 0.12 },
-  rare: { legend: 0.15, unique: 0.45, real: 0.35 },
-  legend: { legend: 0.5, unique: 0.5, real: 0.7 }
+// ---------------------------------------------------------------- 속보 짤: 뉴스 화면 (예전 자랑 카드의 속보 띠를 짤 유형 하나로)
+const NEWS = {
+  channel: { ko: '뿡뉴스', en: 'TOOT NEWS' },
+  tag: { loud: { ko: '단독', en: 'EXCLUSIVE' }, soft: { ko: '속보', en: 'BREAKING' }, hold: { ko: '속보', en: 'BREAKING' } },
+  ticker: { ko: ['시민들 "냄새는 못 맡았다"', '전문가 "괄약근 컨디션 변수"', '오늘 밤 추가 발생 가능성', '현장 연결합니다'],
+    en: ['Witnesses: "no smell yet"', 'Experts cite clench fatigue', 'More expected tonight', 'Live from the scene'] }
 };
-export function composeMeme(ctx) {
-  if (ctx.rarity === 'jackpot') return { name: 'money', real: true, ...UNIQUE.money({ ...ctx, real: true }) };
-  const odds = ODDS[ctx.rarity] || ODDS.none;
-  if (!ctx.practice && chance(odds.legend)) {
-    const name = pick(Object.keys(LEGEND));
-    return { name, real: true, legend: true, ...LEGEND[name](ctx) };
-  }
-  const now = { ...ctx, real: chance(odds.real) };
-  if (chance(odds.unique)) {
-    const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
-    return { name, real: now.real, ...UNIQUE[name](now) };
-  }
-  return { name: 'assembled', real: now.real, ...assemble(now) };
+UNIQUE.news = ({ id, mode, t, real, headline }) => {
+  const studio = pick([['#0B2A6F', '#1F5FD1'], ['#3A0B0B', '#B3261E'], ['#101820', '#2E4A62']]);
+  const tag = L(NEWS.tag[mode] || NEWS.tag.soft);
+  return {
+    ...grad(160, studio),
+    items: [...Array.from({ length: 6 }, (_, i) => ({ k: 'rect', x: 8 + i * 16, y: 0, w: 0.4, h: 66, color: 'rgba(255,255,255,0.08)' })),
+      charItem(id, { loud: 'burst', soft: 'whistle', hold: 'hold' }[mode] || 'blank', 22, 8, 58, { real, floor: 70 }),
+      { k: 'rect', x: 3, y: 4, w: 13, h: 5.6, color: '#E8261C' }, art('LIVE', 3, 5.1, 13, 3.4, { font: 'body', weight: 900, fill: '#FFFFFF', align: 'center' }),
+      art(L(NEWS.channel), 18, 4.9, 40, 3.8, { font: 'body', weight: 900, fill: '#FFFFFF' }),
+      art(hm(t), 70, 4.9, 26, 3.8, { font: 'body', weight: 800, fill: '#FFFFFF', align: 'right' }),
+      { k: 'rect', x: 0, y: 66, w: Math.min(40, em(tag) * 5 + 8), h: 8, color: '#E8261C' },
+      art(tag, 2.5, 67.6, 36, 5, { font: 'body', weight: 900, fill: '#FFFFFF' }),
+      { k: 'rect', x: 0, y: 74, w: 100, h: 15, color: '#FFFFFF' }, { k: 'rect', x: 0, y: 74, w: 1.8, h: 15, color: '#FFD400' },
+      art(headline || L(NEWS.channel), 4.5, 77.4, 92, 6.4, { font: 'body', weight: 900, fill: '#111111' }),
+      { k: 'rect', x: 0, y: 89, w: 100, h: 11, color: '#FFD400' },
+      art(`● ${pick(L(NEWS.ticker))}`, 3, 92, 94, 3.8, { font: 'body', weight: 800, fill: '#111111' })],
+    fx: { x: 0.5, y: 0.45 }
+  };
+};
+
+// ---------------------------------------------------------------- 칭호 짤: 칭호마다 정해진 짤 하나 (처음 받은 순간의 시각 · 모드 · 친구로, 시드 고정)
+const TITLE_MEMES = {
+  jp_heritage: 'award', jp_lotto: 'money', jp_heir: 'money', jp_the: 'thumb', jp_rain: 'money',
+  meeting_loud: 'cctv', last_call: 'nowplaying', hold5: 'award', trinity: 'report', streak30: 'award', total100: 'stock', first_bell: 'forecast',
+  meeting_soft: 'chat', meeting_hold: 'report', night_quiet: 'cctv', monday: 'forecast', friday: 'nowplaying', weekend_nap: 'box',
+  double_loud: 'versus', broke: 'expect', soft3: 'chat', loud5: 'stock', hold3: 'halo', streak7: 'award', total50: 'receipt',
+  lunch_loud: 'receipt', commute: 'expect', cat_hold: 'deal', ensemble: 'lineup', overeat: 'receipt',
+  loud_basic: 'assembled', soft_basic: 'assembled', hold_basic: 'deal', morning: 'forecast', lunch: 'receipt', afternoon: 'chat',
+  evening: 'expect', night: 'nowplaying', first_today: 'news', streak3: 'halo', hamster: 'eng', tit: 'eng', cat: 'eng',
+  hamster_loud: 'versus', tit_soft: 'box'
+};
+/** ctx = { id, mode, t (처음 받은 순간), title(이름), rarity, headline } */
+export function titleMeme(titleId, ctx) {
+  return withSeed(hash(titleId), () => {
+    const name = TITLE_MEMES[titleId] || 'assembled';
+    const real = ctx.rarity === 'jackpot' || ctx.rarity === 'legend' || (ctx.rarity === 'rare' && chance(0.5));
+    const now = { ...ctx, real };
+    const make = LEGEND[name] || UNIQUE[name];
+    return { name, real, title: titleId, ...(make ? make(now) : assemble(now)) };
+  });
 }
+
+/**
+ * 랜덤 짤 (홈의 '짤 뽑기', 하루 3번). ctx = { id, mode, t }
+ * 레전드 짤 6% · 유니크 짤 (나머지 중) 40% · 조립형, 실사 사진 20%. 잭팟 돈 짤은 잭팟 칭호 전용이라 안 나온다.
+ */
+export const ODDS = { legend: 0.06, unique: 0.4, real: 0.2 };
+export function composeMeme(ctx) {
+  return withSeed(null, () => {
+    if (chance(ODDS.legend)) {
+      const name = pick(Object.keys(LEGEND));
+      return { name, real: true, legend: true, ...LEGEND[name]({ ...ctx, real: true }) };
+    }
+    const now = { ...ctx, real: chance(ODDS.real) };
+    if (chance(ODDS.unique)) {
+      const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money' && k !== 'news'));
+      return { name, real: now.real, ...UNIQUE[name](now) };
+    }
+    return { name: 'assembled', real: now.real, ...assemble(now) };
+  });
+}
+
+/** 속보 짤 (칭호 꽝 · 연습). headline = 속보 문구 */
+export const newsMeme = ctx => withSeed(null, () => { const real = chance(0.3); return { name: 'news', real, ...UNIQUE.news({ ...ctx, real }) }; });
 
 // ---------------------------------------------------------------- 화면에 그리기 (DOM, 글자는 cqw)
 const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;

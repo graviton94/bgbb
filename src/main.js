@@ -10,7 +10,7 @@ import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
-import { composeMeme, renderMeme } from './memes.js';
+import { composeMeme, newsMeme, titleMeme, renderMeme } from './memes.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -55,17 +55,18 @@ function nextToast() {
 // ---------------------------------------------------------- 속보 문구 · 카드
 const headlineFor = ev => pick(L(MODES[ev.mode].headlines)).replaceAll('{nick}', L(charById(ev.char).nick));
 
-/** titleId 가 없으면 (이미 가진 칭호 = 꽝) 칭호 대신 한 줄 자막만 */
-function cardData(ev, titleId, headline = headlineFor(ev), caption = pick(L(MODES[ev.mode].captions))) {
-  const title = titleId && titleById(titleId);
-  const d = day(dayKey(ev.t));
-  return {
-    ev, headline, caption,
-    title: title ? L(title.name) : caption, rarity: title ? L(RARITY[title.rarity].name) : '', rarityColor: title ? RARITY[title.rarity].color : '#FFFFFF',
-    isNew: !!title && state.titles[titleId]?.n === 1,
-    owned: ownedCount(), all: TITLES.length,
-    nth: Math.max(1, d.loud + d.soft + d.hold), streak: Math.max(1, streak(ev.t))
-  };
+/** 칭호 짤: 칭호마다 정해진 짤 (처음 받은 순간으로 고정이라 몇 번을 다시 그려도 똑같다) */
+function memeForTitle(titleId) {
+  const x = titleById(titleId), own = state.titles[titleId];
+  const ev = own?.ev || own?.last || { t: own?.first || Date.now(), char: heroId(), mode: 'loud' };
+  return titleMeme(titleId, { id: ev.char, mode: ev.mode, t: ev.t, title: L(x.name), rarity: x.rarity, headline: headlineFor(ev) });
+}
+
+/** 공유 이미지 정보: 짤 + 아래 띠 (칩 · 이름) */
+function shareData(ev, meme, titleId = null, label = '') {
+  const x = titleId && titleById(titleId);
+  return x ? { ev, meme, chip: L(RARITY[x.rarity].name), chipColor: RARITY[x.rarity].color, name: L(x.name) }
+    : { ev, meme, chip: '', chipColor: '#FFFFFF', name: label };
 }
 
 async function shareCard(data) {
@@ -106,26 +107,28 @@ function headliner(results) {
   return results.reduce((a, b) => (score(b) > score(a) ? b : a));
 }
 
-function showBurst(ev, { result = null, more = 0 } = {}) {
+/**
+ * 터지는 화면 · 짤 뽑기 화면 (같은 화면).
+ * kind: title = 새 칭호 (칭호 짤) · miss = 꽝 (이미 가진 칭호, 속보 짤) · gacha = 짤 뽑기 (랜덤 짤) · practice = 연습 (속보 짤)
+ */
+function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew ? 'title' : 'miss') : 'practice' } = {}) {
   const c = charById(ev.char);
   const dlg = $('burst');
   const headline = headlineFor(ev);
   const caption = pick(L(MODES[ev.mode].captions));
-  // 이미 가진 칭호가 나오면 꽝: 칭호를 알리지 않는다 (모을수록 어려워지게)
-  const title = result?.isNew ? titleById(result.title) : null;
+  const title = kind === 'title' ? titleById(result.title) : null;
   const jackpot = title?.rarity === 'jackpot';
-  memeCtx = { id: c.id, mode: ev.mode, t: ev.t, title: title && L(title.name), rarity: title?.rarity, practice: !result };
-  const meme = composeMeme(memeCtx);
+  const meme = title ? memeForTitle(result.title)
+    : kind === 'gacha' ? composeMeme({ id: c.id, mode: ev.mode, t: ev.t })
+      : newsMeme({ id: c.id, mode: ev.mode, t: ev.t, headline: kind === 'practice' ? t('burst.practiceMeta') : headline });
   const box = $('meme');
   box.dataset.meme = meme.name;
   renderMeme(box, meme);
   const d = new Date(ev.t);
   const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
-  // 속보 띠 (카드와 같은 문구)
-  $('chTag').textContent = t(ev.mode === 'loud' ? 'burst.exclusive' : 'burst.breaking');
-  $('chText').textContent = result ? headline : t('burst.practiceMeta');
   const info = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
   const box2 = dlg.querySelector('.unlock');
+  $('burstBar').parentElement.hidden = !title;
   if (title) {
     const rar = RARITY[title.rarity];
     box2.style.setProperty('--chip', rar.color);
@@ -136,18 +139,22 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
     $('burstBar').style.width = '0%';
     requestAnimationFrame(() => { $('burstBar').style.width = `${(ownedCount() / TITLES.length) * 100}%`; });
     $('burstMeta').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
-    burstCard = { ...cardData(ev, result.title, headline, caption), meme };
+    burstCard = shareData(ev, meme, result.title);
+  } else if (kind === 'gacha') {
+    $('burstChip').hidden = !meme.legend && !meme.real;
+    box2.style.setProperty('--chip', meme.legend ? RARITY.legend.color : RARITY.rare.color);
+    $('burstChip').textContent = t(meme.legend ? 'gacha.legend' : 'gacha.real');
+    $('burstWhen').textContent = t('gacha.left', { n: gachaLeft() });
+    $('burstTitle').textContent = t('gacha.title');
+    $('burstMeta').textContent = '';
+    burstCard = shareData(ev, meme, null, t('gacha.title'));
   } else {
     $('burstChip').hidden = true;
-    $('burstWhen').textContent = result ? info : t('burst.practice');
-    $('burstTitle').textContent = result ? caption : t('burst.practiceTitle');
-    $('burstBar').style.width = '0%';
+    $('burstWhen').textContent = kind === 'miss' ? info : t('burst.practice');
+    $('burstTitle').textContent = kind === 'miss' ? caption : t('burst.practiceTitle');
     $('burstMeta').textContent = '';
-    burstCard = result ? { ...cardData(ev, null, headline, caption), meme } : null;
+    burstCard = shareData(ev, meme, null, kind === 'miss' ? caption : t('burst.practiceTitle'));
   }
-  $('shareCard').hidden = !burstCard;
-  $('reroll').hidden = !result;
-  renderReroll();
   dlg.classList.remove('play');
   void dlg.offsetWidth;   // 애니메이션 다시 시작
   dlg.classList.add('play');
@@ -155,11 +162,11 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   dlg.focus();
   haptic([18, 40, 30]);
   // 효과는 짤 칸 안의 자리에서: 냄 = 뿡 글자, 진동 = 거품, 잭팟 = 머니건에서 지폐
-  fxKinds = (jackpot ? ['rain'] : result ? [{ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]] : []).filter(Boolean);
+  fxKinds = (jackpot ? ['rain'] : result ? [{ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]] : kind === 'gacha' ? ['puff'] : []).filter(Boolean);
   runFx(meme);
 }
 
-let memeCtx = null, fxKinds = [];
+let fxKinds = [];
 function runFx(meme) {
   requestAnimationFrame(() => {
     const r = $('meme').getBoundingClientRect(), W = innerWidth, H = innerHeight;
@@ -168,31 +175,9 @@ function runFx(meme) {
   });
 }
 
-// ---------------------------------------------------------- 짤 다시 뽑기 (하루 3번): 실사 · 유니크 · 레전드 짤은 여기서 노린다
-const REROLLS = 3;
-const rerollsLeft = () => (state.rerolls.day === dayKey() ? REROLLS - state.rerolls.n : REROLLS);
-function renderReroll() {
-  const n = rerollsLeft();
-  $('reroll').disabled = n <= 0;
-  $('reroll').textContent = n > 0 ? t('burst.reroll', { n }) : t('burst.rerollNone');
-}
-$('reroll').addEventListener('click', () => {
-  if (!memeCtx || rerollsLeft() <= 0) return;
-  state.rerolls = { day: dayKey(), n: REROLLS - rerollsLeft() + 1 };
-  commit();
-  const meme = composeMeme(memeCtx);
-  const box = $('meme');
-  box.dataset.meme = meme.name;
-  renderMeme(box, meme);
-  if (burstCard) burstCard.meme = meme;
-  box.style.animation = 'none';
-  void box.offsetWidth;
-  box.style.animation = '';
-  play('ui_pop', 0.5);
-  haptic(12);
-  renderReroll();
-  runFx(meme);
-});
+// ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 '연습 한 방' (속보 짤)
+const GACHA = 3;
+const gachaLeft = () => (state.gacha.day === dayKey() ? Math.max(0, GACHA - state.gacha.n) : GACHA);
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
 $('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));
@@ -278,6 +263,8 @@ function renderHome() {
   $('latestName').textContent = latest ? L(titleById(latest.title).name) : t('home.noTitle');
   $('dexCount').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
   $('freeze').textContent = t(state.frozen ? 'home.unfreeze' : 'home.freeze');
+  const left = gachaLeft();
+  $('practice').textContent = left ? t('home.gacha', { n: left }) : t('home.practice');
   $('freeze').classList.toggle('on', state.frozen);
 }
 
@@ -299,7 +286,12 @@ $('hero').addEventListener('click', () => {
 $('practice').addEventListener('click', () => {
   const id = heroId();
   playFriend(id, styleOf(id), getDiy());
-  showBurst({ t: Date.now(), char: id, mode: 'loud' });
+  const ev = { t: Date.now(), char: id, mode: 'loud' };
+  if (gachaLeft() > 0) {
+    state.gacha = { day: dayKey(), n: GACHA - gachaLeft() + 1 };
+    commit();
+    showBurst(ev, { kind: 'gacha' });
+  } else showBurst(ev);
 });
 
 $('cushionBtn').addEventListener('click', openCushion);
@@ -366,13 +358,13 @@ function openTitle(id) {
   $('tsHow').textContent = L(x.how);
   const first = new Date(own.first);
   $('tsMeta').textContent = t('dex.meta', { n: own.n, date: `${first.getFullYear()}.${first.getMonth() + 1}.${first.getDate()}` });
+  renderMeme($('tsMeme'), memeForTitle(id));
   $('titleSheet').showModal();
 }
 $('tsShare').addEventListener('click', () => {
   const own = state.titles[sheetTitle];
-  if (!own?.last) return;
-  const x = titleById(sheetTitle);
-  shareCard({ ...cardData(own.last, sheetTitle), meme: composeMeme({ id: own.last.char, mode: own.last.mode, t: own.last.t, title: L(x.name), rarity: x.rarity }) });
+  if (!own) return;
+  shareCard(shareData(own.ev || own.last, memeForTitle(sheetTitle), sheetTitle));   // 칭호 짤은 늘 같은 짤
 });
 
 // ---------------------------------------------------------- 렌더

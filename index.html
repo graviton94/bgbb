@@ -67,11 +67,10 @@
     </nav>
   </div>
 
-  <!-- 터지는 순간: 정사각형 짤 한 칸 (src/memes.js 에서 랜덤) -->
+  <!-- 터지는 순간 · 짤 뽑기: 정사각형 짤 한 칸 (칭호 짤 · 속보 짤 · 랜덤 짤, src/memes.js) -->
   <dialog class="burst" id="burst" tabindex="-1" aria-labelledby="burstTitle">
     <div class="meme" id="meme" role="img"></div>
     <canvas class="fx" id="fx" aria-hidden="true"></canvas>
-    <div class="chyron"><b id="chTag"></b><span id="chText"></span></div>
     <div class="unlock">
       <div class="u-row"><span class="r-chip" id="burstChip"></span><span class="meta" id="burstWhen"></span></div>
       <strong id="burstTitle"></strong>
@@ -79,7 +78,6 @@
       <span class="meta" id="burstMeta"></span>
     </div>
     <div class="burst-actions">
-      <button class="btn reroll" id="reroll" type="button"></button>
       <button class="btn dark" id="shareCard" type="button" data-i18n="burst.share"></button>
       <button class="btn" data-close type="button" data-i18n="burst.ok"></button>
     </div>
@@ -113,6 +111,7 @@
   <!-- 칭호 상세 -->
   <dialog class="sheet small" id="titleSheet">
     <div class="sheet-body">
+      <div class="meme ts-meme" id="tsMeme" role="img"></div>
       <span class="rarity" id="tsRarity"></span>
       <h3 class="ts-name" id="tsName"></h3>
       <p id="tsHow"></p>

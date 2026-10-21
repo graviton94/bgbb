@@ -110,26 +110,17 @@ async function captureScreens(lang) {
   await page.click('.tab[data-screen="dex"]');
   await page.waitForTimeout(400);
   await shot('dex');
-  // 속보 카드는 앱이 그리는 1080×1920 그림을 그대로 쓴다
+  // 자랑 이미지는 앱이 그리는 그림 그대로 (회의실 테러범 칭호 짤 + 아래 띠)
   const card = await page.evaluate(async () => {
     const { drawCard } = await import('/src/card.js');
-    const { composeMeme } = await import('/src/memes.js');
+    const { titleMeme } = await import('/src/memes.js');
     const canvas = document.getElementById('card');
     const d = new Date();
     d.setHours(14, 7, 0, 0);
     const ko = document.documentElement.lang === 'ko';
-    let meme;   // 방구 구름이 나오는 조립형 짤이 나올 때까지
-    do { meme = composeMeme({ id: 'hamster', mode: 'loud', t: d.getTime(), title: ko ? '회의실 테러범' : 'Meeting Room Menace', rarity: 'legend' }); }
-    while (meme.name !== 'assembled' || !meme.items.some(it => it.style === 'sfx'));
-    await drawCard(canvas, {
-      meme,
-      ev: { t: d.getTime(), char: 'hamster', mode: 'loud' },
-      title: document.documentElement.lang === 'ko' ? '회의실 테러범' : 'Meeting Room Menace',
-      rarity: document.documentElement.lang === 'ko' ? '레전드' : 'Legend', rarityColor: '#D7FF3D', isNew: true,
-      owned: 12, all: 45, nth: 2, streak: 7,
-      headline: document.documentElement.lang === 'ko' ? '햄찌, 끝내 참지 못해' : 'Hammy finally lets one go',
-      caption: document.documentElement.lang === 'ko' ? '방금 그거 뭐임' : 'what was that'
-    });
+    const name = ko ? '회의실 테러범' : 'Meeting Room Menace';
+    const meme = titleMeme('meeting_loud', { id: 'hamster', mode: 'loud', t: d.getTime(), title: name, rarity: 'legend' });
+    await drawCard(canvas, { meme, ev: { t: d.getTime(), char: 'hamster', mode: 'loud' }, chip: ko ? '레전드' : 'Legend', chipColor: '#D7FF3D', name });
     return canvas.toDataURL('image/png').split(',')[1];
   });
   shots.card = Buffer.from(card, 'base64');
