@@ -332,5 +332,289 @@
    "duration": 2.04372,
    "file": "ui_freeze/04.ogg"
   }
+ ],
+ "fart_tiny": [
+  {
+   "source": "freesound",
+   "title": "Small fart",
+   "url": "https://cdn.freesound.org/previews/808/808123_13776456-hq.mp3",
+   "page": "https://freesound.org/s/808123/",
+   "artist": "ldsqui",
+   "license": "CC0",
+   "duration": 0.822688,
+   "file": "fart_tiny/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Short Fart.mp3",
+   "url": "https://cdn.freesound.org/previews/677/677225_14650607-hq.mp3",
+   "page": "https://freesound.org/s/677225/",
+   "artist": "ldsqui",
+   "license": "CC0",
+   "duration": 1.01007,
+   "file": "fart_tiny/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "fartie.wav",
+   "url": "https://cdn.freesound.org/previews/97/97737_1457702-hq.mp3",
+   "page": "https://freesound.org/s/97737/",
+   "artist": "ldsqui",
+   "license": "CC0",
+   "duration": 1.0,
+   "file": "fart_tiny/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "little parp.wav",
+   "url": "https://cdn.freesound.org/previews/26/26793_48671-hq.mp3",
+   "page": "https://freesound.org/s/26793/",
+   "artist": "ldsqui",
+   "license": "CC0",
+   "duration": 0.430952,
+   "file": "fart_tiny/04.ogg"
+  },
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_tiny/05.ogg"
+  }
+ ],
+ "fart_rapid": [
+  {
+   "source": "freesound",
+   "title": "Volta ao mundo",
+   "url": "https://cdn.freesound.org/previews/846/846008_18449876-hq.mp3",
+   "page": "https://freesound.org/s/846008/",
+   "artist": "mellonius",
+   "license": "CC0",
+   "duration": 3.25599,
+   "file": "fart_rapid/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoots100-104.wav",
+   "url": "https://cdn.freesound.org/previews/556/556506_6518586-hq.mp3",
+   "page": "https://freesound.org/s/556506/",
+   "artist": "Jixolros",
+   "license": "CC0",
+   "duration": 3.8583,
+   "file": "fart_rapid/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "xKicks - Fart.aif",
+   "url": "https://cdn.freesound.org/previews/331/331825_3489710-hq.mp3",
+   "page": "https://freesound.org/s/331825/",
+   "artist": "Jixolros",
+   "license": "CC0",
+   "duration": 1.33333,
+   "file": "fart_rapid/03.ogg"
+  },
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_rapid/04.ogg"
+  }
+ ],
+ "fart_squeal": [
+  {
+   "source": "freesound",
+   "title": "medium-realpoot132.wav",
+   "url": "https://cdn.freesound.org/previews/565/565746_6518586-hq.mp3",
+   "page": "https://freesound.org/s/565746/",
+   "artist": "Jixolros",
+   "license": "CC0",
+   "duration": 1.30898,
+   "file": "fart_squeal/01.ogg"
+  },
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_squeal/02.ogg"
+  }
+ ],
+ "fart_deep": [
+  {
+   "source": "freesound",
+   "title": "Short Fart_02.wav",
+   "url": "https://cdn.freesound.org/previews/521/521092_2628301-hq.mp3",
+   "page": "https://freesound.org/s/521092/",
+   "artist": "DSISStudios",
+   "license": "CC0",
+   "duration": 0.972562,
+   "file": "fart_deep/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "WAV Fart Vegan 081",
+   "url": "https://cdn.freesound.org/previews/777/777443_13558226-hq.mp3",
+   "page": "https://freesound.org/s/777443/",
+   "artist": "DSISStudios",
+   "license": "CC0",
+   "duration": 1.92421,
+   "file": "fart_deep/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart With Reverb.mp3",
+   "url": "https://cdn.freesound.org/previews/523/523468_11606850-hq.mp3",
+   "page": "https://freesound.org/s/523468/",
+   "artist": "DSISStudios",
+   "license": "CC0",
+   "duration": 3.36689,
+   "file": "fart_deep/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "fart100bpm.wav",
+   "url": "https://cdn.freesound.org/previews/20/20751_53896-hq.mp3",
+   "page": "https://freesound.org/s/20751/",
+   "artist": "DSISStudios",
+   "license": "CC0",
+   "duration": 2.40626,
+   "file": "fart_deep/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burp - medium-deep",
+   "url": "https://cdn.freesound.org/previews/814/814323_5287430-hq.mp3",
+   "page": "https://freesound.org/s/814323/",
+   "artist": "DSISStudios",
+   "license": "CC0",
+   "duration": 0.740797,
+   "file": "fart_deep/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "xKicks - Fart.aif",
+   "url": "https://cdn.freesound.org/previews/331/331825_3489710-hq.mp3",
+   "page": "https://freesound.org/s/331825/",
+   "artist": "ElectroShockNetwork",
+   "license": "CC0",
+   "duration": 1.33333,
+   "file": "fart_deep/06.ogg"
+  }
+ ],
+ "fart_wet": [
+  {
+   "source": "freesound",
+   "title": "wet fart.mp3",
+   "url": "https://cdn.freesound.org/previews/555/555418_12455127-hq.mp3",
+   "page": "https://freesound.org/s/555418/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 1.24302,
+   "file": "fart_wet/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Juicy Fart4",
+   "url": "https://cdn.freesound.org/previews/183/183550_2558531-hq.mp3",
+   "page": "https://freesound.org/s/183550/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 2.60062,
+   "file": "fart_wet/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "WAV Fart Vegan 049.wav",
+   "url": "https://cdn.freesound.org/previews/650/650691_13558226-hq.mp3",
+   "page": "https://freesound.org/s/650691/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 2.62898,
+   "file": "fart_wet/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Wet Fart",
+   "url": "https://cdn.freesound.org/previews/808/808662_17413817-hq.mp3",
+   "page": "https://freesound.org/s/808662/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 1.82275,
+   "file": "fart_wet/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Bad Chili Fart.wav",
+   "url": "https://cdn.freesound.org/previews/94/94989_1391979-hq.mp3",
+   "page": "https://freesound.org/s/94989/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 1.39374,
+   "file": "fart_wet/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "i like wet things",
+   "url": "https://cdn.freesound.org/previews/647/647544_14217119-hq.mp3",
+   "page": "https://freesound.org/s/647544/",
+   "artist": "kuchtaa",
+   "license": "CC0",
+   "duration": 1.88498,
+   "file": "fart_wet/06.ogg"
+  }
+ ],
+ "fart_bath": [
+  {
+   "source": "freesound",
+   "title": "WAV Fart Vegan 050.wav",
+   "url": "https://cdn.freesound.org/previews/650/650695_13558226-hq.mp3",
+   "page": "https://freesound.org/s/650695/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 4.32433,
+   "file": "fart_bath/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "explosivetubfart.wav",
+   "url": "https://cdn.freesound.org/previews/524/524096_8964414-hq.mp3",
+   "page": "https://freesound.org/s/524096/",
+   "artist": "JavonniNathanOtero",
+   "license": "CC0",
+   "duration": 2.7832,
+   "file": "fart_bath/02.ogg"
+  },
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_bath/03.ogg"
+  }
+ ],
+ "fart_whoopee": [
+  {
+   "source": "freesound",
+   "title": "Whoopee Cushion",
+   "url": "https://cdn.freesound.org/previews/398/398284_2351866-hq.mp3",
+   "page": "https://freesound.org/s/398284/",
+   "artist": "FlashTrauma",
+   "license": "CC0",
+   "duration": 1.17535,
+   "file": "fart_whoopee/01.ogg"
+  }
  ]
 }
