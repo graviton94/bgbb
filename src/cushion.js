@@ -1,5 +1,5 @@
-// 방석 모드: 폰을 내려놓고 장전 → 누가 들거나 흔들거나 만지는 순간 뿡.
-// 흔들림은 devicemotion (권한 필요 없음). 장전 중엔 화면을 검게 해 꺼진 척하고, 앱이면 화면이 안 꺼지게 붙잡는다.
+// 함정설치: 폰을 내려놓고 설치 → 누가 들거나 흔들거나 만지는 순간 뿡.
+// 흔들림은 devicemotion (권한 필요 없음, 못 읽는 기기는 화면 터치만). 설치 중엔 화면을 검게 해 꺼진 척하고, 앱이면 화면이 안 꺼지게 붙잡는다.
 import { charById, face } from './data.js';
 import { t, L } from './i18n.js';
 import { state, commit, getDiy } from './store.js';
@@ -18,10 +18,7 @@ let base = null;
 let armedAt = 0;
 let hits = 0;
 let wakeLock = null;
-let hasMotion = false;
 let heroId = 'hamster';
-
-addEventListener('devicemotion', e => { if (e.accelerationIncludingGravity?.x != null) hasMotion = true; }, { once: true });
 
 function show(name) {
   stage = name;
@@ -107,7 +104,6 @@ function stop() {
 export function openCushion() {
   const c = charById(state.hero) || charById('hamster');
   $('cFace').src = face(c.id, 'shameless');
-  $('cNote').textContent = `${t('cushion.note')}${hasMotion || native ? '' : ` ${t('cushion.noMotion')}`}`;
   $('cCount').textContent = state.cushion ? t('cushion.count', { n: state.cushion }) : '';
   show('setup');
   $('cushion').showModal();

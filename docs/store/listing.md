@@ -30,8 +30,8 @@
 ■ 미친 알림 (끌 수 있음)
 터진 뒤 소리 없이 한 줄. "방금 그거 햄찌임. 나 아님."
 
-■ 방석 모드
-폰을 소파 쿠션 밑이나 친구 자리에 두고 장전. 누가 들거나 만지는 순간 뿡. 화면은 꺼진 척.
+■ 함정설치!
+폰을 소파 쿠션 밑이나 친구 자리에 두고 설치. 누가 들거나 만지는 순간 뿡. 화면은 꺼진 척.
 
 ■ 내 목소리도 됨
 친구마다 소리 3종(실제 녹음) 중 고르거나, 3초 녹음으로 내 목소리를 장착.
@@ -70,8 +70,8 @@ Save and share a 9:16 breaking-news card: "EXCLUSIVE: Hammy finally lets one go"
 ■ Unhinged notifications (optional)
 One silent line after each one. "That was Hammy. Not me."
 
-■ Cushion mode
-Arm your phone and leave it under a cushion or on a friend's seat. The moment someone picks it up or touches it: toot. The screen pretends to be off.
+■ Set a trap!
+Set your phone and leave it under a cushion or on a friend's seat. The moment someone picks it up or touches it: toot. The screen pretends to be off.
 
 ■ Your own voice
 Pick from three real recordings per friend, or record 3 seconds of your own voice.

@@ -81,15 +81,13 @@
     </div>
   </dialog>
 
-  <!-- 방석 모드: 내려놓고 장전 → 누가 들거나 만지면 뿡 -->
+  <!-- 함정설치: 내려놓고 설치 → 누가 들거나 만지면 뿡 -->
   <dialog class="cushion" id="cushion" tabindex="-1" aria-labelledby="cushionTitle">
     <section class="c-setup" id="cSetup">
-      <img class="c-face" id="cFace" alt="">
+      <div class="c-face-wrap"><img class="c-face" id="cFace" alt=""><img class="c-shades" src="assets/faces/sunglasses.png" alt=""></div>
       <h2 id="cushionTitle" data-i18n="cushion.title"></h2>
-      <p data-i18n-html="cushion.how"></p>
-      <p class="muted small" id="cNote"></p>
       <p class="c-count" id="cCount"></p>
-      <button class="btn primary wide" id="cArm" type="button" data-i18n="cushion.arm"></button>
+      <button class="btn primary wide c-arm" id="cArm" type="button" data-i18n="cushion.arm"></button>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </section>
     <section class="c-countdown" id="cCountdown" hidden>
