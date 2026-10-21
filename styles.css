@@ -41,7 +41,9 @@ img { -webkit-user-drag: none; }
 .app {
   max-width: 480px;
   margin: 0 auto;
-  min-height: 100%;
+  height: 100%;
+  height: 100dvh;   /* 위(로고) · 아래(탭) 고정, 가운데만 남는 높이를 나눠 쓴다 */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   padding-top: var(--safe-top);
@@ -64,12 +66,12 @@ img { -webkit-user-drag: none; }
 .icon-btn:active { background: rgba(0, 0, 0, 0.06); }
 
 main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
-.screen { display: none; flex: 1; flex-direction: column; padding: 0 20px 16px; }
+.screen { display: none; flex: 1; flex-direction: column; min-height: 0; padding: 0 20px 16px; overflow-y: auto; }
+#screen-home { overflow: hidden; padding-bottom: 8px; }   /* 홈은 절대 안 스크롤: 캐릭터 무대가 남는 높이만큼 줄어든다 */
 .screen.active { display: flex; }
 
 .nav {
-  position: sticky;
-  bottom: 0;
+  flex: none;
   display: flex;
   justify-content: center;
   gap: 28px;
@@ -119,7 +121,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .status {
   align-self: flex-start;
   display: inline-flex; align-items: center; gap: 8px;
-  min-height: 36px; margin-top: 18px; padding: 0 12px 0 0;
+  min-height: 36px; margin-top: clamp(4px, 2dvh, 18px); padding: 0 12px 0 0;
   border: 0; background: none; cursor: pointer;
   font-size: 13px; color: var(--muted);
 }
@@ -127,26 +129,26 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .dot.on { background: #12B76A; }
 .dot.frozen { background: #2E90FA; }
 
-.label { margin-top: 34px; font-size: 15px; color: var(--muted); }
+.label { margin-top: clamp(4px, 3dvh, 34px); font-size: 15px; color: var(--muted); }
 .big {
   margin: 2px 0 0;
   font-family: var(--display);
   font-weight: 400;
-  font-size: clamp(56px, 17vw, 76px);
+  font-size: clamp(40px, min(17vw, 8.6dvh), 76px);
   line-height: 1.02;
   letter-spacing: -2px;
 }
-.line { margin: 14px 0 0; font-size: 15px; color: var(--muted); line-height: 1.6; }
+.line { margin: clamp(4px, 1.6dvh, 14px) 0 0; font-size: 15px; color: var(--muted); line-height: 1.5; }
 
-.stage { position: relative; flex: 1; min-height: 210px; margin-top: 12px; }
+.stage { position: relative; flex: 1 1 0; min-height: 96px; margin-top: 8px; }
 .hero {
   position: absolute; left: -2%; bottom: -4px;
-  width: 58%; max-width: 250px;
+  height: 100%; max-height: 250px; aspect-ratio: 1; max-width: 58%;
   padding: 0; border: 0; background: none; cursor: pointer;
   transform: rotate(-6deg);
 }
 .hero img {
-  width: 100%; display: block;
+  width: 100%; height: 100%; object-fit: contain; object-position: bottom left; display: block;
   filter: drop-shadow(3px 0 0 #fff) drop-shadow(-3px 0 0 #fff) drop-shadow(0 3px 0 #fff) drop-shadow(0 -3px 0 #fff);
 }
 .hero.wiggle { animation: wiggle 0.5s ease; }
@@ -166,11 +168,12 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   font-weight: 600;
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
-#bubble1 { left: 44%; top: 14%; }
-#bubble2 { left: 50%; top: calc(14% + 54px); }
+/* 말풍선은 캐릭터 머리 옆에 붙어 다닌다 (무대 높이가 바뀌어도) */
+#bubble1 { left: 44%; bottom: calc(min(100%, 250px) * 0.7); }
+#bubble2 { left: 50%; bottom: calc(min(100%, 250px) * 0.7 - 54px); }
 .bubble.accent { background: var(--lime); }
 
-.home-bottom { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.home-bottom { flex: none; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .latest {
   display: flex; justify-content: space-between; align-items: center;
   min-height: 64px; padding: 10px 16px;
@@ -429,12 +432,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
 /* 키 작은 화면: 위아래 여백을 줄여 버튼이 한 화면에 들어오게 */
 @media (max-height: 700px) {
-  .status { margin-top: 6px; }
-  .label { margin-top: 10px; }
-  .big { font-size: 50px; }
-  .line { margin-top: 8px; font-size: 14px; }
-  .stage { min-height: 150px; }
-  .hero { width: 46%; }
+  .line { font-size: 14px; }
   .latest { min-height: 54px; padding: 6px 14px; }
   .btn { min-height: 48px; }
 }

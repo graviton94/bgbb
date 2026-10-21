@@ -306,7 +306,8 @@ $('cushionBtn').addEventListener('click', openCushion);
 
 $('freeze').addEventListener('click', () => {
   state.frozen = !state.frozen;
-  play(state.frozen ? 'ui_freeze' : 'ui_pop', 0.7);
+  // 비상탈출은 회의 중에 누르니까 소리 없이 (짧은 손맛만). 다시 시작은 작게 뿅
+  if (state.frozen) haptic(15); else play('ui_pop', 0.3);
   toast(t(state.frozen ? 'op.frozen' : 'op.thawed'));
   syncSchedule(previewOperation);
 });

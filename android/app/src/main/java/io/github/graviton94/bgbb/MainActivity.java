@@ -224,6 +224,18 @@ public class MainActivity extends Activity {
             PrankScheduler.configure(getApplicationContext(), json);
         }
 
+        /** 방구 소리: 알림 볼륨 · 벨소리 모드를 따른다 (style: main | soft | loud | diy) */
+        @JavascriptInterface
+        public void playToot(String charId, String style) {
+            PrankPlayer.playToot(getApplicationContext(), charId, style);
+        }
+
+        /** 지금 폰 상태: loud (소리) | soft (진동) | hold (무음 · 방해금지 · 알림 볼륨 0) */
+        @JavascriptInterface
+        public String deviceMode() {
+            return PrankPlayer.deviceMode(getApplicationContext());
+        }
+
         /** 알림의 "다시 시작!" 으로 비상탈출이 풀렸는지 (한 번 읽으면 지워짐) */
         @JavascriptInterface
         public boolean takeResumed() {

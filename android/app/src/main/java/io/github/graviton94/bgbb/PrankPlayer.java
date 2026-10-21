@@ -72,9 +72,15 @@ final class PrankPlayer {
         }
         AudioManager am = c.getSystemService(AudioManager.class);
         int ringer = am != null ? am.getRingerMode() : AudioManager.RINGER_MODE_NORMAL;
-        if (ringer == AudioManager.RINGER_MODE_NORMAL) return "loud";
+        // 소리는 알림 볼륨을 따르니까, 벨소리 모드여도 알림 볼륨이 0 이면 참음 (기준을 하나로)
+        if (ringer == AudioManager.RINGER_MODE_NORMAL) return am != null && am.getStreamVolume(AudioManager.STREAM_NOTIFICATION) == 0 ? "hold" : "loud";
         if (ringer == AudioManager.RINGER_MODE_VIBRATE) return "soft";
         return "hold";
+    }
+
+    /** 앱 안에서 내는 방구 소리 (연습 · 캐릭터 누르기 · 함정)도 알람과 똑같이 알림 볼륨으로. 무음 · 진동이면 시스템이 막는다. */
+    static void playToot(Context c, String charId, String sound) {
+        new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
     }
 
     private static void play(Context c, String charId, String sound, Runnable done) {

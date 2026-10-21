@@ -104,7 +104,9 @@ function stop() {
 export function openCushion() {
   const c = charById(state.hero) || charById('hamster');
   $('cFace').src = face(c.id, 'shameless');
-  $('cCount').textContent = state.cushion ? t('cushion.count', { n: state.cushion }) : '';
+  // 소리는 알림 볼륨 · 벨소리 모드를 따른다: 지금 소리가 안 나는 상태면 미리 알려 준다
+  const quiet = native?.deviceMode && native.deviceMode() !== 'loud';
+  $('cCount').textContent = [state.cushion ? t('cushion.count', { n: state.cushion }) : '', quiet ? t('cushion.quiet') : ''].filter(Boolean).join(' · ');
   show('setup');
   $('cushion').showModal();
   $('cushion').focus();
