@@ -63,8 +63,7 @@ android/                   WebView 껍데기 + 불시 작전 엔진
 npm start                               # 브라우저 미리보기 (ES 모듈이라 file:// 로는 안 열림)
 npm test                                # 일정 규칙 테스트
 cd android && ./gradlew testDebugUnitTest assembleDebug
-python3 tools/fetch_sounds.py      실제 녹음 후보 받기 (Freesound CC0 · Wikimedia Commons, GitHub Actions 에서)
-tools/build_sounds.py      고른 녹음을 잘라 효과음 만들기 → assets/sounds/ (출처: tools/sound_credits.json)
+python3 tools/build_sounds.py           # 고른 녹음으로 효과음 다시 만들기 (후보는 tools/sound_candidates/)
 ```
 
 `main` 에 푸시하거나 PR 을 열면 GitHub Actions 가 테스트 → 디버그 APK → 출시용 AAB 를 만든다.
