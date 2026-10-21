@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
+r"""
 Post-processes the 7 photorealistic Hamster ("방구 햄찌") images into:
   - 1024x1024 transparent RGBA PNGs in `c:\bgbb\assets\expressions_real\`
   - Exact eye-coordinate alignment on #1, #3, #4, #6, #7 to (372, 430) & (652, 430)
