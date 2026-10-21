@@ -10,7 +10,7 @@ import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
-import { MEMES, pickMeme } from './memes.js';
+import { composeMeme, renderMeme } from './memes.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -109,24 +109,21 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   const dlg = $('burst');
   const headline = headlineFor(ev);
   const caption = pick(L(MODES[ev.mode].captions));
-  // 짤은 랜덤 (잭팟만 돈 틀). 표정은 결과에 맞춰: 냄 = 터짐, 진동 = 휘파람, 참음 = 뻔뻔
-  const jackpot = result && titleById(result.title).rarity === 'jackpot';
-  const name = pickMeme(jackpot);
-  const meme = MEMES[name]({ id: c.id, expr: BURST_FACE[ev.mode] });
+  // 짤: 그 상황으로 조립 (잭팟 = 돈 짤, 가끔 유니크 짤). 자랑 카드도 같은 짤을 그린다.
+  const title = result && titleById(result.title);
+  const jackpot = title?.rarity === 'jackpot';
+  const meme = composeMeme({ id: c.id, mode: ev.mode, t: ev.t, title: title && L(title.name), rarity: title?.rarity, practice: !result });
   const box = $('meme');
-  box.dataset.meme = name;
-  box.style.setProperty('--meme-bg', meme.bg);
-  box.innerHTML = meme.html;
-  box.setAttribute('aria-label', box.textContent.replace(/\s+/g, ' ').trim());
+  box.dataset.meme = meme.name;
+  renderMeme(box, meme);
   const d = new Date(ev.t);
   const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
   $('burstWhen').textContent = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
   if (result) {
-    const title = titleById(result.title);
     const own = state.titles[result.title];
     $('burstTitle').textContent = L(title.name);
     $('burstMeta').textContent = `${result.isNew ? t('burst.new') : t('burst.again', { n: own.n })} · ${t('burst.meta', { n: ownedCount(), all: TITLES.length, rarity: L(RARITY[title.rarity].name) })}`;
-    burstCard = cardData(ev, result.title, headline, caption);
+    burstCard = { ...cardData(ev, result.title, headline, caption), meme };
   } else {
     $('burstWhen').textContent = t('burst.practice');
     $('burstTitle').textContent = t('burst.practiceTitle');
@@ -146,7 +143,7 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   requestAnimationFrame(() => {
     const r = box.getBoundingClientRect(), W = innerWidth, H = innerHeight;
     const at = p => ({ x: (r.left + p.x * r.width) / W, y: (r.top + p.y * r.height) / H });
-    startFx($('fx'), kinds.filter(Boolean), { from: at(meme.fx), gun: at({ x: 0.3, y: 0.62 }) });
+    startFx($('fx'), kinds.filter(Boolean), { from: at(meme.fx), gun: at(meme.fx) });
   });
 }
 $('burst').addEventListener('close', () => stopFx($('fx')));
@@ -315,7 +312,9 @@ function openTitle(id) {
 }
 $('tsShare').addEventListener('click', () => {
   const own = state.titles[sheetTitle];
-  if (own?.last) shareCard(cardData(own.last, sheetTitle));
+  if (!own?.last) return;
+  const x = titleById(sheetTitle);
+  shareCard({ ...cardData(own.last, sheetTitle), meme: composeMeme({ id: own.last.char, mode: own.last.mode, t: own.last.t, title: L(x.name), rarity: x.rarity }) });
 });
 
 // ---------------------------------------------------------- 렌더

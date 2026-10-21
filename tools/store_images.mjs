@@ -113,10 +113,16 @@ async function captureScreens(lang) {
   // 속보 카드는 앱이 그리는 1080×1920 그림을 그대로 쓴다
   const card = await page.evaluate(async () => {
     const { drawCard } = await import('/src/card.js');
+    const { composeMeme } = await import('/src/memes.js');
     const canvas = document.getElementById('card');
     const d = new Date();
     d.setHours(14, 7, 0, 0);
+    const ko = document.documentElement.lang === 'ko';
+    let meme;   // 방구 구름이 나오는 조립형 짤이 나올 때까지
+    do { meme = composeMeme({ id: 'hamster', mode: 'loud', t: d.getTime(), title: ko ? '회의실 테러범' : 'Meeting Room Menace', rarity: 'legend' }); }
+    while (meme.name !== 'assembled' || !meme.items.some(it => it.src?.includes('fart_bubble')));
     await drawCard(canvas, {
+      meme,
       ev: { t: d.getTime(), char: 'hamster', mode: 'loud' },
       title: document.documentElement.lang === 'ko' ? '회의실 테러범' : 'Meeting Room Menace',
       rarity: document.documentElement.lang === 'ko' ? '레전드' : 'Legend',
