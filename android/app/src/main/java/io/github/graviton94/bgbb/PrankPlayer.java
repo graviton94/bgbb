@@ -15,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -85,12 +87,16 @@ final class PrankPlayer {
                 mp.setDataSource(diy.getAbsolutePath());
             } else {
                 String style = "soft".equals(sound) || "loud".equals(sound) ? sound : "main";
-                // 같은 소리도 매번 조금씩 다르게: <캐릭터>_<스타일>, _2, _3 중 하나
-                int take = 1 + RANDOM.nextInt(3);
-                String name = charId + "_" + style + (take == 1 ? "" : "_" + take);
-                int res = c.getResources().getIdentifier(name, "raw", c.getPackageName());
-                if (res == 0) res = c.getResources().getIdentifier(charId + "_" + style, "raw", c.getPackageName());
-                if (res == 0) throw new IllegalStateException("no sound " + charId + "_" + style);
+                // 같은 소리도 매번 다르게: <캐릭터>_<스타일>, _2, _3 … 있는 것 중 하나
+                String base = charId + "_" + style;
+                List<Integer> takes = new ArrayList<>();
+                for (int n = 1; n <= 9; n++) {
+                    int id = c.getResources().getIdentifier(n == 1 ? base : base + "_" + n, "raw", c.getPackageName());
+                    if (id == 0) break;
+                    takes.add(id);
+                }
+                if (takes.isEmpty()) throw new IllegalStateException("no sound " + base);
+                int res = takes.get(RANDOM.nextInt(takes.size()));
                 try (AssetFileDescriptor afd = c.getResources().openRawResourceFd(res)) {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                 }
