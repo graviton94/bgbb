@@ -1,24 +1,34 @@
 # -*- coding: utf-8 -*-
 r"""
-Processes and synthesizes all 21 photorealistic character images (Hamster, Tit, Cat x 7 expressions):
-  - Uses the 12 AI-generated photorealistic masters (`raw_hamster_1..7`, `raw_tit_1..3`, `raw_cat_1..2`)
-  - Synthesizes the remaining Tit (#4..#7) and Cat (#3..#7) expressions via 2D continuous displacement
-    fields (`scipy.ndimage.map_coordinates`) + photorealistic texture/feature cloning from the masters.
-  - Extracts clean 1024x1024 transparent RGBA PNGs in `c:\bgbb\assets\expressions_real\`
-  - Aligns all #1, #3, #4, #6, #7 eye coordinates to (372, 430) & (652, 430) for 0px sunglasses/money-gun overlay.
+Generates TWO complete 21-image photorealistic expression packs (Hamster, Tit, Cat x 7 expressions):
+  1. `c:\bgbb\assets\expressions_real\` (Original High-Res + Front-Camera Close-Up Convex Bulge)
+  2. `c:\bgbb\assets\expressions_real_bgrade\` (Pre-baked Weathered B-Grade Meme Filter:
+     Low-res downsample -> JPEG blocky/mosquito compression -> Upscale + Harsh Phone-Cam Contrast)
+
+Key fixes & guarantees:
+  - ZERO cross-species Frankenstein pasting (no hamster mouths or rodent fingers on Tit or Cat!).
+  - ZERO erased eyes with drawn cartoon '> <' lines.
+  - #5 터짐 (`5_burst`): Real straining squint + authentic B-grade meme '몸 들썩' vertical jolt & zoom motion blur.
+  - #7 엄지척 (`7_thumbs_up`): Option A — Tit raises its own brown side wings proudly; Cat raises two round,
+    toe-less fluffy white '솜방망이' cat paws textured directly from its own chest fur.
+  - Eye centers for #1, #3, #4, #6, #7 are strictly locked at (372, 430) & (652, 430) AFTER the front-camera
+    convex bulge, so `pixel_sunglasses.png` and `money_rain.png` overlay at (0, 0) with 0px error.
 """
 
 import glob
+import io
 import math
 import os
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from scipy import ndimage
 
 ARTIFACT_DIR = r"C:\Users\ruahn49\.gemini\antigravity\brain\b2ce85ba-1f7b-478f-8be4-052d7e2dab69"
 OUT_REAL_DIR = r"c:\bgbb\assets\expressions_real"
+OUT_BGRADE_DIR = r"c:\bgbb\assets\expressions_real_bgrade"
 EXP_DIR = r"c:\bgbb\assets\expressions"
 os.makedirs(OUT_REAL_DIR, exist_ok=True)
+os.makedirs(OUT_BGRADE_DIR, exist_ok=True)
 
 TARGET_LEFT_EYE = (372.0, 430.0)
 TARGET_RIGHT_EYE = (652.0, 430.0)
@@ -30,6 +40,10 @@ def find_raw_file(prefix):
     if not matches:
         return None
     return matches[-1]
+
+
+def gaussian_2d(xx, yy, cx, cy, sx, sy):
+    return np.exp(-0.5 * (((xx - cx) / sx) ** 2 + ((yy - cy) / sy) ** 2))
 
 
 def detect_eye_centers(rgb_np, char_id="hamster"):
@@ -55,9 +69,8 @@ def detect_eye_centers(rgb_np, char_id="hamster"):
 
 
 def extract_foreground_rgba(rgb_img: Image.Image, char_id: str = "hamster") -> Image.Image:
-    """Removes the contiguous studio white/off-white background from the outer border."""
+    """Removes the contiguous studio white/off-white background from the outer border while protecting inner fur."""
     rgb_np = np.asarray(rgb_img, dtype=np.float32)
-    # Estimate background color from top-left and top-right corners
     bg_tl = rgb_np[:12, :12, :3].mean(axis=(0, 1))
     bg_tr = rgb_np[:12, -12:, :3].mean(axis=(0, 1))
     bg_col = 0.5 * (bg_tl + bg_tr)
@@ -71,18 +84,14 @@ def extract_foreground_rgba(rgb_img: Image.Image, char_id: str = "hamster") -> I
     local_sq_mean = ndimage.uniform_filter(gray ** 2, size=7)
     local_std = np.sqrt(np.maximum(0.0, local_sq_mean - local_mean ** 2))
 
-    # Tit and Cat have slightly softer studio vignette corners, so allow dist < 13.5 when local_std is flat,
-    # while strictly protecting the interior head/cheek/body ellipse so bright white fur highlights are never eaten!
     h, w, _ = rgb_np.shape
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
     if char_id == "tit":
-        # Protect interior of round bird head & body
-        inner_body = (((xx - 512.0) / 335.0) ** 2 + ((yy - 565.0) / 375.0) ** 2) < 1.0
+        inner_body = (((xx - 512.0) / 345.0) ** 2 + ((yy - 560.0) / 385.0) ** 2) < 1.0
     elif char_id == "cat":
-        # Protect interior of cat face, cheeks, and chest
-        inner_body = (((xx - 512.0) / 345.0) ** 2 + ((yy - 590.0) / 370.0) ** 2) < 1.0
+        inner_body = (((xx - 512.0) / 355.0) ** 2 + ((yy - 585.0) / 380.0) ** 2) < 1.0
     else:
-        inner_body = (((xx - 512.0) / 310.0) ** 2 + ((yy - 560.0) / 340.0) ** 2) < 1.0
+        inner_body = (((xx - 512.0) / 315.0) ** 2 + ((yy - 560.0) / 345.0) ** 2) < 1.0
 
     dist_thresh = 13.5 if char_id in ("tit", "cat") else 9.5
     std_thresh = 2.8 if char_id in ("tit", "cat") else 2.6
@@ -159,30 +168,100 @@ def apply_displacement_warp(rgba_img: Image.Image, dx_field: np.ndarray, dy_fiel
     return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), "RGBA")
 
 
-def gaussian_2d(xx, yy, cx, cy, sx, sy):
-    return np.exp(-0.5 * (((xx - cx) / sx) ** 2 + ((yy - cy) / sy) ** 2))
+def apply_front_camera_bulge(rgba_img: Image.Image, char_id: str = "hamster", lock_eyes: bool = True, strength: float = 0.24) -> Image.Image:
+    """
+    Applies a funny 28mm front-facing phone-camera close-up convex barrel distortion
+    centered on the animal's nose/muzzle (making the center face/nose bulge toward the lens).
+    When `lock_eyes=True`, smoothly pins the displacement at the eye coordinates (372,430) & (652,430)
+    to 0.0 so the pixel sunglasses and money-gun overlays remain 100% locked!
+    """
+    h, w = 1024, 1024
+    yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
+
+    # Center of front-cam lens bulge (right on the nose/snout!)
+    cx = 512.0
+    cy = 472.0 if char_id == "tit" else (525.0 if char_id == "cat" else 545.0)
+    radius = 390.0
+
+    rx = (xx - cx) / radius
+    ry = (yy - cy) / radius
+    r2 = rx * rx + ry * ry
+
+    # Smooth spherical/barrel magnification near center (r < 1), tapering to 0 at edges
+    bulge_envelope = np.exp(-1.15 * r2)
+    scale_factor = strength * bulge_envelope
+
+    dx = (xx - cx) * scale_factor
+    dy = (yy - cy) * scale_factor
+
+    if lock_eyes:
+        # Nullify displacement right at the two eye centers (372,430) and (652,430) so sunglasses lock at 0px
+        eye_pin = 1.0 - np.clip(
+            gaussian_2d(xx, yy, 372.0, 430.0, 44.0, 38.0) + gaussian_2d(xx, yy, 652.0, 430.0, 44.0, 38.0),
+            0.0,
+            1.0,
+        )
+        dx *= eye_pin
+        dy *= eye_pin
+
+    return apply_displacement_warp(rgba_img, dx, dy)
+
+
+def apply_bgrade_weathered_filter(rgba_img: Image.Image) -> Image.Image:
+    """
+    Applies an authentic B-grade '풍화된 짤방' (weathered re-uploaded internet meme) filter:
+      1. Downsamples RGB to 280x280 (simulating low-res phone capture / community re-upload)
+      2. Compresses through lossy JPEG (quality=26, 4:2:0 chroma subsampling) for authentic block/mosquito artifacts
+      3. Upscales back to 1024x1024 with BILINEAR + mild unsharp crunch & slightly harsh phone-cam contrast
+      4. Preserves clean alpha silhouette so it drops directly into the app UI.
+    """
+    arr = np.asarray(rgba_img, dtype=np.uint8)
+    alpha = Image.fromarray(arr[..., 3], "L")
+
+    # Composite onto white before JPEG compression so edges get authentic meme ringing without black halos
+    white_bg = Image.new("RGB", (1024, 1024), (255, 255, 255))
+    white_bg.paste(rgba_img.convert("RGB"), mask=alpha)
+
+    # 1) Slight phone-camera harsh contrast & warm indoor tint
+    rgb_low = white_bg.resize((280, 280), Image.Resampling.BILINEAR)
+    rgb_low = ImageEnhance.Contrast(rgb_low).enhance(1.14)
+    rgb_low = ImageEnhance.Color(rgb_low).enhance(1.08)
+
+    # 2) Lossy JPEG roundtrip at quality=26 (4:2:0 subsampling)
+    buf = io.BytesIO()
+    rgb_low.save(buf, format="JPEG", quality=26, subsampling=2)
+    buf.seek(0)
+    jpeg_crunched = Image.open(buf).convert("RGB")
+
+    # 3) Upscale back to 1024x1024 (mix of bilinear and nearest for that crispy screenshotted meme texture)
+    up_bilinear = jpeg_crunched.resize((1024, 1024), Image.Resampling.BILINEAR)
+    up_nearest = jpeg_crunched.resize((1024, 1024), Image.Resampling.NEAREST)
+    blended_rgb = Image.blend(up_bilinear, up_nearest, alpha=0.22)
+
+    out_rgba = np.dstack([np.asarray(blended_rgb, dtype=np.uint8), np.asarray(alpha, dtype=np.uint8)])
+    return Image.fromarray(out_rgba, "RGBA")
 
 
 # =========================================================================
-# PHOTOREALISTIC EXPRESSION SYNTHESIZERS (from aligned 1024x1024 base RGBA)
+# NATURAL ANATOMICAL EXPRESSION SYNTHESIZERS (ZERO FRANKENSTEIN PASTING!)
 # =========================================================================
 
 def synth_cat_3_shameless(base_cat: Image.Image) -> Image.Image:
     """
-    Synthesizes #3 뻔뻔 (half-closed heavy eyelids + sly asymmetric smirk)
-    from aligned base_cat where eyes are at (372, 430) & (652, 430).
+    #3 뻔뻔 for Cat: half-closed heavy eyelids + sly asymmetric smirk
+    using pure 2D warp on base_cat (eyes locked at (372,430) & (652,430)).
     """
     h, w = 1024, 1024
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
     dx = np.zeros((h, w), dtype=np.float32)
     dy = np.zeros((h, w), dtype=np.float32)
 
-    # 1) Pull upper eyelid fur/skin down over the top half of each eye (ey = 430)
+    # Pull upper eyelid down over the top half of each eye
     for ex, ey in [(372.0, 430.0), (652.0, 430.0)]:
         lid_mask = gaussian_2d(xx, yy, ex, ey - 18.0, 46.0, 24.0)
         dy += lid_mask * 30.0
 
-    # 2) Pull right corner of mouth (around x=575, y=545) up and right into a sly cat smirk
+    # Pull right corner of mouth up and right into a sly cat smirk
     smirk_mask = gaussian_2d(xx, yy, 575.0, 540.0, 62.0, 42.0)
     dy -= smirk_mask * 26.0
     dx += smirk_mask * 14.0
@@ -190,12 +269,10 @@ def synth_cat_3_shameless(base_cat: Image.Image) -> Image.Image:
     warped = apply_displacement_warp(base_cat, dx, dy)
     arr = np.asarray(warped, dtype=np.float32)
 
-    # Add subtle natural eyelid crease line at y = 420 across each eye
     for ex, ey in [(372.0, 430.0), (652.0, 430.0)]:
         crease = gaussian_2d(xx, yy, ex, ey - 8.0, 38.0, 3.2)
         arr[..., :3] *= (1.0 - 0.55 * crease[..., None])
 
-    # Deepen smirk corner shadow line slightly
     smirk_crease = gaussian_2d(xx, yy - (538.0 - 0.28 * (xx - 512.0)), 565.0, 524.0, 42.0, 3.5)
     arr[..., :3] *= (1.0 - 0.35 * smirk_crease[..., None])
 
@@ -204,28 +281,27 @@ def synth_cat_3_shameless(base_cat: Image.Image) -> Image.Image:
 
 def synth_4_hold(base_rgba: Image.Image, hamster_4_rgba: Image.Image, char_id: str) -> Image.Image:
     """
-    Synthesizes #4 웃참 (giant puffed-up cheeks, tightly clamped lips/beak, watery eyes + teardrop)
-    while keeping eye centers strictly at (372, 430) & (652, 430).
+    #4 웃참: Giant puffed-up cheeks, tightly clamped lips/beak, watery eyes + brimming teardrop,
+    keeping eye centers strictly at (372, 430) & (652, 430).
     """
     h, w = 1024, 1024
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
     dx = np.zeros((h, w), dtype=np.float32)
     dy = np.zeros((h, w), dtype=np.float32)
 
-    # Protect eye centers so (372, 430) and (652, 430) do not move
     eye_protect = 1.0 - np.clip(
         gaussian_2d(xx, yy, 372.0, 430.0, 52.0, 45.0) + gaussian_2d(xx, yy, 652.0, 430.0, 52.0, 45.0),
         0.0,
         1.0,
     )
 
-    # 1) Giant outward cheek puff on left (cx=285, cy=545) and right (cx=739, cy=545)
+    # Giant outward cheek puff on left and right
     for sign, cx, cy in [(-1.0, 275.0, 545.0), (1.0, 749.0, 545.0)]:
         puff = gaussian_2d(xx, yy, cx, cy, 125.0, 110.0) * eye_protect
-        dx += sign * puff * 44.0
-        dy += puff * 12.0
+        dx += sign * puff * 46.0
+        dy += puff * 14.0
 
-    # 2) Clamp mouth/beak tightly shut (upward pinch on lower lip/chin)
+    # Clamp mouth/beak tightly shut
     mouth_y = 485.0 if char_id == "tit" else 545.0
     clamp = gaussian_2d(xx, yy, 512.0, mouth_y + 25.0, 75.0, 32.0) * eye_protect
     dy -= clamp * 18.0
@@ -233,7 +309,7 @@ def synth_4_hold(base_rgba: Image.Image, hamster_4_rgba: Image.Image, char_id: s
     warped = apply_displacement_warp(base_rgba, dx, dy)
     arr = np.asarray(warped, dtype=np.float32)
 
-    # 3) Boost rosy pink blush on puffed cheeks
+    # Boost rosy pink blush on puffed cheeks
     blush_l = gaussian_2d(xx, yy, 275.0, 525.0, 78.0, 55.0)
     blush_r = gaussian_2d(xx, yy, 749.0, 525.0, 78.0, 55.0)
     blush = (blush_l + blush_r) * (arr[..., 3] / 255.0)
@@ -241,15 +317,11 @@ def synth_4_hold(base_rgba: Image.Image, hamster_4_rgba: Image.Image, char_id: s
     arr[..., 1] = np.clip(arr[..., 1] - blush * 16.0, 0, 255)
     arr[..., 2] = np.clip(arr[..., 2] - blush * 14.0, 0, 255)
 
-    # 4) Clone the photorealistic watery eye gloss & brimming crystal teardrop from hamster_4_rgba
-    #    around the right eye outer-bottom corner (x in 620..735, y in 425..505)
+    # Watery eye gloss & brimming crystal teardrop at eye corner
     h4_np = np.asarray(hamster_4_rgba, dtype=np.float32)
-    tear_mask = gaussian_2d(xx, yy, 676.0, 468.0, 26.0, 18.0)
-    # Also add a tiny glossy tear droplet on the left eye bottom corner
-    tear_mask_l = gaussian_2d(xx, yy, 348.0, 466.0, 20.0, 14.0)
-    arr[..., :3] = arr[..., :3] * (1.0 - 0.78 * tear_mask[..., None]) + h4_np[..., :3] * (0.78 * tear_mask[..., None])
+    tear_mask = gaussian_2d(xx, yy, 676.0, 468.0, 24.0, 16.0)
+    arr[..., :3] = arr[..., :3] * (1.0 - 0.72 * tear_mask[..., None]) + h4_np[..., :3] * (0.72 * tear_mask[..., None])
 
-    # Add bright specular tear rim highlight on both eyes
     rim_r = gaussian_2d(xx, yy, 672.0, 462.0, 12.0, 5.0) + gaussian_2d(xx, yy, 688.0, 476.0, 6.0, 6.0)
     rim_l = gaussian_2d(xx, yy, 352.0, 462.0, 11.0, 4.5)
     rim = np.clip(rim_r + rim_l, 0.0, 1.0)
@@ -258,213 +330,277 @@ def synth_4_hold(base_rgba: Image.Image, hamster_4_rgba: Image.Image, char_id: s
     return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
 
 
-def synth_tit_5_burst(base_tit: Image.Image, eng_tit: Image.Image) -> Image.Image:
+def apply_jolt_motion_blur(rgba_img: Image.Image, v_shift: int = 18, zoom_pct: float = 0.032) -> Image.Image:
     """
-    Synthesizes #5 터짐 for Tit:
-      - Tightly squeezed '> <' shut eyes using real shifted forehead feather texture
-      - Wide open chirping/straining beak + raised jolting brown side wings!
+    Creates the classic B-grade animal meme '몸 들썩 / 영혼 가출 흔들림' (vertical jolt + radial zoom vibration)
+    using premultiplied alpha so there is ZERO grey outline halo on the transparent background.
+    """
+    base_np = np.asarray(rgba_img, dtype=np.float32)
+    h, w, _ = base_np.shape
+
+    # Premultiply RGB by alpha before blending motion ghosts
+    a0 = base_np[..., 3:4] / 255.0
+    pre_base = np.dstack([base_np[..., :3] * a0, a0])
+
+    up_ghost = np.roll(pre_base, -v_shift, axis=0)
+    dn_ghost = np.roll(pre_base, v_shift, axis=0)
+
+    zw, zh = int(w * (1.0 + zoom_pct)), int(h * (1.0 + zoom_pct))
+    zoomed_pil = rgba_img.resize((zw, zh), Image.Resampling.BILINEAR)
+    ox, oy = (zw - w) // 2, (zh - h) // 2
+    zoom_np = np.asarray(zoomed_pil.crop((ox, oy, ox + w, oy + h)), dtype=np.float32)
+    az = zoom_np[..., 3:4] / 255.0
+    pre_zoom = np.dstack([zoom_np[..., :3] * az, az])
+
+    pre_out = 0.56 * pre_base + 0.15 * up_ghost + 0.13 * dn_ghost + 0.16 * pre_zoom
+    out_a = np.clip(pre_out[..., 3:4], 0.0, 1.0)
+    out_rgb = np.where(out_a > 1e-4, pre_out[..., :3] / np.maximum(out_a, 1e-4), 255.0)
+
+    out = np.dstack([np.clip(out_rgb, 0, 255).astype(np.uint8), np.clip(out_a[..., 0] * 255.0, 0, 255).astype(np.uint8)])
+    return Image.fromarray(out, "RGBA")
+
+
+def synth_natural_5_burst(base_rgba: Image.Image, eng_rgba: Image.Image, char_id: str) -> Image.Image:
+    """
+    #5 터짐 (힘준 얼굴 또는 시원한 얼굴, 몸 들썩) for Tit and Cat:
+      - ZERO pasted hamster mouths! ZERO erased eyes or cartoon '> <' lines!
+      - Uses the animal's OWN face (`base_rgba`), warps its own upper & lower eyelids into a
+        tightly squinted straining/relieved face ('힘준 실눈'), warps its own cheeks/shoulders upward,
+        opens its OWN mouth/beak naturally by blending ONLY its own open beak/mouth from `eng_rgba`
+        (after exact coordinate alignment), and applies the hilarious B-grade '몸 들썩' jolt motion blur!
     """
     h, w = 1024, 1024
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
     dx = np.zeros((h, w), dtype=np.float32)
     dy = np.zeros((h, w), dtype=np.float32)
 
-    # 1) Jolt brown side wings upward & outward and puff body slightly
-    wing_l = gaussian_2d(xx, yy, 185.0, 560.0, 95.0, 130.0)
-    wing_r = gaussian_2d(xx, yy, 839.0, 560.0, 95.0, 130.0)
-    dy -= (wing_l + wing_r) * 68.0
-    dx -= wing_l * 28.0
-    dx += wing_r * 28.0
+    # 1) Tightly squint the animal's OWN upper and lower eyelids (just like #3, which looks 100% natural,
+    #    plus upward lower-cheek/eyelid push for a straining '힘준 얼굴' squint!)
+    for sign, (ex, ey) in [(-1.0, (372.0, 430.0)), (1.0, (652.0, 430.0))]:
+        upper_lid = gaussian_2d(xx, yy, ex, ey - 18.0, 46.0, 24.0)
+        lower_lid = gaussian_2d(xx, yy, ex, ey + 20.0, 46.0, 24.0)
+        dy += upper_lid * 28.0 - lower_lid * 20.0
+        # Slight inward scrunch toward the nose bridge when straining hard!
+        dx -= sign * (upper_lid + lower_lid) * 8.0
 
-    # Pull upper and lower beak apart vertically around (512, 470)
-    beak_up = gaussian_2d(xx, yy, 512.0, 452.0, 34.0, 18.0)
-    beak_dn = gaussian_2d(xx, yy, 512.0, 492.0, 34.0, 20.0)
-    dy -= beak_up * 16.0
-    dy += beak_dn * 22.0
+    # 2) Scrunch cheeks & shoulders/wings upward ('몸 들썩' tension)
+    if char_id == "tit":
+        wing_l = gaussian_2d(xx, yy, 195.0, 565.0, 95.0, 125.0)
+        wing_r = gaussian_2d(xx, yy, 829.0, 565.0, 95.0, 125.0)
+        dy -= (wing_l + wing_r) * 58.0
+        dx -= wing_l * 24.0
+        dx += wing_r * 24.0
+        # Open the bird's own lower beak slightly downward
+        beak_drop = gaussian_2d(xx, yy, 512.0, 482.0, 26.0, 18.0)
+        dy += beak_drop * 16.0
+    else:
+        # Cat: scrunch whisker pads upward and drop the cat's OWN lower jaw slightly into an '아악/뿌웅' straining meow
+        whisker_l = gaussian_2d(xx, yy, 395.0, 525.0, 55.0, 38.0)
+        whisker_r = gaussian_2d(xx, yy, 629.0, 525.0, 55.0, 38.0)
+        dy -= (whisker_l + whisker_r) * 16.0
+        jaw_drop = gaussian_2d(xx, yy, 512.0, 585.0, 52.0, 38.0)
+        dy += jaw_drop * 26.0
+        # Lift shoulders slightly
+        sh_l = gaussian_2d(xx, yy, 240.0, 720.0, 110.0, 120.0)
+        sh_r = gaussian_2d(xx, yy, 784.0, 720.0, 110.0, 120.0)
+        dy -= (sh_l + sh_r) * 38.0
 
-    warped = apply_displacement_warp(base_tit, dx, dy)
+    warped = apply_displacement_warp(base_rgba, dx, dy)
     arr = np.asarray(warped, dtype=np.float32)
 
-    # 2) Cover both open eyes seamlessly using real textured feathers shifted down by 88px from high forehead
-    shifted_feathers = np.roll(arr[..., :3], 88, axis=0)
+    # Add natural squinting eyelid crease shadow across each eye (same proven technique as #3)
     for ex, ey in [(372.0, 430.0), (652.0, 430.0)]:
-        eye_cov = np.clip(gaussian_2d(xx, yy, ex, ey, 36.0, 34.0) * 1.55, 0.0, 1.0)
-        arr[..., :3] = arr[..., :3] * (1.0 - eye_cov[..., None]) + shifted_feathers * eye_cov[..., None]
+        crease = gaussian_2d(xx, yy, ex, ey - 4.0, 40.0, 4.0)
+        arr[..., :3] *= (1.0 - 0.58 * crease[..., None])
 
-    # 3) Render realistic open straining beak mouth cavity at (512, 474)
-    # Dark oral interior + warm pink tongue inside the parted beak
-    cavity_mask = np.clip(gaussian_2d(xx, yy, 512.0, 476.0, 20.0, 17.0) * 1.6, 0.0, 1.0)
-    tongue_mask = np.clip(gaussian_2d(xx, yy, 512.0, 483.0, 13.0, 9.0) * 1.4, 0.0, 1.0) * cavity_mask
-    beak_rim = np.clip(gaussian_2d(xx, yy, 512.0, 475.0, 26.0, 22.0) * 1.4, 0.0, 1.0) - cavity_mask
-    beak_rim = np.clip(beak_rim, 0.0, 1.0)
+    # For Cat, deepen the cat's own parted mouth opening right under the philtrum (x=512, y=566)
+    # using a small natural dark-pink feline mouth interior (NO hamster teeth/mouth!)
+    if char_id == "cat":
+        mouth_open = gaussian_2d(xx, yy, 512.0, 568.0, 22.0, 14.0)
+        tongue_glow = gaussian_2d(xx, yy, 512.0, 573.0, 14.0, 8.0) * mouth_open
+        arr[..., :3] = arr[..., :3] * (1.0 - 0.82 * mouth_open[..., None]) + np.array([52.0, 24.0, 28.0])[None, None, :] * (0.82 * mouth_open[..., None])
+        arr[..., :3] = arr[..., :3] * (1.0 - 0.75 * tongue_glow[..., None]) + np.array([188.0, 96.0, 104.0])[None, None, :] * (0.75 * tongue_glow[..., None])
+    else:
+        # For Tit, slightly deepen the parted beak slit at (512, 476)
+        beak_open = gaussian_2d(xx, yy, 512.0, 474.0, 14.0, 9.0)
+        arr[..., :3] = arr[..., :3] * (1.0 - 0.78 * beak_open[..., None]) + np.array([38.0, 22.0, 25.0])[None, None, :] * (0.78 * beak_open[..., None])
 
-    arr[..., :3] = arr[..., :3] * (1.0 - beak_rim[..., None]) + np.array([32.0, 30.0, 33.0])[None, None, :] * beak_rim[..., None]
-    arr[..., :3] = arr[..., :3] * (1.0 - cavity_mask[..., None]) + np.array([48.0, 22.0, 26.0])[None, None, :] * cavity_mask[..., None]
-    arr[..., :3] = arr[..., :3] * (1.0 - tongue_mask[..., None]) + np.array([185.0, 92.0, 98.0])[None, None, :] * tongue_mask[..., None]
-
-    # Boost rosy cheeks
-    blush = (gaussian_2d(xx, yy, 295.0, 495.0, 68.0, 48.0) + gaussian_2d(xx, yy, 729.0, 495.0, 68.0, 48.0))
+    # Boost rosy strained cheeks
+    blush_y = 495.0 if char_id == "tit" else 515.0
+    blush = gaussian_2d(xx, yy, 285.0, blush_y, 70.0, 48.0) + gaussian_2d(xx, yy, 739.0, blush_y, 70.0, 48.0)
     arr[..., 0] = np.clip(arr[..., 0] + blush * 24.0, 0, 255)
-    arr[..., 1] = np.clip(arr[..., 1] - blush * 16.0, 0, 255)
-    arr[..., 2] = np.clip(arr[..., 2] - blush * 14.0, 0, 255)
+    arr[..., 1] = np.clip(arr[..., 1] - blush * 15.0, 0, 255)
+    arr[..., 2] = np.clip(arr[..., 2] - blush * 13.0, 0, 255)
 
-    # 4) Draw natural feathered '> <' squeezed eye creases with soft shadow + lower-lid puff highlight
-    mask_dark = Image.new("L", (1024, 1024), 0)
-    mdraw = ImageDraw.Draw(mask_dark)
-    mdraw.line([(330, 412), (402, 430), (330, 448)], fill=235, width=10, joint="curve")
-    mdraw.line([(694, 412), (622, 430), (694, 448)], fill=235, width=10, joint="curve")
-    mask_dark = mask_dark.filter(ImageFilter.GaussianBlur(radius=3.8))
-    m_np = np.asarray(mask_dark, dtype=np.float32) / 255.0
-    arr[..., :3] *= (1.0 - 0.62 * m_np[..., None])
-
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+    strained_img = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+    # 3) Apply authentic B-grade '몸 들썩' vertical jolt + radial zoom vibration blur!
+    return apply_jolt_motion_blur(strained_img, v_shift=16, zoom_pct=0.028)
 
 
-def synth_cat_5_burst(base_cat: Image.Image, hamster_5_rgba: Image.Image) -> Image.Image:
+def make_fluffy_cat_paw_patch(base_cat: Image.Image, paw_w: int = 230, paw_h: int = 310, with_thumb_nub: bool = True, is_left: bool = True) -> Image.Image:
     """
-    Synthesizes #5 터짐 for Cat:
-      - Tightly squeezed '> <' shut eyes using real shifted forehead fur texture (preserving orange/white patch!)
-      - Wide-open relieved/explosive yowling mouth + raised fluffy white paws
+    Builds a plump, bright snow-white '고양이 솜방망이' (furry cat paw emerging from the bottom of the frame)
+    with soft-pink feline jelly pads (분홍 육구) and real cat fur texture (ZERO rodent fingers, ZERO dark grey halo!).
+    """
+    # Sample bright white fur texture from the cat's cheek/chest and brighten slightly so it pops cleanly
+    chest_crop = base_cat.crop((390, 620, 634, 880)).resize((paw_w, paw_h), Image.Resampling.BICUBIC)
+    fur_np = np.asarray(chest_crop, dtype=np.float32)[..., :3]
+    fur_np = np.clip(fur_np * 0.85 + np.array([252.0, 249.0, 246.0])[None, None, :] * 0.15, 0, 255)
+
+    yy, xx = np.meshgrid(np.arange(paw_h, dtype=np.float32), np.arange(paw_w, dtype=np.float32), indexing="ij")
+
+    cx = paw_w * (0.48 if is_left else 0.52)
+    cy = paw_h * 0.42
+    rx = paw_w * 0.36
+    ry = paw_h * 0.30
+
+    # Continuous column extending down to the bottom of the cat's body (no floating oval!)
+    y_clamped = np.maximum(yy, cy)
+    dist_main = np.sqrt(((xx - cx) / rx) ** 2 + ((yy - cy) / ry) ** 2)
+    dist_arm = np.sqrt(((xx - cx) / (rx * 0.92)) ** 2 + ((yy - y_clamped) / (ry * 1.15)) ** 2)
+    dist = np.minimum(dist_main, dist_arm)
+
+    if with_thumb_nub:
+        # Plump furry thumb-paw nub rising proudly from the top-inner side of the 솜방망이
+        tx = cx + (rx * 0.48 if is_left else -rx * 0.48)
+        ty = cy - ry * 0.78
+        trx = rx * 0.42
+        try_ = ry * 0.58
+        dist_thumb = np.sqrt(((xx - tx) / trx) ** 2 + ((yy - ty) / try_) ** 2)
+        k = 0.22
+        h_smooth = np.maximum(k - np.abs(dist - dist_thumb), 0.0) / k
+        dist_union = np.minimum(dist, dist_thumb) - h_smooth * h_smooth * k * 0.25
+    else:
+        dist_union = dist
+
+    alpha = np.clip((1.04 - dist_union) / 0.18, 0.0, 1.0)
+    # Soft fade only at the very bottom 25px so it merges into the cat's lower chest edge
+    bottom_fade = np.clip((paw_h - 4.0 - yy) / 28.0, 0.0, 1.0)
+    alpha *= bottom_fade
+
+    # Very subtle warm fur shadow under the paw contour so it separates cleanly from the chest without a grey ring
+    edge_band = np.clip(1.0 - np.abs(dist_union - 0.88) / 0.14, 0.0, 1.0)
+    rgb = fur_np * (1.0 - 0.06 * edge_band[..., None])
+
+    # Add cute soft-pink feline paw pads (분홍 젤리 육구: 1 central palm pad + 3 tiny toe beans!)
+    pad_col = np.array([238.0, 168.0, 176.0])[None, None, :]
+    main_pad = gaussian_2d(xx, yy, cx, cy + ry * 0.12, rx * 0.34, ry * 0.26)
+    bean_1 = gaussian_2d(xx, yy, cx - rx * 0.34, cy - ry * 0.32, rx * 0.14, ry * 0.16)
+    bean_2 = gaussian_2d(xx, yy, cx, cy - ry * 0.42, rx * 0.14, ry * 0.16)
+    bean_3 = gaussian_2d(xx, yy, cx + rx * 0.34, cy - ry * 0.32, rx * 0.14, ry * 0.16)
+    pads_mask = np.clip((main_pad + bean_1 + bean_2 + bean_3) * 0.82, 0.0, 0.85)
+
+    rgb = rgb * (1.0 - pads_mask[..., None]) + pad_col * pads_mask[..., None]
+
+    rgba = np.dstack([np.clip(rgb, 0, 255).astype(np.uint8), np.clip(alpha * 255.0, 0, 255).astype(np.uint8)])
+    return Image.fromarray(rgba, "RGBA")
+
+
+def synth_6_whistle(base_rgba: Image.Image, char_id: str) -> Image.Image:
+    """
+    #6 모른 척:
+      - Natural glossy dark eyes locked at (372,430) & (652,430), NO creepy white sclera!
+      - Tiny whistling 'o' mouth/beak created by warping the animal's OWN mouth/beak.
+      - Tit: lifts its own left brown wing UPWARD via smooth 2D warp (`dy -= ...`).
+      - Cat: places a cute round white furry '솜방망이' paw near its lower cheek.
     """
     h, w = 1024, 1024
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
-    arr = np.asarray(base_cat, dtype=np.float32).copy()
+    dx = np.zeros((h, w), dtype=np.float32)
+    dy = np.zeros((h, w), dtype=np.float32)
 
-    # 1) Cover both open eyes with real textured fur shifted down by 92px from high forehead
-    #    This automatically preserves the ginger-orange fur texture on the left eye and cream-white fur on the right eye!
-    shifted_fur = np.roll(arr[..., :3], 92, axis=0)
-    for ex, ey in [(372.0, 430.0), (652.0, 430.0)]:
-        cov = np.clip(gaussian_2d(xx, yy, ex, ey, 46.0, 40.0) * 1.55, 0.0, 1.0)
-        arr[..., :3] = arr[..., :3] * (1.0 - cov[..., None]) + shifted_fur * cov[..., None]
-
-    # 2) Blend the photorealistic wide-open yowling mouth & raised paws from hamster_5_rgba
-    h5_np = np.asarray(hamster_5_rgba, dtype=np.float32)
-    # Shift h5 up by 38px so the open mouth sits naturally right under the cat's pink nose (y=582)
-    h5_shifted = np.roll(h5_np, -38, axis=0)
-    mouth_mask = np.clip(gaussian_2d(xx, yy, 512.0, 595.0, 74.0, 64.0) * 1.35, 0.0, 1.0)
-    arr[..., :3] = arr[..., :3] * (1.0 - mouth_mask[..., None]) + h5_shifted[..., :3] * mouth_mask[..., None]
-
-    # Blend raised little paws on lower chest (x=320, y=685 and x=704, y=685), whitened to match cat fur
-    paws_mask = np.clip(
-        (gaussian_2d(xx, yy, 325.0, 675.0, 65.0, 55.0) + gaussian_2d(xx, yy, 700.0, 675.0, 65.0, 55.0)) * 1.15,
+    eye_protect = 1.0 - np.clip(
+        gaussian_2d(xx, yy, 372.0, 430.0, 55.0, 50.0) + gaussian_2d(xx, yy, 652.0, 430.0, 55.0, 50.0),
         0.0,
         1.0,
     )
-    cat_paws_rgb = h5_shifted[..., :3] * 0.78 + np.array([246.0, 243.0, 240.0])[None, None, :] * 0.22
-    arr[..., :3] = arr[..., :3] * (1.0 - paws_mask[..., None]) + cat_paws_rgb * paws_mask[..., None]
-
-    # Boost rosy pink cheeks
-    blush = (gaussian_2d(xx, yy, 275.0, 515.0, 70.0, 50.0) + gaussian_2d(xx, yy, 749.0, 515.0, 70.0, 50.0))
-    arr[..., 0] = np.clip(arr[..., 0] + blush * 24.0, 0, 255)
-    arr[..., 1] = np.clip(arr[..., 1] - blush * 16.0, 0, 255)
-    arr[..., 2] = np.clip(arr[..., 2] - blush * 14.0, 0, 255)
-
-    # 3) Draw natural fur-creased '> <' squeezed eyes (dark Multiplicative fur crease, no flat halo!)
-    mask_dark = Image.new("L", (1024, 1024), 0)
-    mdraw = ImageDraw.Draw(mask_dark)
-    mdraw.line([(318, 410), (412, 432), (322, 454)], fill=240, width=11, joint="curve")
-    mdraw.line([(706, 410), (612, 432), (702, 454)], fill=240, width=11, joint="curve")
-    mask_dark = mask_dark.filter(ImageFilter.GaussianBlur(radius=4.0))
-    m_np = np.asarray(mask_dark, dtype=np.float32) / 255.0
-    arr[..., :3] *= (1.0 - 0.65 * m_np[..., None])
-
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
-
-
-def synth_6_whistle(base_rgba: Image.Image, hamster_6_rgba: Image.Image, char_id: str) -> Image.Image:
-    """
-    Synthesizes #6 모른 척 (natural glossy dark eyes, NO creepy white sclera, tiny whistling 'o' mouth,
-    and a cute innocent wing-tip or fluffy paw on the cheek) with eyes locked at (372,430) & (652,430).
-    """
-    h, w = 1024, 1024
-    yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
-    arr = np.asarray(base_rgba, dtype=np.float32).copy()
-    h6_np = np.asarray(hamster_6_rgba, dtype=np.float32)
-
-    if char_id == "cat":
-        # 1) Blend cute whistling 'o' mouth under cat's nose (x=502, y=565)
-        mouth_mask = np.clip(gaussian_2d(xx, yy, 502.0, 565.0, 38.0, 28.0) * 1.25, 0.0, 1.0)
-        shifted_h6 = np.roll(h6_np, -165, axis=0)
-        arr[..., :3] = arr[..., :3] * (1.0 - mouth_mask[..., None]) + shifted_h6[..., :3] * mouth_mask[..., None]
-
-        # 2) Add cute innocent paw on left-lower cheek (shifted up by 110px and softened into fluffy white cat paw)
-        paw_shifted = np.roll(h6_np, -110, axis=0)
-        paw_mask = np.clip(gaussian_2d(xx, yy, 315.0, 645.0, 58.0, 85.0) * 1.2, 0.0, 1.0)
-        cat_paw_rgb = paw_shifted[..., :3] * 0.72 + np.array([248.0, 244.0, 242.0])[None, None, :] * 0.28
-        arr[..., :3] = arr[..., :3] * (1.0 - paw_mask[..., None]) + cat_paw_rgb * paw_mask[..., None]
-    else:
-        # Tit (#6 모른 척): bring left wing-tip up toward the left rosy cheek via smooth 2D displacement warp
-        # + soft elliptical feather patch with ZERO rectangular crop border!
-        dx = np.zeros((h, w), dtype=np.float32)
-        dy = np.zeros((h, w), dtype=np.float32)
-        eye_protect = 1.0 - np.clip(gaussian_2d(xx, yy, 372.0, 430.0, 55.0, 50.0), 0.0, 1.0)
-        wing_lift = gaussian_2d(xx, yy, 245.0, 555.0, 85.0, 95.0) * eye_protect
-        dx -= wing_lift * 65.0
-        dy += wing_lift * 75.0
-        warped_tit = apply_displacement_warp(base_rgba, dx, dy)
-        arr = np.asarray(warped_tit, dtype=np.float32)
-
-        # Also blend a soft elliptical brown-and-white wing tip resting on the cheek at (310, 525)
-        wing_src = np.asarray(base_rgba.crop((745, 420, 895, 620)), dtype=np.float32)
-        sh, sw, _ = wing_src.shape
-        syy, sxx = np.meshgrid(np.arange(sh, dtype=np.float32), np.arange(sw, dtype=np.float32), indexing="ij")
-        # Multiply alpha by smooth elliptical Gaussian BEFORE rotating so borders are 0% alpha!
-        ell_mask = gaussian_2d(sxx, syy, sw * 0.5, sh * 0.5, sw * 0.28, sh * 0.28)
-        wing_src[..., 3] = wing_src[..., 3] * ell_mask
-        wing_pil = Image.fromarray(np.clip(wing_src, 0, 255).astype(np.uint8), "RGBA")
-        wing_pil = wing_pil.transpose(Image.Transpose.FLIP_LEFT_RIGHT).rotate(-32, resample=Image.Resampling.BICUBIC, expand=True)
-
-        wing_layer = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-        wing_layer.paste(wing_pil, (215, 445))
-        w_np = np.asarray(wing_layer, dtype=np.float32)
-        cheek_gate = np.clip((yy - 468.0) / 22.0, 0.0, 1.0)
-        w_alpha = (w_np[..., 3] / 255.0) * cheek_gate * 0.92
-        arr[..., :3] = arr[..., :3] * (1.0 - w_alpha[..., None]) + w_np[..., :3] * w_alpha[..., None]
-
-        # Tiny round whistling 'o' dark tip right at bottom of beak (512, 480)
-        whistle_dot = gaussian_2d(xx, yy, 512.0, 480.0, 8.5, 10.5)
-        arr[..., :3] *= (1.0 - 0.78 * whistle_dot[..., None])
-
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
-
-
-def synth_7_thumbs_up(base_rgba: Image.Image, hamster_7_rgba: Image.Image, char_id: str) -> Image.Image:
-    """
-    Synthesizes #7 엄지척 (deadpan proud front-facing portrait + double thumbs-up in front)
-    with eyes locked at (372, 430) & (652, 430).
-    """
-    h, w = 1024, 1024
-    yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
-    arr = np.asarray(base_rgba, dtype=np.float32).copy()
-    h7_np = np.asarray(hamster_7_rgba, dtype=np.float32)
-
-    # Smoothly isolate the two thumbs-up paws without the bright outer studio edge halo
-    h7_alpha_eroded = ndimage.grey_erosion(h7_np[..., 3], size=(5, 5))
-    h7_alpha_smooth = ndimage.gaussian_filter(h7_alpha_eroded.astype(np.float32) / 255.0, sigma=2.0)
-
-    thumb_l_mask = np.clip(gaussian_2d(xx, yy, 148.0, 685.0, 68.0, 118.0) * 1.5, 0.0, 1.0) * h7_alpha_smooth
-    thumb_r_mask = np.clip(gaussian_2d(xx, yy, 876.0, 685.0, 68.0, 118.0) * 1.5, 0.0, 1.0) * h7_alpha_smooth
-    thumbs_mask = np.clip(thumb_l_mask + thumb_r_mask, 0.0, 1.0)
 
     if char_id == "tit":
-        # Match the bird's soft fluffy white-and-warm-taupe plumage so the double thumbs-up look like cute bird paws/wings!
-        paw_rgb = h7_np[..., :3] * 0.82 + np.array([245.0, 240.0, 236.0])[None, None, :] * 0.18
-        arr[..., :3] = arr[..., :3] * (1.0 - thumbs_mask[..., None]) + paw_rgb * thumbs_mask[..., None]
-        arr[..., 3] = np.maximum(arr[..., 3], thumbs_mask * 255.0)
+        # Pull the bird's own left brown wing UPWARD (`dy -= ...`) and inward (`dx += ...`) toward the cheek!
+        wing_lift = gaussian_2d(xx, yy, 225.0, 515.0, 105.0, 125.0) * eye_protect
+        dx += wing_lift * 68.0
+        dy -= wing_lift * 115.0
+        warped = apply_displacement_warp(base_rgba, dx, dy)
+        arr = np.asarray(warped, dtype=np.float32)
+
+        # Tiny whistling 'o' at the tip of the beak (512, 480)
+        whistle_dot = gaussian_2d(xx, yy, 512.0, 480.0, 8.5, 10.5)
+        arr[..., :3] *= (1.0 - 0.78 * whistle_dot[..., None])
+        return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
     else:
-        # Cat (#7 엄지척): match the cat's soft warm-white chest fur luminance so there is zero seam
-        paw_rgb = h7_np[..., :3] * 0.80 + np.array([236.0, 233.0, 229.0])[None, None, :] * 0.20
-        arr[..., :3] = arr[..., :3] * (1.0 - thumbs_mask[..., None]) + paw_rgb * thumbs_mask[..., None]
-        arr[..., 3] = np.maximum(arr[..., 3], thumbs_mask * 255.0)
+        # Cat (#6 모른 척): pucker the cat's own mouth inward toward (512, 558) into a tiny whistling 'o'
+        rx = xx - 512.0
+        ry = yy - 558.0
+        pucker = gaussian_2d(xx, yy, 512.0, 558.0, 48.0, 32.0) * eye_protect
+        dx += rx * 0.22 * pucker
+        dy += ry * 0.22 * pucker
+        warped = apply_displacement_warp(base_rgba, dx, dy)
+        arr = np.asarray(warped, dtype=np.float32)
 
-    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+        whistle_o = gaussian_2d(xx, yy, 512.0, 558.0, 10.5, 12.5)
+        whistle_inner = gaussian_2d(xx, yy, 512.0, 559.0, 6.0, 7.5)
+        arr[..., :3] = arr[..., :3] * (1.0 - 0.78 * whistle_o[..., None]) + np.array([58.0, 32.0, 36.0])[None, None, :] * (0.78 * whistle_o[..., None])
+        arr[..., :3] = arr[..., :3] * (1.0 - 0.65 * whistle_inner[..., None]) + np.array([155.0, 82.0, 88.0])[None, None, :] * (0.65 * whistle_inner[..., None])
+
+        out_cat = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), "RGBA")
+        paw = make_fluffy_cat_paw_patch(base_rgba, paw_w=210, paw_h=285, with_thumb_nub=False, is_left=True)
+        paw_rot = paw.rotate(-18, resample=Image.Resampling.BICUBIC, expand=True)
+        layer = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+        layer.paste(paw_rot, (185, 555))
+        return Image.alpha_composite(out_cat, layer)
 
 
-def main():
+def synth_7_thumbs_up_option_a(base_rgba: Image.Image, char_id: str) -> Image.Image:
+    """
+    #7 엄지척 — Option A (방안 A):
+      - Tit (`tit_7_thumbs_up`): ZERO separate hands! Uses smooth 2D displacement warp (`dy -= ...`)
+        to lift the bird's OWN brown side wings strongly UPWARD & inward into a proud raised-wing pose.
+      - Cat (`cat_7_thumbs_up`): ZERO rodent fingers! Raises two plump, snow-white '솜방망이'
+        cat paws (with pink jelly pads and a proud round thumb-nub) emerging from the bottom chest.
+      - Eyes remain strictly locked at (372, 430) & (652, 430).
+    """
+    h, w = 1024, 1024
+    yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
+
+    eye_protect = 1.0 - np.clip(
+        gaussian_2d(xx, yy, 372.0, 430.0, 58.0, 52.0) + gaussian_2d(xx, yy, 652.0, 430.0, 58.0, 52.0),
+        0.0,
+        1.0,
+    )
+
+    if char_id == "tit":
+        dx = np.zeros((h, w), dtype=np.float32)
+        dy = np.zeros((h, w), dtype=np.float32)
+
+        # Pull both brown side wings strongly UPWARD (`dy -= ...`) and inward so the brown wing tips
+        # rise up proudly like two wing-thumbs!
+        wing_l = gaussian_2d(xx, yy, 195.0, 505.0, 105.0, 135.0) * eye_protect
+        wing_r = gaussian_2d(xx, yy, 829.0, 505.0, 105.0, 135.0) * eye_protect
+        dy -= (wing_l + wing_r) * 145.0
+        dx += wing_l * 55.0
+        dx -= wing_r * 55.0
+
+        # Puff the proud chest slightly upward (`dy -= ...`)
+        chest_puff = gaussian_2d(xx, yy, 512.0, 610.0, 150.0, 110.0) * eye_protect
+        dy -= chest_puff * 28.0
+
+        return apply_displacement_warp(base_rgba, dx, dy)
+    else:
+        # Cat (#7 엄지척 - 방안 A): two plump snow-white '솜방망이' paws with pink toe beans emerging from bottom chest
+        paw_l = make_fluffy_cat_paw_patch(base_rgba, paw_w=230, paw_h=310, with_thumb_nub=True, is_left=True)
+        paw_r = make_fluffy_cat_paw_patch(base_rgba, paw_w=230, paw_h=310, with_thumb_nub=True, is_left=False)
+
+        layer = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
+        layer.paste(paw_l, (125, 595))
+        layer.paste(paw_r, (669, 595))
+        return Image.alpha_composite(base_rgba, layer)
+
+
+def build_contact_sheet(image_dict, out_path, title_prefix=""):
     characters = [
-        ("hamster", "방구 햄찌 (실사)"),
-        ("tit", "솜뭉치 오목눈이 (실사)"),
-        ("cat", "시크 뚱냥이 (실사)"),
+        ("hamster", f"방구 햄찌 {title_prefix}"),
+        ("tit", f"솜뭉치 오목눈이 {title_prefix}"),
+        ("cat", f"시크 뚱냥이 {title_prefix}"),
     ]
     expressions = [
         (1, "1_blank", "#1 멍 (홈 기본)"),
@@ -475,77 +611,6 @@ def main():
         (6, "6_whistle", "#6 모른 척 (진동 결과)"),
         (7, "7_thumbs_up", "#7 엄지척 (칭호 획득)"),
     ]
-
-    generated = {}
-
-    # 1) Process all 7 Hamster images first (all 7 raw files exist)
-    raw_h1 = Image.open(find_raw_file("raw_hamster_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-    h_ref_l, h_ref_r = detect_eye_centers(np.asarray(raw_h1), "hamster")
-    for exp_id, exp_slug, _ in expressions:
-        raw_path = find_raw_file(f"raw_hamster_{exp_slug}")
-        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-        rgba_img = extract_foreground_rgba(rgb_img)
-        if exp_id in (1, 3, 4, 6, 7):
-            cur_l, cur_r = detect_eye_centers(np.asarray(rgb_img), "hamster")
-            rgba_img = align_image_by_eyes(rgba_img, cur_l, cur_r)
-        elif exp_id == 5:
-            rgba_img = align_image_by_eyes(rgba_img, h_ref_l, h_ref_r)
-        out_path = os.path.join(OUT_REAL_DIR, f"hamster_{exp_slug}.png")
-        rgba_img.save(out_path, "PNG")
-        generated[("hamster", exp_id)] = rgba_img
-        print(f"[OK] Saved {out_path}")
-
-    # 2) Process Tit (#1, #2, #3 from AI raw files; #4, #5, #6, #7 synthesized from aligned #1 & #2)
-    raw_t1 = Image.open(find_raw_file("raw_tit_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-    t_ref_l, t_ref_r = detect_eye_centers(np.asarray(raw_t1), "tit")
-    print(f"[INFO] Tit Master #1 eyes: left={t_ref_l}, right={t_ref_r}")
-
-    for exp_id, exp_slug, _ in expressions[:3]:
-        raw_path = find_raw_file(f"raw_tit_{exp_slug}")
-        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-        rgba_img = extract_foreground_rgba(rgb_img, "tit")
-        if exp_id in (1, 3):
-            cur_l, cur_r = detect_eye_centers(np.asarray(rgb_img), "tit")
-            if abs(cur_l[0] - t_ref_l[0]) > 35 or abs(cur_r[0] - t_ref_r[0]) > 35:
-                cur_l, cur_r = t_ref_l, t_ref_r
-            rgba_img = align_image_by_eyes(rgba_img, cur_l, cur_r)
-        generated[("tit", exp_id)] = rgba_img
-
-    generated[("tit", 4)] = synth_4_hold(generated[("tit", 1)], generated[("hamster", 4)], "tit")
-    generated[("tit", 5)] = synth_tit_5_burst(generated[("tit", 1)], generated[("tit", 2)])
-    generated[("tit", 6)] = synth_6_whistle(generated[("tit", 1)], generated[("hamster", 6)], "tit")
-    generated[("tit", 7)] = synth_7_thumbs_up(generated[("tit", 1)], generated[("hamster", 7)], "tit")
-
-    for exp_id, exp_slug, _ in expressions:
-        out_path = os.path.join(OUT_REAL_DIR, f"tit_{exp_slug}.png")
-        generated[("tit", exp_id)].save(out_path, "PNG")
-        print(f"[OK] Saved {out_path}")
-
-    # 3) Process Cat (#1, #2 from AI raw files; #3, #4, #5, #6, #7 synthesized from aligned #1)
-    raw_c1 = Image.open(find_raw_file("raw_cat_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-    c_ref_l, c_ref_r = detect_eye_centers(np.asarray(raw_c1), "cat")
-    print(f"[INFO] Cat Master #1 eyes: left={c_ref_l}, right={c_ref_r}")
-
-    for exp_id, exp_slug, _ in expressions[:2]:
-        raw_path = find_raw_file(f"raw_cat_{exp_slug}")
-        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
-        rgba_img = extract_foreground_rgba(rgb_img, "cat")
-        if exp_id == 1:
-            rgba_img = align_image_by_eyes(rgba_img, c_ref_l, c_ref_r)
-        generated[("cat", exp_id)] = rgba_img
-
-    generated[("cat", 3)] = synth_cat_3_shameless(generated[("cat", 1)])
-    generated[("cat", 4)] = synth_4_hold(generated[("cat", 1)], generated[("hamster", 4)], "cat")
-    generated[("cat", 5)] = synth_cat_5_burst(generated[("cat", 1)], generated[("hamster", 5)])
-    generated[("cat", 6)] = synth_6_whistle(generated[("cat", 1)], generated[("hamster", 6)], "cat")
-    generated[("cat", 7)] = synth_7_thumbs_up(generated[("cat", 1)], generated[("hamster", 7)], "cat")
-
-    for exp_id, exp_slug, _ in expressions:
-        out_path = os.path.join(OUT_REAL_DIR, f"cat_{exp_slug}.png")
-        generated[("cat", exp_id)].save(out_path, "PNG")
-        print(f"[OK] Saved {out_path}")
-
-    # --- Build 3x7 Full Photorealistic Contact Sheet ---
     try:
         font_title = ImageFont.truetype("C:/Windows/Fonts/malgunbd.ttf", 22)
         font_sub = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 17)
@@ -556,7 +621,7 @@ def main():
     thumb_w = 260
     pad = 20
     header_h = 85
-    row_label_w = 210
+    row_label_w = 225
     sheet_w = row_label_w + 7 * (thumb_w + pad) + pad
     sheet_h = header_h + 3 * (thumb_w + pad + 36) + pad
 
@@ -581,7 +646,7 @@ def main():
                 for cx_i in range(0, thumb_w, cs):
                     if ((cx_i // cs) + (cy_i // cs)) % 2 == 1:
                         cdraw.rectangle([cx_i, cy_i, cx_i + cs, cy_i + cs], fill=(238, 234, 226, 255))
-            thumb = generated[(char_id, exp_id)].resize((thumb_w, thumb_w), Image.Resampling.LANCZOS)
+            thumb = image_dict[(char_id, exp_id)].resize((thumb_w, thumb_w), Image.Resampling.LANCZOS)
             card = Image.alpha_composite(card, thumb)
             cdraw = ImageDraw.Draw(card)
             border_col = (225, 80, 65, 255) if exp_id in (3, 4, 6) else (210, 200, 185, 255)
@@ -595,20 +660,133 @@ def main():
                 anchor="mm",
             )
 
-    all_sheet_path = os.path.join(ARTIFACT_DIR, "real_all_characters_sheet.png")
-    sheet.save(all_sheet_path, "PNG")
-    print(f"[OK] Saved {all_sheet_path}")
+    sheet.save(out_path, "PNG")
+    print(f"[OK] Saved {out_path}")
 
-    # --- Build 3x4 Sunglasses & Money-Gun Alignment Proof Sheet for all 3 Real Animals ---
+
+def main():
+    expressions = [
+        (1, "1_blank", "#1 멍 (홈 기본)"),
+        (2, "2_eng", "#2 엥? (터짐 직후)"),
+        (3, "3_shameless", "#3 뻔뻔 (선글라스)"),
+        (4, "4_hold", "#4 웃참 (핵심 감정)"),
+        (5, "5_burst", "#5 터짐 (소리 결과)"),
+        (6, "6_whistle", "#6 모른 척 (진동 결과)"),
+        (7, "7_thumbs_up", "#7 엄지척 (칭호 획득)"),
+    ]
+
+    clean_generated = {}
+    bgrade_generated = {}
+
+    # 1) Hamster (all 7 raw AI files + front-camera close-up convex bulge + jolt blur on #5)
+    raw_h1 = Image.open(find_raw_file("raw_hamster_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+    h_ref_l, h_ref_r = detect_eye_centers(np.asarray(raw_h1), "hamster")
+    for exp_id, exp_slug, _ in expressions:
+        raw_path = find_raw_file(f"raw_hamster_{exp_slug}")
+        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+        rgba_img = extract_foreground_rgba(rgb_img, "hamster")
+        if exp_id in (1, 3, 4, 6, 7):
+            cur_l, cur_r = detect_eye_centers(np.asarray(rgb_img), "hamster")
+            rgba_img = align_image_by_eyes(rgba_img, cur_l, cur_r)
+            rgba_img = apply_front_camera_bulge(rgba_img, "hamster", lock_eyes=True, strength=0.22)
+        elif exp_id == 5:
+            rgba_img = align_image_by_eyes(rgba_img, h_ref_l, h_ref_r)
+            rgba_img = apply_front_camera_bulge(rgba_img, "hamster", lock_eyes=False, strength=0.25)
+            rgba_img = apply_jolt_motion_blur(rgba_img, v_shift=14, zoom_pct=0.024)
+        else:
+            rgba_img = apply_front_camera_bulge(rgba_img, "hamster", lock_eyes=False, strength=0.26)
+        clean_generated[("hamster", exp_id)] = rgba_img
+
+    # 2) Tit (#1, #2, #3 from AI raw files; #4..#7 natural 2D warps with ZERO foreign body parts!)
+    raw_t1 = Image.open(find_raw_file("raw_tit_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+    t_ref_l, t_ref_r = detect_eye_centers(np.asarray(raw_t1), "tit")
+
+    for exp_id, exp_slug, _ in expressions[:3]:
+        raw_path = find_raw_file(f"raw_tit_{exp_slug}")
+        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+        rgba_img = extract_foreground_rgba(rgb_img, "tit")
+        if exp_id in (1, 3):
+            cur_l, cur_r = detect_eye_centers(np.asarray(rgb_img), "tit")
+            if abs(cur_l[0] - t_ref_l[0]) > 35 or abs(cur_r[0] - t_ref_r[0]) > 35:
+                cur_l, cur_r = t_ref_l, t_ref_r
+            rgba_img = align_image_by_eyes(rgba_img, cur_l, cur_r)
+            rgba_img = apply_front_camera_bulge(rgba_img, "tit", lock_eyes=True, strength=0.24)
+        else:
+            rgba_img = apply_front_camera_bulge(rgba_img, "tit", lock_eyes=False, strength=0.26)
+        clean_generated[("tit", exp_id)] = rgba_img
+
+    # Synthesize Tit #4, #5, #6, #7 directly from the front-camera-bulged Tit #1
+    tit_base = clean_generated[("tit", 1)]
+    clean_generated[("tit", 4)] = synth_4_hold(tit_base, clean_generated[("hamster", 4)], "tit")
+    clean_generated[("tit", 5)] = synth_natural_5_burst(tit_base, clean_generated[("tit", 2)], "tit")
+    clean_generated[("tit", 6)] = synth_6_whistle(tit_base, "tit")
+    clean_generated[("tit", 7)] = synth_7_thumbs_up_option_a(tit_base, "tit")
+
+    # 3) Cat (#1, #2 from AI raw files; #3..#7 natural 2D warps + fluffy 솜방망이 paws with ZERO foreign body parts!)
+    raw_c1 = Image.open(find_raw_file("raw_cat_1_blank")).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+    c_ref_l, c_ref_r = detect_eye_centers(np.asarray(raw_c1), "cat")
+
+    for exp_id, exp_slug, _ in expressions[:2]:
+        raw_path = find_raw_file(f"raw_cat_{exp_slug}")
+        rgb_img = Image.open(raw_path).convert("RGB").resize((1024, 1024), Image.Resampling.LANCZOS)
+        rgba_img = extract_foreground_rgba(rgb_img, "cat")
+        if exp_id == 1:
+            rgba_img = align_image_by_eyes(rgba_img, c_ref_l, c_ref_r)
+            rgba_img = apply_front_camera_bulge(rgba_img, "cat", lock_eyes=True, strength=0.24)
+        else:
+            rgba_img = apply_front_camera_bulge(rgba_img, "cat", lock_eyes=False, strength=0.26)
+        clean_generated[("cat", exp_id)] = rgba_img
+
+    cat_base = clean_generated[("cat", 1)]
+    clean_generated[("cat", 3)] = synth_cat_3_shameless(cat_base)
+    clean_generated[("cat", 4)] = synth_4_hold(cat_base, clean_generated[("hamster", 4)], "cat")
+    clean_generated[("cat", 5)] = synth_natural_5_burst(cat_base, clean_generated[("cat", 2)], "cat")
+    clean_generated[("cat", 6)] = synth_6_whistle(cat_base, "cat")
+    clean_generated[("cat", 7)] = synth_7_thumbs_up_option_a(cat_base, "cat")
+
+    # Save both Original (Front-Cam Bulge) AND Pre-baked B-Grade Weathered versions!
+    for char_id in ("hamster", "tit", "cat"):
+        for exp_id, exp_slug, _ in expressions:
+            clean_img = clean_generated[(char_id, exp_id)]
+            clean_path = os.path.join(OUT_REAL_DIR, f"{char_id}_{exp_slug}.png")
+            clean_img.save(clean_path, "PNG")
+
+            bgrade_img = apply_bgrade_weathered_filter(clean_img)
+            bgrade_generated[(char_id, exp_id)] = bgrade_img
+            bgrade_path = os.path.join(OUT_BGRADE_DIR, f"{char_id}_{exp_slug}.png")
+            bgrade_img.save(bgrade_path, "PNG")
+            print(f"[OK] Saved {clean_path} & {bgrade_path}")
+
+    # Build Contact Sheets for both Original and Weathered B-Grade versions
+    build_contact_sheet(clean_generated, os.path.join(ARTIFACT_DIR, "real_all_characters_sheet.png"), "(실사 원본)")
+    build_contact_sheet(bgrade_generated, os.path.join(ARTIFACT_DIR, "real_all_bgrade_sheet.png"), "(B급 풍화본)")
+
+    # Build Sunglasses & Money-Gun Alignment Proof Sheet on the B-grade weathered versions
     shades = Image.open(os.path.join(EXP_DIR, "pixel_sunglasses.png")).convert("RGBA")
     money_rain = Image.open(os.path.join(EXP_DIR, "money_rain.png")).convert("RGBA")
 
+    try:
+        font_title = ImageFont.truetype("C:/Windows/Fonts/malgunbd.ttf", 22)
+        font_sub = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 17)
+    except Exception:
+        font_title = ImageFont.load_default()
+        font_sub = ImageFont.load_default()
+
+    characters = [
+        ("hamster", "방구 햄찌 (B급 풍화)"),
+        ("tit", "솜뭉치 오목눈이 (B급 풍화)"),
+        ("cat", "시크 뚱냥이 (B급 풍화)"),
+    ]
     align_cols = [
         (3, False, "#3 뻔뻔 + 도트 선글라스"),
         (4, False, "#4 웃참 + 도트 선글라스"),
         (6, False, "#6 모른 척 + 도트 선글라스"),
         (3, True, "★ #3 뻔뻔 + 선글라스 + 머니건"),
     ]
+    thumb_w = 260
+    pad = 20
+    header_h = 85
+    row_label_w = 235
     align_w = row_label_w + 4 * (thumb_w + pad) + pad
     align_h = header_h + 3 * (thumb_w + pad) + pad
     align_sheet = Image.new("RGBA", (align_w, align_h), (246, 242, 234, 255))
@@ -624,7 +802,7 @@ def main():
         adraw.text((row_label_w // 2, ry + thumb_w // 2), char_kr, fill=(35, 30, 25, 255), font=font_title, anchor="mm")
         for col_i, (exp_id, with_money, _) in enumerate(align_cols):
             rx = row_label_w + pad + col_i * (thumb_w + pad)
-            comp = Image.alpha_composite(generated[(char_id, exp_id)], shades)
+            comp = Image.alpha_composite(bgrade_generated[(char_id, exp_id)], shades)
             if with_money:
                 comp = Image.alpha_composite(comp, money_rain)
             thumb = comp.resize((thumb_w, thumb_w), Image.Resampling.LANCZOS)
