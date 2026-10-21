@@ -51,6 +51,58 @@ final class PrankNotifier {
         nm.createNotificationChannel(ch);
     }
 
+    private static String randomNick(Context c) {
+        int[] ids = {R.string.nick_hamster, R.string.nick_tit, R.string.nick_cat};
+        return c.getString(ids[RANDOM.nextInt(ids.length)]);
+    }
+
+    private static String line(Context c, int arrayRes, Object... args) {
+        String[] lines = c.getResources().getStringArray(arrayRes);
+        return String.format(lines[RANDOM.nextInt(lines.length)], args);
+    }
+
+    /** 비상탈출 중 도발: "아직도 참고 있어?" + [다시 시작!] 버튼 (앱 안 열고 바로 풀림) */
+    static void nagFrozen(Context c, long hours) {
+        String nick = randomNick(c);
+        PendingIntent resume = PendingIntent.getBroadcast(c, 2,
+                new Intent(c, PrankReceiver.class).setAction(PrankReceiver.ACTION_RESUME),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        show(c, nick, line(c, R.array.nag_frozen, nick, hours), new Notification.Action.Builder(null, c.getString(R.string.action_resume), resume).build());
+    }
+
+    /** 쫄 시간 중 아주 가끔: 조용히 한 줄 */
+    static void nagRest(Context c) {
+        String nick = randomNick(c);
+        show(c, nick, line(c, R.array.nag_rest, nick), null);
+    }
+
+    /** "다시 시작!" 눌렀을 때 그 알림을 바꿔 둔다 */
+    static void resumed(Context c) {
+        show(c, c.getString(R.string.app_name), c.getString(R.string.resumed), null);
+    }
+
+    private static void show(Context c, String title, String text, Notification.Action action) {
+        if (!c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ON, true) || !allowed(c)) return;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm == null) return;
+        ensureChannel(c);
+        PendingIntent open = PendingIntent.getActivity(c, 0,
+                new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        Notification.Builder b = new Notification.Builder(c, CHANNEL)
+                .setSmallIcon(R.drawable.ic_stat_toot)
+                .setColor(0xFF111111)
+                .setContentTitle(title)
+                .setContentText(text)
+                .setStyle(new Notification.BigTextStyle().bigText(text))
+                .setContentIntent(open)
+                .setAutoCancel(true)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)   // 잠금화면에도 그대로
+                .setCategory(Notification.CATEGORY_REMINDER);
+        if (action != null) b.addAction(action);
+        nm.notify(ID, b.build());
+    }
+
     /** mode: loud | soft | hold */
     static void post(Context c, String charId, String mode) {
         if (!c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ON, true) || !allowed(c)) return;
@@ -76,6 +128,7 @@ final class PrankNotifier {
                 .setSubText(c.getString(R.string.news_sub))
                 .setContentIntent(open)
                 .setAutoCancel(true)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setCategory(Notification.CATEGORY_SOCIAL)
                 .build();
         nm.notify(ID, n);   // 같은 자리에 덮어써서 쌓이지 않게

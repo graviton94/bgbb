@@ -16,6 +16,23 @@
         <item>%1$s: 진동으로 살짝 냄. 아무도 모름.</item>
         <item>부르르… %1$s의 소심한 한 방</item>
     </string-array>
+    <string name="action_resume">다시 시작!</string>
+    <string name="resumed">다시 시작! 언제 터질지는 모름.</string>
+    <!-- 비상탈출 중 도발. %1$s 친구 이름, %2$d 몇 시간째 -->
+    <string-array name="nag_frozen">
+        <item>아직도 참고 있어?</item>
+        <item>%1$s: 나 언제 나가? %2$d시간째 대기 중</item>
+        <item>비상탈출 %2$d시간째… 괄약근 괜찮음?</item>
+        <item>%1$s: 쫄았구나 ㅋ</item>
+        <item>참는 게 더 위험함. 다시 시작! 눌러</item>
+    </string-array>
+    <!-- 쫄 시간 중 아주 가끔 -->
+    <string-array name="nag_rest">
+        <item>%1$s: 지금 쫄 시간이라 참는 중… 진짜 참는 중…</item>
+        <item>쫄 시간 끝나면 보자.</item>
+        <item>%1$s: 조용히 장전 중</item>
+        <item>지금 뀌면 안 되는 거 맞지?</item>
+    </string-array>
     <string-array name="news_hold">
         <item>%1$s: 무음이라 참음. 다음엔 안 참음.</item>
         <item>[단독] %1$s, 무음 모드에 막혀 꾹 참아</item>

@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face, vibeFor } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, HOME_LINES, TIPS, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -180,13 +180,21 @@ function previewOperation() {
   if (!on.length || state.frozen) return;
   const c = pick(on);
   const mode = state.previewMode;
-  if (mode === 'loud') playFriend(c.id, state.friends[c.id].style, getDiy());
-  if (mode === 'soft') navigator.vibrate?.(vibeFor(c.id, state.friends[c.id].style).t);
+  const style = styleOf(c.id);
+  if (mode === 'loud') playFriend(c.id, style, getDiy());
+  if (mode === 'soft') navigator.vibrate?.(vibeFor(c.id, style).t);
   celebrate([{ t: Date.now(), char: c.id, mode }]);
 }
 
+/** 이번에 낼 소리 종류 (매번 랜덤, 내 목소리 섞은 친구는 가끔 내 목소리) */
+const styleOf = id => pickStyle(!!state.friends[id].diy && !!getDiy());
+
 function drainNative() {
   if (!native) return;
+  if (native.takeResumed?.() && state.frozen) {   // 알림의 "다시 시작!" 으로 풀림
+    state.frozen = false;
+    syncSchedule(previewOperation);
+  }
   let events = [];
   try { events = JSON.parse(native.drainEvents() || '[]'); } catch (e) { events = []; }
   celebrate(events);
@@ -208,7 +216,6 @@ function renderHome() {
   const n = remainingToday();
   let big, line;
   if (state.frozen) { big = t('home.frozenBig'); line = t('home.frozenLine'); }
-  else if (!state.schedule.on) { big = t('home.offBig'); line = t('home.offLine'); }
   else if (!anyFriendOn()) { big = t('home.nobodyBig'); line = t('home.nobodyLine'); }
   else if (state.schedule.rest.on && resting()) { big = t('home.restBig'); line = t('home.restLine', { window: restLabel() }); }
   else if (!n) { big = t('home.done'); line = t('home.doneLine'); }
@@ -243,7 +250,7 @@ function renderHome() {
 let heroBusy = 0;
 $('hero').addEventListener('click', () => {
   const id = heroId();
-  playFriend(id, state.friends[id].style, getDiy(), 0.7);
+  playFriend(id, styleOf(id), getDiy(), 0.7);
   // 누르면 잠깐 터지는 얼굴
   clearTimeout(heroBusy);
   $('heroImg').src = face(id, 'burst');
@@ -257,7 +264,7 @@ $('hero').addEventListener('click', () => {
 
 $('practice').addEventListener('click', () => {
   const id = heroId();
-  playFriend(id, state.friends[id].style, getDiy());
+  playFriend(id, styleOf(id), getDiy());
   showBurst({ t: Date.now(), char: id, mode: 'loud' });
 });
 
@@ -339,7 +346,6 @@ function render() {
   $('streak').textContent = n ? t('top.streak', { n }) : '';
   $('statusDot').className = 'dot' + (state.frozen ? ' frozen' : isActive() ? ' on' : '');
   $('statusText').textContent = state.frozen ? t('status.frozen')
-    : !state.schedule.on ? t('status.off')
       : !anyFriendOn() ? t('status.nobody')
         : t(inWindow() ? 'status.active' : 'status.waiting', { window: windowLabel() });
   renderHome();
@@ -350,9 +356,6 @@ function render() {
 
 // ---------------------------------------------------------- 설정
 function renderSettings() {
-  $('opOn').checked = state.schedule.on;
-  $('winStart').value = state.schedule.start;
-  $('winEnd').value = state.schedule.end;
   $('freqs').innerHTML = Object.entries(FREQUENCIES).map(([k, f]) =>
     `<button class="chip ${state.schedule.freq === k ? 'on' : ''}" data-f="${k}" type="button">${t('settings.freqChip', { name: L(f.name), lo: f.range[0], hi: f.range[1] })}</button>`).join('');
   $('notifyRow').hidden = !native;
@@ -363,26 +366,18 @@ function renderSettings() {
   $('restOn').checked = state.schedule.rest.on;
   $('restInfo').textContent = state.schedule.rest.on ? t('settings.restOn', { window: restLabel() }) : t('settings.restOff');
   $('scheduleInfo').textContent = isActive() ? t('settings.left', { n: remainingToday() }) : t('settings.paused');
-  const styles = ['main', 'soft', 'loud'].concat(getDiy() ? ['diy'] : []);
   $('friends').innerHTML = CHARACTERS.map(c => {
     const f = state.friends[c.id];
     return `<div class="friend ${f.on ? '' : 'off'}">
       <label class="row"><span class="friend-name"><img src="${face(c.id)}" alt="">${esc(L(c.name))}</span>
         <input type="checkbox" class="switch" data-on="${c.id}" ${f.on ? 'checked' : ''}></label>
-      <div class="chips">${styles.map(s => `<button class="chip ${f.style === s ? 'on' : ''}" data-c="${c.id}" data-s="${s}" type="button">${L(STYLE_NAMES[s])}${s === 'diy' ? '' : ` · ${esc(L(c.styles[s]))}`}</button>`).join('')}</div>
+      ${getDiy() ? `<div class="chips"><button class="chip ${f.diy ? 'on' : ''}" data-c="${c.id}" type="button">${t('friend.mixDiy')}</button></div>` : ''}
     </div>`;
   }).join('');
   $('recordState').textContent = getDiy() ? t('friend.hasRecording') : '';
   $('version').textContent = t('settings.version', { v: native?.appVersion?.() || 'web' });
 }
 
-for (const id of ['winStart', 'winEnd']) {
-  for (let h = 0; h < 24; h++) $(id).add(new Option(`${two(h)}:00`, h));
-  $(id).addEventListener('change', e => {
-    state.schedule[id === 'winStart' ? 'start' : 'end'] = Number(e.target.value);
-    syncSchedule(previewOperation);
-  });
-}
 // ---------------------------------------------------------- 쫄? (매일 쉬는 시간) — 위아래로 굴리는 시 · 분
 const STEP = 5;   // 분 단위
 function fillWheel(el, values) {
@@ -422,11 +417,6 @@ $('restSave').addEventListener('click', () => {
   syncSchedule(previewOperation);
 });
 
-$('opOn').addEventListener('change', e => {
-  state.schedule.on = e.target.checked;
-  toast(t(e.target.checked ? 'op.started' : 'op.paused'));
-  syncSchedule(previewOperation);
-});
 $('freqs').addEventListener('click', e => {
   const b = e.target.closest('.chip');
   if (!b) return;
@@ -457,8 +447,9 @@ $('friends').addEventListener('change', e => {
 $('friends').addEventListener('click', e => {
   const b = e.target.closest('.chip');
   if (!b) return;
-  state.friends[b.dataset.c].style = b.dataset.s;
-  playFriend(b.dataset.c, b.dataset.s, getDiy());
+  const f = state.friends[b.dataset.c];
+  f.diy = !f.diy;
+  if (f.diy) playFriend(b.dataset.c, 'diy', getDiy());
   syncSchedule(previewOperation);
 });
 
@@ -487,7 +478,7 @@ $('record').addEventListener('click', async () => {
       // 앱에서는 파일로도 저장해 앱이 꺼져 있어도 알람이 이 소리를 낸다
       native?.saveCustomSound(reader.result.split(',')[1]);
       const id = heroId();
-      state.friends[id].style = 'diy';
+      state.friends[id].diy = true;
       playFriend(id, 'diy', getDiy());
       toast(t('friend.equipped', { name: L(charById(id).name) }));
       syncSchedule(previewOperation);

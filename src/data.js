@@ -55,6 +55,17 @@ export const face = (charId, expr = 'blank', real = false) => `assets/${real ? '
 // 터지는 순간 표정: 냄 = 터짐, 진동 = 모른 척 휘파람, 참음 = 뻔뻔 (+ 선글라스), 잭팟 = 엄지척 (+ 선글라스), 연습 = 엥?
 export const BURST_FACE = { loud: 'burst', soft: 'whistle', hold: 'shameless', jackpot: 'thumbs_up', practice: 'eng' };
 
+// 소리 종류는 유저가 고르지 않는다: 터질 때마다 랜덤 (기본 55% · 소심 30% · 우렁찬 15%, 햄찌 레어 방구는 따로 2%).
+// 내 목소리를 섞어 둔 친구는 25% 확률로 내 목소리. PrankPlayer.java 와 같은 값.
+export const STYLE_WEIGHTS = { main: 0.55, soft: 0.3, loud: 0.15 };
+export const DIY_CHANCE = 0.25;
+export function pickStyle(diy = false, random = Math.random) {
+  if (diy && random() < DIY_CHANCE) return 'diy';
+  let r = random();
+  for (const [s, w] of Object.entries(STYLE_WEIGHTS)) { if ((r -= w) < 0) return s; }
+  return 'main';
+}
+
 export const STYLE_NAMES = {
   main: { ko: '기본', en: 'Normal' },
   soft: { ko: '소심', en: 'Shy' },

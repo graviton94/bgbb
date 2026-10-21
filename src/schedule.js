@@ -10,7 +10,7 @@ const HOUR = 3600e3;
 
 export function windowLabel({ start, end } = state.schedule) {
   if (start === end) return '24h';
-  const f = h => `${String(h).padStart(2, '0')}:00`;
+  const f = h => `${String(h || 24).padStart(2, '0')}:00`;
   return `${f(start)}~${f(end)}`;
 }
 
@@ -41,7 +41,7 @@ function configJson() {
     end: state.schedule.end,
     freq: state.schedule.freq,
     rest: state.schedule.rest,
-    sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, sound: state.friends[c.id].style }))
+    sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, diy: !!state.friends[c.id].diy }))
   });
 }
 

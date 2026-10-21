@@ -42,7 +42,9 @@ final class PrankPlayer {
         }
         JSONObject pick = sounds.optJSONObject(RANDOM.nextInt(sounds.length()));
         String charId = pick.optString("char", "hamster");
-        String sound = pick.optString("sound", "main");
+        // 소리 종류는 매번 랜덤 (src/data.js 의 pickStyle 과 같다): 기본 55% · 소심 30% · 우렁찬 15%, 내 목소리 섞은 친구는 25% 내 목소리
+        boolean diy = pick.optBoolean("diy") && new File(c.getFilesDir(), DIY_FILE).exists();
+        String sound = pickStyle(diy);
         String mode = deviceMode(c);
         PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
         PrankNotifier.post(c, charId, mode);
@@ -53,6 +55,14 @@ final class PrankPlayer {
             if ("soft".equals(mode)) vibrate(c, charId, sound);
             done.run();
         }
+    }
+
+    static String pickStyle(boolean diy) {
+        if (diy && RANDOM.nextDouble() < 0.25) return "diy";
+        double r = RANDOM.nextDouble();
+        if (r < 0.55) return "main";
+        if (r < 0.85) return "soft";
+        return "loud";
     }
 
     static String deviceMode(Context c) {

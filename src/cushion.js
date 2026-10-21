@@ -83,7 +83,7 @@ function caught() {
   if (stage !== 'armed') return;
   native?.setDim?.(false);
   // 내 목소리를 골랐으면 그걸로, 아니면 우렁찬 방구 (2% 레어 포함)
-  const style = state.friends[heroId].style === 'diy' ? 'diy' : 'loud';
+  const style = state.friends[heroId].diy && getDiy() && Math.random() < 0.5 ? 'diy' : 'loud';   // 함정은 늘 우렁차게
   playFriend(heroId, style, getDiy(), 1);
   navigator.vibrate?.([60, 40, 120]);
   state.cushion++;

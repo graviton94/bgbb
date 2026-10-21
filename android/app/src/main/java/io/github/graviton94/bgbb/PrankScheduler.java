@@ -33,6 +33,14 @@ final class PrankScheduler {
     private static final String KEY_PLAN_DAY = "planDay";
     private static final String KEY_EVENTS = "events";
     private static final String KEY_LAST = "lastFire";
+    // 도발 알림: 비상탈출 중엔 "아직도 참고 있어?", 쫄 시간엔 아주 가끔 한 줄 (둘 다 소리·진동 없음)
+    private static final String KEY_FROZEN_AT = "frozenAt";
+    private static final String KEY_NAG = "nag";
+    private static final String KEY_NAG_KIND = "nagKind";
+    private static final String KEY_NAG_N = "nagN";
+    private static final String KEY_RESUMED = "resumedByNotif";
+    static final String NAG_FROZEN = "frozen", NAG_REST = "rest", NAG_SKIP = "skip";
+    private static final double REST_TEASE_CHANCE = 0.3;
     static final long GAP = 3_600_000L;
     private static final int MAX_EVENTS = 500;
     private static final long HOUR = 3_600_000L;
@@ -46,7 +54,45 @@ final class PrankScheduler {
 
     /** JS 가 보낸 설정을 저장하고 일정을 새로 뽑는다. */
     static void configure(Context c, String json) {
-        prefs(c).edit().putString(KEY_CONFIG, json).remove(KEY_PLAN).remove(KEY_PLAN_DAY).apply();
+        boolean wasFrozen = config(c).optBoolean("frozen");
+        SharedPreferences.Editor e = prefs(c).edit().putString(KEY_CONFIG, json).remove(KEY_PLAN).remove(KEY_PLAN_DAY).remove(KEY_NAG);
+        boolean frozen = false;
+        try { frozen = new JSONObject(json).optBoolean("frozen"); } catch (JSONException ignored) { }
+        if (frozen && !wasFrozen) e.putLong(KEY_FROZEN_AT, System.currentTimeMillis()).putInt(KEY_NAG_N, 0);
+        if (!frozen) e.remove(KEY_FROZEN_AT);
+        e.apply();
+        reschedule(c);
+    }
+
+    /** 알림의 "다시 시작!" 버튼: 앱을 안 열어도 비상탈출을 푼다. 앱은 다음에 열릴 때 takeResumed 로 알게 된다. */
+    static void resumeFromNotification(Context c) {
+        JSONObject cfg = config(c);
+        if (!cfg.optBoolean("frozen")) return;
+        try { cfg.put("frozen", false); } catch (JSONException ignored) { }
+        prefs(c).edit().putString(KEY_CONFIG, cfg.toString()).remove(KEY_PLAN).remove(KEY_PLAN_DAY)
+                .remove(KEY_NAG).remove(KEY_FROZEN_AT).putBoolean(KEY_RESUMED, true).apply();
+        reschedule(c);
+    }
+
+    static boolean takeResumed(Context c) {
+        boolean r = prefs(c).getBoolean(KEY_RESUMED, false);
+        if (r) prefs(c).edit().remove(KEY_RESUMED).apply();
+        return r;
+    }
+
+    static long frozenHours(Context c) {
+        long at = prefs(c).getLong(KEY_FROZEN_AT, 0);
+        return at == 0 ? 0 : Math.max(1, (System.currentTimeMillis() - at) / HOUR);
+    }
+
+    static String nagKind(Context c) {
+        return prefs(c).getString(KEY_NAG_KIND, NAG_SKIP);
+    }
+
+    /** 도발 알림을 하나 쓴 뒤 (또는 건너뛴 뒤) 다음 것을 새로 잡게 한다. */
+    static void nagDone(Context c) {
+        SharedPreferences p = prefs(c);
+        p.edit().remove(KEY_NAG).putInt(KEY_NAG_N, p.getInt(KEY_NAG_N, 0) + 1).apply();
         reschedule(c);
     }
 
@@ -77,10 +123,69 @@ final class PrankScheduler {
         am.cancel(pi);
 
         JSONObject cfg = config(c);
+        scheduleNag(c, am, cfg, System.currentTimeMillis());
         if (!isActive(cfg)) return;
         long next = nextTrigger(c, cfg, System.currentTimeMillis());
         // 정확한 시각일 필요가 없으므로(불시니까!) 권한이 필요 없는 inexact + Doze 허용 알람을 쓴다.
         if (next > 0) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi);
+    }
+
+    private static void scheduleNag(Context c, AlarmManager am, JSONObject cfg, long now) {
+        PendingIntent pi = PendingIntent.getBroadcast(c, 1,
+                new Intent(c, PrankReceiver.class).setAction(PrankReceiver.ACTION_NAG),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        am.cancel(pi);
+        SharedPreferences p = prefs(c);
+        long at = p.getLong(KEY_NAG, 0);
+        if (at <= now) {
+            String kind = NAG_SKIP;
+            at = 0;
+            if (cfg.optBoolean("frozen")) {
+                // 첫 도발은 2~4시간 뒤, 그 뒤로는 5~9시간마다. 잠자는 시간(0~6시)이면 아침으로 민다.
+                int n = p.getInt(KEY_NAG_N, 0);
+                long base = n == 0 ? Math.max(now, p.getLong(KEY_FROZEN_AT, now)) : now;
+                at = awake(base + (long) ((n == 0 ? 2 + 2 * RANDOM.nextDouble() : 5 + 4 * RANDOM.nextDouble()) * HOUR));
+                kind = NAG_FROZEN;
+            } else if (isActive(cfg) && rest(cfg) != null) {
+                // 다음 쫄 시간 (06~24시와 겹치는 부분) 중 아무 때나, 30% 확률로만. 꽝이면 그 쫄 시간이 끝날 때 다시 뽑는다.
+                for (int k = 0; k < 3 && at == 0; k++) {
+                    long day = addDays(windowStart(cfg, now), k);
+                    long[] rest = restInside(cfg, day);
+                    if (rest == null || rest[1] <= now) continue;
+                    long from = Math.max(rest[0], now + 60_000);
+                    if (RANDOM.nextDouble() < REST_TEASE_CHANCE) {
+                        at = from + (long) (RANDOM.nextDouble() * (rest[1] - from));
+                        kind = NAG_REST;
+                    } else {
+                        at = rest[1];
+                    }
+                }
+            }
+            if (at == 0) return;
+            p.edit().putLong(KEY_NAG, at).putString(KEY_NAG_KIND, kind).apply();
+        }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
+    }
+
+    /** 0~6시면 그날 6시 + 0~90분으로 */
+    private static long awake(long t) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        if (cal.get(Calendar.HOUR_OF_DAY) >= 6) return t;
+        cal.set(Calendar.HOUR_OF_DAY, 6);
+        cal.set(Calendar.MINUTE, 0);
+        return cal.getTimeInMillis() + (long) (RANDOM.nextDouble() * 1.5 * HOUR);
+    }
+
+    /** 작전일 day 안에서 쉬는 시간과 겹치는 첫 구간 [a, b] (없으면 null) */
+    private static long[] restInside(JSONObject cfg, long day) {
+        List<long[]> open = openSegments(cfg, day);
+        long end = day + windowLength(cfg), cursor = day;
+        for (long[] s : open) {
+            if (s[0] > cursor) return new long[]{cursor, s[0]};
+            cursor = s[1];
+        }
+        return cursor < end ? new long[]{cursor, end} : null;
     }
 
     private static long nextTrigger(Context c, JSONObject cfg, long now) {
@@ -201,7 +306,7 @@ final class PrankScheduler {
     static long windowStart(JSONObject cfg, long now) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now);
-        cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 7));
+        cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 6));
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
@@ -214,7 +319,7 @@ final class PrankScheduler {
     }
 
     static long windowLength(JSONObject cfg) {
-        int hours = ((cfg.optInt("end", 22) - cfg.optInt("start", 7)) % 24 + 24) % 24;
+        int hours = ((cfg.optInt("end", 0) - cfg.optInt("start", 6)) % 24 + 24) % 24;
         return (hours == 0 ? 24 : hours) * HOUR;
     }
 

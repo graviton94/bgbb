@@ -9,9 +9,9 @@ const RECENT = 30;
 function initial() {
   return {
     onboarded: false,
-    friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, style: 'main' }])),
+    friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
-    schedule: { on: true, start: 7, end: 22, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 } },   // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음)
+    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 } },   // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음)
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
     notify: true,         // 터진 뒤 알림 문구 (앱)
@@ -38,9 +38,13 @@ function load() {
       if (!(k in saved)) continue;
       const b = base[k];
       base[k] = b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...saved[k] } : saved[k];
-      if (k === 'schedule') base.schedule.rest = { ...initial().schedule.rest, ...saved.schedule?.rest };
+      // 작전 시간은 06~24시 고정 (유저가 못 바꾼다), 끄는 건 비상탈출로만
+      if (k === 'schedule') Object.assign(base.schedule, { on: true, start: 6, end: 0, rest: { ...initial().schedule.rest, ...saved.schedule?.rest } });
     }
-    for (const c of CHARACTERS) base.friends[c.id] = { on: true, style: 'main', ...base.friends[c.id] };
+    for (const c of CHARACTERS) {
+      const f = base.friends[c.id] || {};
+      base.friends[c.id] = { on: f.on !== false, diy: f.diy ?? f.style === 'diy' };   // 예전 '소리 고르기' 는 버린다
+    }
   } catch (e) {
     console.warn('저장된 상태를 읽지 못했어요', e);
   }

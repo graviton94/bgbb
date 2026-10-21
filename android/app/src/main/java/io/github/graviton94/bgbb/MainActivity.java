@@ -224,6 +224,12 @@ public class MainActivity extends Activity {
             PrankScheduler.configure(getApplicationContext(), json);
         }
 
+        /** 알림의 "다시 시작!" 으로 비상탈출이 풀렸는지 (한 번 읽으면 지워짐) */
+        @JavascriptInterface
+        public boolean takeResumed() {
+            return PrankScheduler.takeResumed(getApplicationContext());
+        }
+
         @JavascriptInterface
         public String drainEvents() {
             return PrankScheduler.drainEvents(getApplicationContext());

@@ -10,11 +10,26 @@ import org.json.JSONObject;
 public class PrankReceiver extends BroadcastReceiver {
 
     static final String ACTION_FIRE = "io.github.graviton94.bgbb.ACTION_FIRE";
+    static final String ACTION_NAG = "io.github.graviton94.bgbb.ACTION_NAG";
+    static final String ACTION_RESUME = "io.github.graviton94.bgbb.ACTION_RESUME";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         Context c = context.getApplicationContext();
         JSONObject cfg = PrankScheduler.config(c);
+        if (ACTION_RESUME.equals(intent.getAction())) {   // 도발 알림의 "다시 시작!"
+            PrankScheduler.resumeFromNotification(c);
+            PrankNotifier.resumed(c);
+            return;
+        }
+        if (ACTION_NAG.equals(intent.getAction())) {
+            String kind = PrankScheduler.nagKind(c);
+            long now = System.currentTimeMillis();
+            if (PrankScheduler.NAG_FROZEN.equals(kind) && cfg.optBoolean("frozen")) PrankNotifier.nagFrozen(c, PrankScheduler.frozenHours(c));
+            else if (PrankScheduler.NAG_REST.equals(kind) && PrankScheduler.inRest(cfg, now)) PrankNotifier.nagRest(c);
+            PrankScheduler.nagDone(c);
+            return;
+        }
         boolean fire = ACTION_FIRE.equals(intent.getAction())
                 && PrankScheduler.isActive(cfg)
                 && PrankScheduler.inWindow(cfg, System.currentTimeMillis())
