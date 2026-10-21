@@ -1,38 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Generates the 3-character x 7-expression Expansion Pack (21 transparent 1024x1024 PNGs)
-plus pixel sunglasses prop and visual preview contact sheets.
-
-Characters:
-  - hamster (방구 햄찌): Chubby white hamster, yellow wavy hair tuft (#FED36A), pink oval cheeks (#FFAAA6)
-  - tit (솜뭉치 오목눈이): Round fluffy white bird, brown wings (#8D6748), tiny triangular beak, pink cheeks
-  - cat (시크 뚱냥이): Chubby white cat, orange patch over left ear/head & belly (#FFB77D), pink cheeks
-
-7 Expressions:
-  1_blank     (#1 멍)      : 무표정 정면, 초점 없는 눈 (홈 기본)
-  2_eng       (#2 엥?)     : 얼굴 초근접 클로즈업, 동공 확대, 정면 (터짐 직후, 시안 1)
-  3_shameless (#3 뻔뻔)    : 반쯤 감은 눈, 입꼬리 살짝, 정면 (선글라스 씌우는 짤, 시안 3·4)
-  4_hold      (#4 웃참)    : 볼 빵빵, 입 꾹, 눈물 찔끔 (앱의 핵심 감정, 홈·알림)
-  5_burst     (#5 터짐)    : 힘준 얼굴/시원한 얼굴, 몸 들썩 (소리 모드 결과)
-  6_whistle   (#6 모른 척) : 고개/시선 돌리고 휘파람, 곁눈질 (진동·참음 결과)
-  7_thumbs_up (#7 엄지척)  : 양손 엄지척, 뿌듯 무표정 정면 (새 칭호 받았을 때)
-
-CRITICAL RULE:
-  Expressions #3 (3_shameless), #4 (4_hold), and #6 (6_whistle) share the EXACT SAME
-  eye center coordinates on the 1024x1024 canvas:
-    Left Eye Center  : (372, 430)
-    Right Eye Center : (652, 430)
-    Eye Bridge Center: (512, 430)
+Generates:
+1. Base character images (`assets/hamster.png`, `assets/tit.png`, `assets/cat.png`)
+   unified with the 3-character x 7-expression Expansion Pack design (1024x1024 transparent PNG).
+2. All 21 Expression Pack images (`assets/expressions/{hamster,tit,cat}_{1..7}_*.png`, 1024x1024 transparent PNG).
+3. All 9 Tamagotchi animation sprites (`assets/sprites/*.png`) using the EXACT SAME character design
+   so characters never revert to the old design when walking, jumping, singing, flying, or sleeping.
+4. Pixel sunglasses prop (`assets/expressions/pixel_sunglasses.png`).
 """
 
 import math
 import os
+import shutil
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
+ASSETS_DIR = r"c:\bgbb\assets"
 OUT_DIR = r"c:\bgbb\assets\expressions"
+SPRITES_DIR = r"c:\bgbb\assets\sprites"
 ARTIFACT_DIR = r"C:\Users\ruahn49\.gemini\antigravity\brain\b2ce85ba-1f7b-478f-8be4-052d7e2dab69"
+
 os.makedirs(OUT_DIR, exist_ok=True)
+os.makedirs(SPRITES_DIR, exist_ok=True)
 os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
 CANVAS_SIZE = 1024
@@ -242,17 +231,22 @@ def make_body_silhouette_pts(cx=512, top_y=150, bot_y=950, half_w_top=325, half_
     return c1[:-1] + c2[:-1] + c3[:-1] + c4[:-1] + c5[:-1]
 
 
-def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int):
+def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int, pose_variant: str = "normal"):
+    """
+    Draws the unified character base design.
+    pose_variant can be: 'normal' | 'walk' | 'fly' | 'sleep'
+    """
     is_closeup = (exp_id == 2)
     is_hold = (exp_id == 4)
     is_burst = (exp_id == 5)
+    is_fly = (pose_variant == "fly")
+    is_walk = (pose_variant == "walk")
 
     if is_closeup:
-        # Extreme face close-up filling almost the entire 1024x1024 canvas (like the '엥?' reference meme!)
         cx, top_y, bot_y = 512, 35, 1060
         hw_top, hw_bot = 465, 505
         cheek_bulge = 0.10
-    elif is_burst:
+    elif is_burst or is_fly:
         cx, top_y, bot_y = 512, 135, 920
         hw_top, hw_bot = 335, 375
         cheek_bulge = 0.05
@@ -296,7 +290,6 @@ def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int):
         mask = mask.filter(ImageFilter.GaussianBlur(radius=1.5))
         cc._apply_crayon_fill(mask, COL_WHITE)
 
-        # Cat's signature orange patches (left ear/forehead patch + round belly spot)
         patch_mask = Image.new("L", (CANVAS_SIZE, CANVAS_SIZE), 0)
         pd = ImageDraw.Draw(patch_mask)
         if is_closeup:
@@ -347,29 +340,41 @@ def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int):
         cc.draw_crayon_polyline(top_arc, width=22, color=COL_BLACK, closed=False)
 
     elif char_id == "tit":
-        # Fluffy cotton-ball crown tufts at top of head
-        tuft_y = 35 if is_closeup else 155
+        tuft_y = 35 if is_closeup else (135 if is_fly else 155)
         cc.draw_crayon_polyline([(465, tuft_y + 8), (495, tuft_y - 24), (515, tuft_y + 4)], width=20, color=COL_BLACK)
         cc.draw_crayon_polyline([(512, tuft_y + 4), (542, tuft_y - 20), (558, tuft_y + 10)], width=20, color=COL_BLACK)
 
-        # Brown side wings clearly visible on the left & right sides of the body (matching assets/tit.png!)
         if not is_closeup and exp_id != 7:
-            wy = -40 if is_burst else 0
-            wing_l_pts = (
-                bezier_curve((215, 510 + wy), (115, 520 + wy), (95, 675 + wy), (165, 755 + wy), 20)
-                + bezier_curve((165, 755 + wy), (235, 765 + wy), (265, 635 + wy), (215, 510 + wy), 20)[1:]
-            )
-            wing_r_pts = (
-                bezier_curve((809, 510 + wy), (909, 520 + wy), (929, 675 + wy), (859, 755 + wy), 20)
-                + bezier_curve((859, 755 + wy), (789, 765 + wy), (759, 635 + wy), (809, 510 + wy), 20)[1:]
-            )
-            cc.fill_polygon(wing_l_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
-            cc.fill_polygon(wing_r_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
-            # Signature white wing stripe from assets/tit.png
-            cc.draw_crayon_polyline([(142, 625 + wy), (218, 665 + wy)], width=18, color=COL_WHITE)
-            cc.draw_crayon_polyline([(882, 625 + wy), (806, 665 + wy)], width=18, color=COL_WHITE)
+            if is_fly:
+                # Raised flapping brown wings for fly sprite!
+                wing_l_pts = (
+                    bezier_curve((215, 460), (65, 340), (45, 510), (165, 595), 20)
+                    + bezier_curve((165, 595), (225, 595), (255, 520), (215, 460), 20)[1:]
+                )
+                wing_r_pts = (
+                    bezier_curve((809, 460), (959, 340), (979, 510), (859, 595), 20)
+                    + bezier_curve((859, 595), (799, 595), (769, 520), (809, 460), 20)[1:]
+                )
+                cc.fill_polygon(wing_l_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
+                cc.fill_polygon(wing_r_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
+                cc.draw_crayon_polyline([(110, 465), (195, 515)], width=18, color=COL_WHITE)
+                cc.draw_crayon_polyline([(914, 465), (829, 515)], width=18, color=COL_WHITE)
+            else:
+                wy = -40 if is_burst else 0
+                wing_l_pts = (
+                    bezier_curve((215, 510 + wy), (115, 520 + wy), (95, 675 + wy), (165, 755 + wy), 20)
+                    + bezier_curve((165, 755 + wy), (235, 765 + wy), (265, 635 + wy), (215, 510 + wy), 20)[1:]
+                )
+                wing_r_pts = (
+                    bezier_curve((809, 510 + wy), (909, 520 + wy), (929, 675 + wy), (859, 755 + wy), 20)
+                    + bezier_curve((859, 755 + wy), (789, 765 + wy), (759, 635 + wy), (809, 510 + wy), 20)[1:]
+                )
+                cc.fill_polygon(wing_l_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
+                cc.fill_polygon(wing_r_pts, COL_TIT_WING, COL_BLACK, outline_width=22)
+                cc.draw_crayon_polyline([(142, 625 + wy), (218, 665 + wy)], width=18, color=COL_WHITE)
+                cc.draw_crayon_polyline([(882, 625 + wy), (806, 665 + wy)], width=18, color=COL_WHITE)
 
-    # --- 4. CHEEK BLUSH & ARMS ---
+    # --- 4. CHEEK BLUSH & ARMS/FEET ---
     if is_closeup:
         cheek_l = (95, 535, 285, 650)
         cheek_r = (739, 535, 929, 650)
@@ -389,13 +394,15 @@ def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int):
         cc.draw_arc_pts(779, 520, 72, 62, -55, 45, width=20, color=COL_BLACK)
 
     if not is_closeup:
-        foot_y = 918 if is_burst else 945
+        foot_y = 918 if (is_burst or is_fly) else 945
+        step_l = -22 if is_walk else 0
+        step_r = 18 if is_walk else 0
         if char_id == "tit":
-            cc.draw_crayon_polyline([(385, foot_y - 10), (365, foot_y + 28), (395, foot_y + 15), (410, foot_y + 30)], width=18, color=COL_BLACK)
-            cc.draw_crayon_polyline([(639, foot_y - 10), (615, foot_y + 30), (630, foot_y + 15), (659, foot_y + 28)], width=18, color=COL_BLACK)
+            cc.draw_crayon_polyline([(385, foot_y - 10 + step_l), (365, foot_y + 28 + step_l), (395, foot_y + 15 + step_l), (410, foot_y + 30 + step_l)], width=18, color=COL_BLACK)
+            cc.draw_crayon_polyline([(639, foot_y - 10 + step_r), (615, foot_y + 30 + step_r), (630, foot_y + 15 + step_r), (659, foot_y + 28 + step_r)], width=18, color=COL_BLACK)
         else:
-            cc.draw_arc_pts(370, foot_y, 52, 28, 10, 170, width=22, color=COL_BLACK)
-            cc.draw_arc_pts(654, foot_y, 52, 28, 10, 170, width=22, color=COL_BLACK)
+            cc.draw_arc_pts(370, foot_y + step_l, 52, 28, 10, 170, width=22, color=COL_BLACK)
+            cc.draw_arc_pts(654, foot_y + step_r, 52, 28, 10, 170, width=22, color=COL_BLACK)
 
     if not is_closeup and exp_id != 7 and char_id != "tit":
         if is_burst:
@@ -408,6 +415,11 @@ def draw_character_base(cc: CrayonCanvas, char_id: str, exp_id: int):
             arm_r = bezier_curve((774, 620), (699, 600), (674, 675), (759, 690), 22)
             cc.fill_polygon(arm_l, COL_WHITE, COL_BLACK, outline_width=20)
             cc.fill_polygon(arm_r, COL_WHITE, COL_BLACK, outline_width=20)
+        elif is_walk:
+            arm_l = bezier_curve((225, 565), (305, 610), (285, 685), (205, 645), 20)
+            arm_r = bezier_curve((799, 605), (729, 655), (749, 730), (819, 685), 20)
+            cc.draw_crayon_polyline(arm_l, width=20, color=COL_BLACK, closed=False)
+            cc.draw_crayon_polyline(arm_r, width=20, color=COL_BLACK, closed=False)
         else:
             arm_l = bezier_curve((225, 585), (295, 635), (275, 710), (205, 665), 20)
             arm_r = bezier_curve((799, 585), (729, 635), (749, 710), (819, 665), 20)
@@ -432,7 +444,6 @@ def draw_nose_or_beak(cc: CrayonCanvas, char_id: str, cx: int, cy: int, scale: f
 
 
 def draw_thumbs_up_hand(cc: CrayonCanvas, side: str, char_id: str):
-    """Draws the iconic big chubby '멋지다' double thumbs-up hands in the foreground."""
     is_left = (side == "left")
     fx = 185 if is_left else 839
     fy = 645
@@ -482,26 +493,21 @@ def draw_expression_features(cc: CrayonCanvas, char_id: str, exp_id: int):
 
     elif exp_id == 2:
         # #2 엥? (얼굴 클로즈업, 동공 확대, 정면 - 터짐 직후, 시안 1)
-        # Pure deadpan close-up like the '엥?' hamster reference: huge dark dilated boba eyes, deadpan tiny mouth
         elx, ely = 325, 445
         erx, ery = 699, 445
-        # Outer dark iris + huge dilated pitch-black pupil filling almost the whole eye
         cc.fill_ellipse((elx - 62, ely - 66, elx + 62, ely + 66), COL_DARK_CHARCOAL, COL_BLACK, outline_width=22)
         cc.fill_ellipse((erx - 62, ery - 66, erx + 62, ery + 66), COL_DARK_CHARCOAL, COL_BLACK, outline_width=22)
         cc.fill_ellipse((elx - 44, ely - 48, elx + 44, ely + 48), COL_BLACK, COL_BLACK, outline_width=8)
         cc.fill_ellipse((erx - 44, ery - 48, erx + 44, ery + 48), COL_BLACK, COL_BLACK, outline_width=8)
-        # Tiny pinpoint highlight so the dilated pupils look ultra-staring & deadpan
         cc.fill_ellipse((elx - 24, ely - 26, elx - 10, ely - 12), COL_WHITE, outline_color=None, outline_width=0)
         cc.fill_ellipse((erx - 24, ery - 26, erx - 10, ery - 12), COL_WHITE, outline_color=None, outline_width=0)
 
         draw_nose_or_beak(cc, char_id, 512, 520, scale=1.35)
-        # Deadpan slightly parted 'ㅅ' / small triangle mouth right under nose like the '엥?' hamster meme
         mouth_pts = [(472, 595), (512, 572), (552, 595), (512, 616)]
         cc.fill_polygon(mouth_pts, COL_MOUTH_RED, COL_BLACK, outline_width=18)
 
     elif exp_id == 3:
         # #3 뻔뻔 (반쯤 감은 눈, 입꼬리 살짝, 정면 - 선글라스 씌우는 짤, 시안 3·4)
-        # LOCKED EYE COORDS: (372, 430) & (652, 430)
         for ex, ey in [(lx, ly), (rx, ry)]:
             cc.draw_arc_pts(ex, ey - 2, 34, 32, 8, 172, width=20, color=COL_BLACK)
             cc.fill_ellipse((ex - 20, ey - 10, ex + 20, ey + 24), COL_BLACK, outline_color=None, outline_width=0)
@@ -520,7 +526,6 @@ def draw_expression_features(cc: CrayonCanvas, char_id: str, exp_id: int):
 
     elif exp_id == 4:
         # #4 웃참 (볼 빵빵, 입 꾹, 눈물 찔끔 - 앱의 핵심 감정, 홈·알림)
-        # LOCKED EYE COORDS: (372, 430) & (652, 430)
         for is_left, (ex, ey) in [(True, (lx, ly)), (False, (rx, ry))]:
             cc.fill_ellipse((ex - 27, ey - 27, ex + 27, ey + 27), COL_BLACK, COL_BLACK, outline_width=10)
             cc.fill_ellipse((ex - 14, ey - 16, ex + 2, ey), COL_WHITE, outline_color=None, outline_width=0)
@@ -580,7 +585,6 @@ def draw_expression_features(cc: CrayonCanvas, char_id: str, exp_id: int):
 
     elif exp_id == 6:
         # #6 모른 척 (고개 돌리고 휘파람, 곁눈질 - 진동·참음 결과)
-        # LOCKED EYE COORDS: (372, 430) & (652, 430)
         for ex, ey in [(lx, ly), (rx, ry)]:
             cc.fill_ellipse((ex - 36, ey - 28, ex + 36, ey + 28), COL_WHITE, COL_BLACK, outline_width=20)
             cc.fill_ellipse((ex + 4, ey - 20, ex + 34, ey + 14), COL_BLACK, COL_BLACK, outline_width=8)
@@ -601,26 +605,33 @@ def draw_expression_features(cc: CrayonCanvas, char_id: str, exp_id: int):
 
     elif exp_id == 7:
         # #7 엄지척 (양손 엄지, 뿌듯 무표정 - 새 칭호 받았을 때)
-        # Deadpan proud face like the '멋지다' double thumbs-up hamster meme!
         er = 25
         cc.fill_ellipse((lx - er, ly - er, lx + er, ly + er), COL_BLACK, COL_BLACK, outline_width=10)
         cc.fill_ellipse((rx - er, ry - er, rx + er, ry + er), COL_BLACK, COL_BLACK, outline_width=10)
         cc.fill_ellipse((lx - 11, ly - 12, lx + 3, ly + 2), COL_WHITE, outline_color=None, outline_width=0)
         cc.fill_ellipse((rx - 11, ry - 12, rx + 3, ry + 2), COL_WHITE, outline_color=None, outline_width=0)
 
-        # Gentle proud horizontal/arched eyebrows (not angry!)
         cc.draw_arc_pts(lx, ly - 48, 30, 10, 195, 345, width=16, color=COL_BLACK)
         cc.draw_arc_pts(rx, ry - 48, 30, 10, 195, 345, width=16, color=COL_BLACK)
 
         draw_nose_or_beak(cc, char_id, 512, 470, scale=1.0)
 
-        # Subtle deadpan-proud ':3' mouth
         w_left = quad_curve((462, 520), (487, 538), (512, 515), 16)
         w_right = quad_curve((512, 515), (537, 538), (562, 520), 16)
         cc.draw_crayon_polyline(w_left + w_right[1:], width=20, color=COL_BLACK)
 
         draw_thumbs_up_hand(cc, "left", char_id)
         draw_thumbs_up_hand(cc, "right", char_id)
+
+    elif exp_id == 8:
+        # Sleep face (for hamster_sleep.png / cat_sit.png) using the exact same character design
+        cc.draw_arc_pts(lx, ly - 6, 32, 22, 15, 165, width=20, color=COL_BLACK)
+        cc.draw_arc_pts(rx, ry - 6, 32, 22, 15, 165, width=20, color=COL_BLACK)
+        draw_nose_or_beak(cc, char_id, 512, 472, scale=1.0)
+        cc.draw_crayon_polyline([(478, 518), (546, 518)], width=18, color=COL_BLACK)
+        # Cute 'Zzz' above right ear
+        cc.draw_crayon_polyline([(785, 115), (835, 115), (785, 165), (835, 165)], width=16, color=COL_BLACK)
+        cc.draw_crayon_polyline([(855, 55), (915, 55), (855, 115), (915, 115)], width=18, color=COL_BLACK)
 
 
 def generate_pixel_sunglasses():
@@ -684,95 +695,48 @@ def main():
             fpath = os.path.join(OUT_DIR, fname)
             cc.img.save(fpath, "PNG")
             generated[(char_id, exp_id)] = cc.img
-            print(f"[OK] Saved {fpath} ({cc.img.size}, {cc.img.mode})")
+            print(f"[OK] Saved {fpath}")
 
-    shades_img = generate_pixel_sunglasses()
+        # 1) Update base character image (assets/hamster.png, assets/tit.png, assets/cat.png)
+        #    using the exact same unified design (#1 멍 홈 기본)!
+        base_path = os.path.join(ASSETS_DIR, f"{char_id}.png")
+        generated[(char_id, 1)].save(base_path, "PNG")
+        print(f"[OK] Updated base character image: {base_path} (1024x1024 RGBA)")
 
-    # --- Build 3x7 Contact Sheet Preview ---
-    thumb_w = 260
-    pad = 20
-    header_h = 85
-    row_label_w = 180
-    sheet_w = row_label_w + 7 * (thumb_w + pad) + pad
-    sheet_h = header_h + 3 * (thumb_w + pad + 36) + pad
+    # 2) Update all 9 Tamagotchi animation sprites in assets/sprites/ with the exact same unified character design!
+    for c_idx, (char_id, _) in enumerate(characters):
+        # Walk / Hop sprite
+        cc_walk = CrayonCanvas(size=CANVAS_SIZE, seed=2000 + c_idx * 100)
+        draw_character_base(cc_walk, char_id, 1, pose_variant="walk")
+        draw_expression_features(cc_walk, char_id, 1)
+        walk_name = "tit_hop.png" if char_id == "tit" else f"{char_id}_walk.png"
+        cc_walk.img.save(os.path.join(SPRITES_DIR, walk_name), "PNG")
 
-    sheet = Image.new("RGBA", (sheet_w, sheet_h), (250, 246, 238, 255))
-    sdraw = ImageDraw.Draw(sheet)
+        # React / Jump / Sing / Play sprite -> uses #5 터짐 or #7 엄지척 energy with unified character design
+        react_name = "hamster_jump.png" if char_id == "hamster" else ("tit_sing.png" if char_id == "tit" else "cat_play.png")
+        generated[(char_id, 5)].save(os.path.join(SPRITES_DIR, react_name), "PNG")
 
-    try:
-        font_title = ImageFont.truetype("C:/Windows/Fonts/malgunbd.ttf", 22)
-        font_sub = ImageFont.truetype("C:/Windows/Fonts/malgun.ttf", 17)
-    except Exception:
-        font_title = ImageFont.load_default()
-        font_sub = ImageFont.load_default()
+        # Sleep / Sit / Fly sprite
+        if char_id == "tit":
+            cc_fly = CrayonCanvas(size=CANVAS_SIZE, seed=3000 + c_idx * 100)
+            draw_character_base(cc_fly, char_id, 1, pose_variant="fly")
+            draw_expression_features(cc_fly, char_id, 1)
+            cc_fly.img.save(os.path.join(SPRITES_DIR, "tit_fly.png"), "PNG")
+        else:
+            cc_sleep = CrayonCanvas(size=CANVAS_SIZE, seed=3000 + c_idx * 100)
+            draw_character_base(cc_sleep, char_id, 1, pose_variant="sleep")
+            draw_expression_features(cc_sleep, char_id, 8)
+            sleep_name = "hamster_sleep.png" if char_id == "hamster" else "cat_sit.png"
+            cc_sleep.img.save(os.path.join(SPRITES_DIR, sleep_name), "PNG")
 
-    for col_i, (exp_id, exp_slug, exp_kr) in enumerate(expressions):
-        cx = row_label_w + pad + col_i * (thumb_w + pad) + thumb_w // 2
-        sdraw.text((cx, 25), exp_kr, fill=(40, 35, 30, 255), font=font_title, anchor="mm")
-        if exp_id in (3, 4, 6):
-            sdraw.text((cx, 54), "★ 눈 좌표 고정 (372,430 / 652,430)", fill=(210, 65, 55, 255), font=font_sub, anchor="mm")
+    print("[OK] Updated all 9 animation sprites in assets/sprites/ to unified design.")
 
-    for row_i, (char_id, char_kr) in enumerate(characters):
-        ry = header_h + row_i * (thumb_w + pad + 36)
-        sdraw.text((row_label_w // 2, ry + thumb_w // 2), char_kr, fill=(40, 35, 30, 255), font=font_title, anchor="mm")
-        for col_i, (exp_id, exp_slug, exp_kr) in enumerate(expressions):
-            rx = row_label_w + pad + col_i * (thumb_w + pad)
-            card = Image.new("RGBA", (thumb_w, thumb_w), (255, 255, 255, 255))
-            cdraw = ImageDraw.Draw(card)
-            cs = 20
-            for cy_i in range(0, thumb_w, cs):
-                for cx_i in range(0, thumb_w, cs):
-                    if ((cx_i // cs) + (cy_i // cs)) % 2 == 1:
-                        cdraw.rectangle([cx_i, cy_i, cx_i + cs, cy_i + cs], fill=(240, 236, 228, 255))
-            thumb = generated[(char_id, exp_id)].resize((thumb_w, thumb_w), Image.Resampling.LANCZOS)
-            card = Image.alpha_composite(card, thumb)
-            cdraw = ImageDraw.Draw(card)
-            border_col = (225, 80, 65, 255) if exp_id in (3, 4, 6) else (210, 200, 185, 255)
-            cdraw.rectangle([0, 0, thumb_w - 1, thumb_w - 1], outline=border_col, width=3)
-            sheet.paste(card, (rx, ry))
-            sdraw.text(
-                (rx + thumb_w // 2, ry + thumb_w + 16),
-                f"{char_id}_{exp_slug}.png",
-                fill=(90, 85, 80, 255),
-                font=font_sub,
-                anchor="mm",
-            )
-
-    sheet_path = os.path.join(ARTIFACT_DIR, "character_expansion_sheet.png")
-    sheet.save(sheet_path, "PNG")
-
-    # --- Build Sunglasses Alignment Verification Sheet ---
-    align_w = row_label_w + 3 * (thumb_w + pad) + pad
-    align_h = header_h + 3 * (thumb_w + pad) + pad
-    align_sheet = Image.new("RGBA", (align_w, align_h), (246, 242, 234, 255))
-    adraw = ImageDraw.Draw(align_sheet)
-
-    locked_exps = [
-        (3, "#3 뻔뻔 + 선글라스"),
-        (4, "#4 웃참 + 선글라스"),
-        (6, "#6 모른 척 + 선글라스"),
-    ]
-    for col_i, (exp_id, title_txt) in enumerate(locked_exps):
-        cx = row_label_w + pad + col_i * (thumb_w + pad) + thumb_w // 2
-        adraw.text((cx, 32), title_txt, fill=(35, 30, 25, 255), font=font_title, anchor="mm")
-        adraw.text((cx, 60), "동일 좌표 (0,0) 오버레이", fill=(200, 60, 50, 255), font=font_sub, anchor="mm")
-
-    for row_i, (char_id, char_kr) in enumerate(characters):
-        ry = header_h + row_i * (thumb_w + pad)
-        adraw.text((row_label_w // 2, ry + thumb_w // 2), char_kr, fill=(35, 30, 25, 255), font=font_title, anchor="mm")
-        for col_i, (exp_id, _) in enumerate(locked_exps):
-            rx = row_label_w + pad + col_i * (thumb_w + pad)
-            comp = Image.alpha_composite(generated[(char_id, exp_id)], shades_img)
-            thumb = comp.resize((thumb_w, thumb_w), Image.Resampling.LANCZOS)
-            card = Image.new("RGBA", (thumb_w, thumb_w), (255, 253, 248, 255))
-            card = Image.alpha_composite(card, thumb)
-            cdraw = ImageDraw.Draw(card)
-            cdraw.rectangle([0, 0, thumb_w - 1, thumb_w - 1], outline=(50, 45, 40, 255), width=3)
-            align_sheet.paste(card, (rx, ry))
-
-    align_path = os.path.join(ARTIFACT_DIR, "sunglasses_alignment_proof.png")
-    align_sheet.save(align_path, "PNG")
-    print("[OK] All sheets updated.")
+    # Copy base character images to artifact directory for preview
+    for char_id, _ in characters:
+        shutil.copyfile(
+            os.path.join(ASSETS_DIR, f"{char_id}.png"),
+            os.path.join(ARTIFACT_DIR, f"base_{char_id}.png"),
+        )
 
 
 if __name__ == "__main__":

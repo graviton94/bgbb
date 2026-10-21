@@ -965,7 +965,14 @@ const petActors = [
       base: 'assets/hamster.png',
       walk: 'assets/sprites/hamster_walk.png',
       react: 'assets/sprites/hamster_jump.png',
-      sleep: 'assets/sprites/hamster_sleep.png'
+      sleep: 'assets/sprites/hamster_sleep.png',
+      exp1: 'assets/expressions/hamster_1_blank.png',
+      exp2: 'assets/expressions/hamster_2_eng.png',
+      exp3: 'assets/expressions/hamster_3_shameless.png',
+      exp4: 'assets/expressions/hamster_4_hold.png',
+      exp5: 'assets/expressions/hamster_5_burst.png',
+      exp6: 'assets/expressions/hamster_6_whistle.png',
+      exp7: 'assets/expressions/hamster_7_thumbs_up.png'
     }
   },
   {
@@ -991,7 +998,14 @@ const petActors = [
       walk: 'assets/sprites/tit_hop.png',
       fly: 'assets/sprites/tit_fly.png',
       react: 'assets/sprites/tit_sing.png',
-      sleep: 'assets/tit.png'
+      sleep: 'assets/tit.png',
+      exp1: 'assets/expressions/tit_1_blank.png',
+      exp2: 'assets/expressions/tit_2_eng.png',
+      exp3: 'assets/expressions/tit_3_shameless.png',
+      exp4: 'assets/expressions/tit_4_hold.png',
+      exp5: 'assets/expressions/tit_5_burst.png',
+      exp6: 'assets/expressions/tit_6_whistle.png',
+      exp7: 'assets/expressions/tit_7_thumbs_up.png'
     }
   },
   {
@@ -1016,7 +1030,14 @@ const petActors = [
       base: 'assets/cat.png',
       walk: 'assets/sprites/cat_walk.png',
       react: 'assets/sprites/cat_play.png',
-      sleep: 'assets/sprites/cat_sit.png'
+      sleep: 'assets/sprites/cat_sit.png',
+      exp1: 'assets/expressions/cat_1_blank.png',
+      exp2: 'assets/expressions/cat_2_eng.png',
+      exp3: 'assets/expressions/cat_3_shameless.png',
+      exp4: 'assets/expressions/cat_4_hold.png',
+      exp5: 'assets/expressions/cat_5_burst.png',
+      exp6: 'assets/expressions/cat_6_whistle.png',
+      exp7: 'assets/expressions/cat_7_thumbs_up.png'
     }
   }
 ];
@@ -1088,10 +1109,11 @@ function initPropsInteraction() {
   });
 }
 
-function triggerPetReaction(pet, customText = null) {
+function triggerPetReaction(pet, customText = null, customSprite = null) {
   pet.state = 'react';
   pet.reactTimer = 110;
-  if (pet.spriteImg) pet.spriteImg.src = pet.sprites.react;
+  pet.activeReactSprite = customSprite || pet.sprites.react;
+  if (pet.spriteImg) pet.spriteImg.src = pet.activeReactSprite;
 
   triggerPetJump(pet);
 
@@ -1116,13 +1138,15 @@ function startTamagotchiLoop() {
       petActors.forEach((pet, idx) => {
         if (pet.reactTimer > 0) {
           pet.reactTimer--;
-          if (pet.spriteImg && !pet.spriteImg.src.includes(pet.sprites.react)) {
-            pet.spriteImg.src = pet.sprites.react;
+          const targetReactSrc = pet.activeReactSprite || pet.sprites.react;
+          if (pet.spriteImg && !pet.spriteImg.src.includes(targetReactSrc)) {
+            pet.spriteImg.src = targetReactSrc;
           }
           pet.waddleOffset = Math.sin(Date.now() / 90) * 6;
 
           if (pet.reactTimer === 0) {
             pet.state = 'idle';
+            pet.activeReactSprite = null;
             if (pet.spriteImg) pet.spriteImg.src = pet.sprites.base;
           }
         } else {
@@ -1363,6 +1387,11 @@ function checkCharacterLevelUp(char) {
     char.level = newLevel;
     char.badge = newLevel >= 5 ? `소울메이트 Lv.${newLevel} 👑` : `절친 레벨 ${newLevel} 💖`;
     if (dom.modalCharBadge) dom.modalCharBadge.textContent = char.badge;
+    const pet = petActors.find(p => p.id === char.id);
+    if (pet) {
+      triggerPetReaction(pet, `새 칭호 획득! 멋지다 👍✨`, pet.sprites.exp7);
+      if (dom.modalMascotImg) dom.modalMascotImg.src = pet.sprites.exp7;
+    }
     showToast(`🎉 ${char.name}와(과) 친밀도 Lv.${newLevel} 달성! (+10 🌰)`);
     state.acorns += 10;
     updateAcornDisplay();
@@ -1866,14 +1895,20 @@ function initEmergencyDock() {
       dom.statusDot.classList.remove('pulsing');
       dom.statusDot.classList.add('emergency');
       dom.stealthText.textContent = '쉿! 모든 소리가 꽁꽁 얼어붙음 🥶';
-      petActors.forEach(p => showPetBubble(p, '흡! 숨 참기 🤐', 4000));
+      petActors.forEach(p => {
+        if (p.spriteImg) p.spriteImg.src = p.sprites.exp4; // #4 웃참
+        showPetBubble(p, '흡! 숨 참기 🤐', 4000);
+      });
     } else {
       dom.btnEmergency.classList.remove('active');
       dom.emergencyText.textContent = '🚨 긴급탈출! (원터치 소리 동결)';
       dom.statusDot.classList.add('pulsing');
       dom.statusDot.classList.remove('emergency');
       dom.stealthText.textContent = '햄찌와 친구들이 주머니 속 낮잠 중 💤';
-      petActors.forEach(p => showPetBubble(p, '휴~ 살았다! 💨', 2500));
+      petActors.forEach(p => {
+        if (p.spriteImg) p.spriteImg.src = p.sprites.base; // #1 멍 (홈 기본)
+        showPetBubble(p, '휴~ 살았다! 💨', 2500);
+      });
     }
     updateSchedulerStatusText();
     syncNativeForegroundService();
@@ -1881,7 +1916,7 @@ function initEmergencyDock() {
   });
 }
 
-// 불시 소리 발생 트리거 (모드별 대담/소심/참음 로직 + 도토리 보상 & 리더보드 갱신)
+// 불시 소리 발생 트리거 (모드별 대담/소심/참음 로직 + 7종 표정 변화 + 도토리 보상 & 리더보드 갱신)
 function triggerRandomPetSound() {
   if (state.emergencyEscape) return;
 
@@ -1899,7 +1934,17 @@ function triggerRandomPetSound() {
     state.counts.loud++;
     state.acorns += 3;
     dom.countLoud.textContent = `${state.counts.loud}회`;
-    if (pet) triggerPetReaction(pet, '대담하게 발사! 💥 (+3🌰)');
+    if (pet) {
+      // #5 터짐 -> 직후 #2 엥? 클로즈업!
+      triggerPetReaction(pet, '대담하게 발사! 💥 (+3🌰)', pet.sprites.exp5);
+      setTimeout(() => {
+        if (!state.emergencyEscape && pet.reactTimer > 0) {
+          pet.activeReactSprite = pet.sprites.exp2;
+          if (pet.spriteImg) pet.spriteImg.src = pet.sprites.exp2;
+          showPetBubble(pet, '엥?! 내가 뀐 거 아님 😳', 1600);
+        }
+      }, 900);
+    }
 
   } else if (state.mannerMode === 'vibrate') {
     playCharacterSound(chosenChar, 0.22, 'soft');
@@ -1907,13 +1952,15 @@ function triggerRandomPetSound() {
     state.counts.soft++;
     state.acorns += 3;
     dom.countSoft.textContent = `${state.counts.soft}회`;
-    if (pet) triggerPetReaction(pet, '소심하게 피식... 🫧 (+3🌰)');
+    // #6 모른 척 (고개 돌리고 휘파람, 곁눈질)
+    if (pet) triggerPetReaction(pet, '소심하게 피식... 모른 척 ♪ (+3🌰)', pet.sprites.exp6);
 
   } else if (state.mannerMode === 'silent') {
     state.counts.hold++;
     state.acorns += 5;
     dom.countHold.textContent = `${state.counts.hold}회`;
-    if (pet) triggerPetReaction(pet, '윽! 꾹 참았다 🤫 (+5🌰)');
+    // #4 웃참 (볼 빵빵, 입 꾹, 눈물 찔끔)
+    if (pet) triggerPetReaction(pet, '윽! 볼 빵빵하게 꾹 참았다 🤫 (+5🌰)', pet.sprites.exp4);
     synthPop(0.25);
   }
 
