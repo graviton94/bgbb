@@ -2,10 +2,11 @@
 //  - 조립형: 배경 · 캐릭터 자리와 크기 · 문구(상황 + 한 방) · 문구 자리 · 소품을 매번 랜덤으로
 //  - 캐릭터에 붙는 것(선글라스 = 얼굴, 방구 구름 = 엉덩이 옆, 머니건 = 손)은 캐릭터 상자 기준 좌표
 //  - 레어 이상 칭호는 유니크 짤을 실사 사진으로 (assets/faces_real, 아래가 잘린 사진이라 바닥에 세운다)
-//  - 레전드 짤 (구린 PPT · 유튜브 썸네일 · 모집 포스터 · 검정 슬라이드 감성): 그라데이션 배경 + 워드아트 글자 + 누끼 사진
+//  - 레전드 짤: 상장 · CCTV · AI 분석 리포트 · 괄약근 주식 차트 + 구린 PPT · 썸네일 감성 (그라데이션 · 워드아트 · 누끼)
+//  - 유니크 짤에는 단톡 캡처 · 뿡 예보 · 영수증 · 음악 앱 재생 화면도
 //  - 유니크 짤 (엥? · 스티커+안경 · 참은 나 vs 뀐 나 · 들어갈 때 vs 나올 때 · 범인은 이 안에 · 현자 타임 · 상자 · 잭팟 돈)은 미리 만든 틀
 // 결과는 spec (칸 대비 % 좌표 목록) 이라 화면(DOM)과 자랑 카드(canvas)가 같은 짤을 그린다.
-import { face } from './data.js';
+import { face, charById } from './data.js';
 import { L } from './i18n.js';
 import { SHADES_BOX, SHADES_URL } from './pixels.js';
 
@@ -98,8 +99,8 @@ const rect = (x, y, w, h, color) => ({ k: 'rect', x, y, w, h, color });
 const REAL_BOTTOM = { hamster: { blank: 951, eng: 1024, shameless: 940, hold: 958, burst: 968, whistle: 973, thumbs_up: 952 } };
 const bottomOf = (id, expr) => (REAL_BOTTOM[id]?.[expr] ?? 1024) / 1024;
 /** 실사 사진은 아래가 잘린 사진이라 바닥(floor)에 몸 끝을 딱 붙여 세운다. 원화는 원래 자리 y 그대로 */
-const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false, floor = null } = {}) =>
-  ({ k: 'char', id, expr, x, y: real && floor != null ? floor - w * bottomOf(id, expr) : y, w, r, shades, sticker, real });
+const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false, floor = null, clip = null } = {}) =>
+  ({ k: 'char', id, expr, x, y: real && floor != null ? floor - w * bottomOf(id, expr) : y, w, r, shades, sticker, real, clip });   // clip = { x, y, w, h, rad, bg } 이 상자 밖은 잘라냄
 /** 방구 소리 글자 (만화 효과음): 노랑 + 굵은 검정 테두리, 비스듬히 */
 const sfx = (x, y, w, r, s = pick(L(W.sfx))) => ({ k: 'text', s, x, y, w, r, style: 'sfx', size: fit(s, w, BASE.sfx) });
 /** 엉덩이 옆에서 터지는 효과음 (side = 1 오른쪽, -1 왼쪽) */
@@ -268,16 +269,6 @@ const WL = {
     ko: ['좋은 방구란 소리와 냄', '새, 타이밍 등이 명확한 레', '이아웃 컨셉을 지니고 적', '절하게 배치가 잘 된 방구', '를 말합니다.'],
     en: ['A good toot has a clear', 'layout concept of sound,', 'smell and timing, with', 'proper place-', 'ment.']
   },
-  posterBanner: { ko: '방구뿡과 함께할', en: 'Join Pocket Toot' },
-  posterBig: { ko: '방구장인 모집', en: 'TOOTERS WANTED' },
-  posterWish: { ko: '희망사항', en: 'WISH' },
-  posterReq: { ko: ['괄약근, 엉덩이 능력자', '무음 모드 가능자 우대♥'], en: ['Clench & butt skills', 'Silent mode a plus♥'] },
-  posterRows: { ko: [['접수기간', '☞ 오늘 {hm}'], ['근무조건', '☞ 개별문의'], ['지원방법', '☞ 그냥 뀌기']], en: [['Apply', '☞ today {hm}'], ['Terms', '☞ ask'], ['How', '☞ just toot']] },
-  slideTitle: { ko: ['방구를 참는 방법 2', '방구를 괴롭히는 방법 2'], en: ['How to Hold It In 2'] },
-  slideBody: {
-    ko: ['방구를 잘 참기 위해서는 각 근', '육의 조화를 맞추는 것이 중요합', '니다. 호흡, 자세, 표정, 엉덩이', '의 각도, 배치 등이 조화롭게 이', '루어질 때 좋은 참기가 만들어지', '는 것입니다.'],
-    en: ['To hold it in well, the harmony', 'of each muscle is important.', 'Breathing, posture, face, the', 'angle of the butt and layout', 'must come together to make', 'a good hold.']
-  }
 };
 
 export const LEGEND = {
@@ -300,35 +291,244 @@ export const LEGEND = {
       art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: 'body', weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
       charItem(id, 'thumbs_up', 56, 0, 48, { real: true, floor: 100, sticker: true })],
     fx: { x: 0.8, y: 0.75 }
-  }),
-  // 모집 포스터: 무지개, 노란 화살표 띠, 글자마다 색 다른 큰 제목, 동그라미 글자, 밑줄 조건, 노란 표
-  poster: ({ id, t }) => ({
-    ...grad(135, ['#22C8FF', '#2EFF6A', '#FFE600', '#FF7A2E', '#FF00C8']),
-    items: [{ ...charItem(id, 'blank', 52, -6, 52, { real: true }), alpha: 0.45 },
-      { k: 'rect', x: 3, y: 4, w: 52, h: 8.5, color: '#FFF200', line: '#111111', lw: 0.4, rad: 0 },
-      art(L(WL.posterBanner), 5, 5.6, 48, 4.6, { font: 'serif', weight: 700, fill: '#111111' }),
-      art(L(WL.posterBig), 3, 15, 94, 12.5, { chars: ['#E0262B', '#11A83B', '#1E5BFF', '#111111'], stroke: '#FFFFFF', sw: 1.2, shadow: [0.6, 0.6, '#111111'], r: -3 }),
-      art(L(WL.posterWish), 46, 31, 50, 3.6, { font: 'body', weight: 800, circled: '#111111', align: 'right' }),
-      art(L(WL.posterReq)[0], 18, 40, 79, 5, { font: 'body', weight: 600, fill: '#111111', underline: '#111111', align: 'right' }),
-      art(L(WL.posterReq)[1], 10, 50, 87, 4.6, { font: 'body', weight: 800, fill: '#E0262B', align: 'right' }),
-      { k: 'rect', x: 4, y: 62, w: 92, h: 34, color: '#FFF200', line: '#E0262B', lw: 0.6, rad: 0 },
-      ...L(WL.posterRows).flatMap(([a, b], i) => [
-        art(a, 7, 65 + i * 10, 34, 6.2, { font: 'serif', weight: 700, fill: '#111111' }),
-        art(b.replace('{hm}', hm(t)), 42, 66.6 + i * 10, 52, 4.4, { font: 'body', weight: 500, fill: '#111111' })])],
-    fx: { x: 0.7, y: 0.25 }
-  }),
-  // 검정 슬라이드: 밑줄 하늘색 제목, 명조 본문, 그 위를 덮어버린 흰 사진 상자 + 클립아트
-  slide: ({ id }) => ({
-    bg: '#000000',
-    items: [{ k: 'rect', x: 1.5, y: 30, w: 0.8, h: 40, color: '#FF00C8' }, { k: 'rect', x: 2.6, y: 30, w: 0.8, h: 40, color: '#FFE600' },
-      art(pick(L(WL.slideTitle)), 5, 4, 92, 8.4, { font: 'body', weight: 500, fill: '#9BEFFF', underline: '#9BEFFF' }),
-      art(L(WL.slideBody).join('\n'), 6, 24, 90, 4.6, { font: 'serif', weight: 400, fill: '#FFFFFF', lh: 1.9 }),
-      { k: 'rect', x: 58, y: 34, w: 40, h: 54, color: '#FFFFFF' },
-      charItem(id, pick(['eng', 'hold', 'burst']), 58, 0, 40, { real: true, floor: 88 }),
-      { k: 'img', src: deco(pick(['tree', 'sunflower', 'carrot'])), x: 2, y: 66, w: 32, r: -6 }],
-    fx: { x: 0.78, y: 0.6 }
   })
 };
+
+// ---------------------------------------------------------------- 오리지널 짤: 폰 화면 · 생활 서류 · 뉴스 UI 를 방구로 비틀기
+const T = (ko, en) => L({ ko, en });
+const nickOf = id => L(charById(id).nick);
+const ymd = t => { const d = new Date(t); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`; };
+const hms = t => { const d = new Date(t); return `${hm(t)}:${String(d.getSeconds()).padStart(2, '0')}`; };
+const ampm = t => { const d = new Date(t), h = d.getHours(); return T(`${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`, `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`); };
+const em = s => Math.max(...s.split('\n').map(line => [...line].reduce((n, c) => n + (/[ㄱ-힝]/.test(c) ? 1 : c === ' ' ? 0.3 : 0.6), 0)));
+const MONO = { font: 'mono', weight: 700 };
+
+const CHAT = {
+  ko: {
+    loud: [['c', '방금 소리 들었어?'], ['m', 'ㅇㅇ 다 들었는데'], ['c', '새 소리임'], ['c', '짹짹']],
+    soft: [['c', '부르르'], ['m', '진동 왔어?'], ['c', '아니 나임'], ['m', '...']],
+    hold: [['c', '참는 중'], ['c', '진짜 참는 중'], ['m', '왜 자꾸 보고함'], ['c', '혼자 참기 무서워서']],
+    any: [['m', '회의 중이야 조용히 해'], ['c', '뿡'], ['m', '?'], ['c', '미안 자동완성']]
+  },
+  en: {
+    loud: [['c', 'did u hear that?'], ['m', 'everyone heard'], ['c', 'it was a bird'], ['c', 'tweet tweet']],
+    soft: [['c', 'bzzz'], ['m', 'phone buzzing?'], ['c', 'no that was me'], ['m', '...']],
+    hold: [['c', 'holding it'], ['c', 'really holding it'], ['m', 'why r u reporting'], ['c', 'scared to hold it alone']],
+    any: [["m", "i'm in a meeting"], ['c', 'toot'], ['m', '?'], ['c', 'sorry autocorrect']]
+  }
+};
+
+const ORIGINAL_UNIQUE = {
+  // 단톡 캡처: 친구가 자기 방구를 실시간 보고한다
+  chat: ({ id, mode, t, real }) => {
+    const lines = L(CHAT)[chance(0.3) ? 'any' : mode];
+    const items = [{ k: 'rect', x: 0, y: 0, w: 100, h: 11, color: '#A3B8CA' },
+      art(`${nickOf(id)}${T('님과의 대화', '')}`, 4, 3.4, 70, 4.6, { font: 'body', weight: 800, fill: '#1B1B1B' }),
+      art('≡', 86, 2.6, 10, 6, { font: 'body', weight: 700, fill: '#1B1B1B', align: 'right' })];
+    let y = 15, prev = '';
+    for (const [who, text] of lines) {
+      const size = 4.3, bw = Math.min(62, em(text) * size + 7), bh = 9.5;
+      if (who === 'c') {
+        if (prev !== 'c') {
+          items.push(charItem(id, mode === 'hold' ? 'hold' : 'blank', 3, y, 11, { real, clip: { x: 3, y, w: 11, h: 11, rad: 4.2, bg: '#FFFFFF' } }),
+            art(nickOf(id), 16.5, y, 40, 3, { font: 'body', weight: 500, fill: '#3F4A55' }));
+          y += 4.4;
+        }
+        items.push({ k: 'rect', x: 16.5, y, w: bw, h: bh, color: '#FFFFFF', rad: 3 },
+          art(text, 20, y + 2.5, bw - 6, size, { font: 'body', weight: 500, fill: '#111111' }),
+          art(ampm(t), 17.5 + bw, y + 6, 20, 2.4, { font: 'body', weight: 400, fill: '#4D5A66' }));
+      } else {
+        const x = 96 - bw;
+        items.push({ k: 'rect', x, y, w: bw, h: bh, color: '#FEE500', rad: 3 },
+          art(text, x + 3.5, y + 2.5, bw - 6, size, { font: 'body', weight: 500, fill: '#111111' }),
+          art('1', x - 4, y + 3, 3, 2.6, { font: 'body', weight: 800, fill: '#C9A800', align: 'right' }),
+          art(ampm(t), x - 20, y + 6, 19, 2.4, { font: 'body', weight: 400, fill: '#4D5A66', align: 'right' }));
+      }
+      y += bh + 3;
+      prev = who;
+    }
+    items.push({ k: 'rect', x: 0, y: 90, w: 100, h: 10, color: '#FFFFFF' },
+      art(T('메시지 입력', 'Message'), 5, 93, 60, 3.6, { font: 'body', weight: 400, fill: '#9AA3AB' }),
+      { k: 'rect', x: 84, y: 91.8, w: 12, h: 6.4, color: '#FEE500', rad: 1.4 }, art(T('전송', 'Send'), 84, 93.4, 12, 3.2, { font: 'body', weight: 700, fill: '#3B3B3B', align: 'center' }));
+    return { bg: '#B2C7D9', items, fx: { x: 0.2, y: 0.4 } };
+  },
+
+  // 오늘의 뿡 예보: 기상 캐스터 + 시간대별 예보표 + 뿡 확률
+  forecast: ({ id, mode, t, real }) => {
+    const H = h => { const d = new Date(t); d.setHours(d.getHours() + h); return `${String(d.getHours()).padStart(2, '0')}:00`; };
+    const now = { loud: T('뿡!! 강풍', 'TOOT!! gale'), soft: T('부르르 약풍', 'buzz, light'), hold: T('먹구름 (참는 중)', 'clouds (held)') }[mode];
+    const rows = [[H(-2), T('맑음', 'clear')], [H(0), now], [H(2), T('예측 불가', 'unknown')]];
+    const prob = mode === 'hold' ? 99 : Math.round(rnd(mode === 'loud' ? 86 : 58, mode === 'loud' ? 99 : 79));
+    return {
+      ...grad(180, ['#7EC8FF', '#DDF3FF']),
+      items: [{ k: 'rect', x: 0, y: 0, w: 100, h: 13, color: '#1E3A8A' },
+        art(T('오늘의 뿡 예보', "TODAY'S TOOT FORECAST"), 4, 3.4, 70, 6.4, { fill: '#FFFFFF' }),
+        { k: 'rect', x: 84, y: 4, w: 12, h: 5.2, color: '#E0262B', rad: 1 }, art('LIVE', 84, 5, 12, 3.2, { font: 'body', weight: 900, fill: '#FFFFFF', align: 'center' }),
+        ...rows.flatMap(([time, what], i) => [
+          { k: 'rect', x: 4, y: 18 + i * 13, w: 54, h: 11, color: i === 1 ? '#FFE600' : 'rgba(255,255,255,0.85)', rad: 2, line: i === 1 ? '#111111' : null, lw: 0.4 },
+          art(time, 7, 21.4 + i * 13, 16, 4.2, { font: 'body', weight: 800, fill: '#1E3A8A' }),
+          art(what, 23, 21.4 + i * 13, 34, 4.2, { font: 'body', weight: i === 1 ? 900 : 600, fill: i === 1 ? '#E0262B' : '#333333' })]),
+        art(`${T('뿡 확률', 'Toot chance')}\n${prob}%`, 4, 60, 56, 10, { fill: '#E0262B', stroke: '#FFFFFF', sw: 1.2, lh: 1.05 }),
+        charItem(id, mode === 'loud' ? 'burst' : pick(['blank', 'shameless']), 56, 47, 46, { real, floor: 93 }),
+        { k: 'rect', x: 0, y: 93, w: 100, h: 7, color: '#111111' },
+        art(T('※ 외출 시 무음 모드를 권장합니다', '※ Silent mode advised when going out'), 3, 94.6, 94, 3.2, { font: 'body', weight: 600, fill: '#FFE600' })],
+      fx: { x: 0.78, y: 0.7 }
+    };
+  },
+
+  // 영수증: 뿡 한 개 결제, 체면 차감, 환불 불가
+  receipt: ({ id, mode, t, real }) => {
+    const size = { loud: T('대', 'L'), soft: T('소', 'S'), hold: T('보류', 'held') }[mode];
+    const rows = [[`${T('뿡', 'Toot')}(${size}) x1`, '₩0'], [T('체면', 'Dignity'), mode === 'hold' ? '0' : '-100'], [T('평판', 'Reputation'), mode === 'loud' ? '-50' : '0'],
+      [T('괄약근 포인트', 'Clench pts'), mode === 'hold' ? '+10' : '+1']];
+    const bars = [];
+    for (let x = 26, i = 0; x < 74; i++) { const w = pick([0.4, 0.4, 0.8, 1.2]); bars.push({ k: 'rect', x, y: 80, w, h: 6, color: '#111111' }); x += w + pick([0.5, 0.8, 1.1]); }
+    return {
+      bg: pick(['#FFE1EC', '#DCE9F5', '#E8FFD9', '#FFF3B0']),
+      items: [{ k: 'rect', x: 17, y: 3, w: 66, h: 92, color: '#FFFFFF' },
+        art(T('★ 방구뿡 편의점 ★', '★ TOOT MART ★'), 17, 7, 66, 4.6, { ...MONO, fill: '#111111', align: 'center' }),
+        art(`${ymd(t)} ${hms(t)}\n${T('캐셔', 'Cashier')}: ${nickOf(id)}`, 21, 14, 58, 3.3, { ...MONO, weight: 400, fill: '#333333', lh: 1.4 }),
+        art('- - - - - - - - - - - - - -', 17, 24, 66, 3.3, { ...MONO, weight: 400, fill: '#777777', align: 'center' }),
+        ...rows.flatMap(([a, b], i) => [art(a, 21, 29 + i * 6.4, 40, 3.6, { ...MONO, fill: '#111111' }), art(b, 59, 29 + i * 6.4, 20, 3.6, { ...MONO, fill: '#111111', align: 'right' })]),
+        art('- - - - - - - - - - - - - -', 17, 55, 66, 3.3, { ...MONO, weight: 400, fill: '#777777', align: 'center' }),
+        art(T('합계', 'TOTAL'), 21, 60, 30, 5, { ...MONO, weight: 800, fill: '#111111' }), art('₩0', 55, 60, 24, 5, { ...MONO, weight: 800, fill: '#111111', align: 'right' }),
+        art(T('교환·환불 불가 (이미 나감)', 'No refunds (already out)'), 17, 70, 66, 3, { ...MONO, weight: 400, fill: '#333333', align: 'center' }),
+        ...bars,
+        charItem(id, pick(['whistle', 'shameless']), 66, 0, 38, { real, floor: 100 })],
+      fx: { x: 0.85, y: 0.8 }
+    };
+  },
+
+  // 음악 앱 재생 화면: 지금 재생 중 = 뿡 (Feat. 괄약근)
+  nowplaying: ({ id, mode, real }) => {
+    const pct = rnd(0.25, 0.7), box = { x: 16, y: 6, w: 68, h: 64, rad: 3, bg: pick(['#FFB3D9', '#CFEFFF', '#FFE600', '#D7FF3D']) };
+    return {
+      ...grad(165, ['#4A2470', '#160D22']),
+      items: [charItem(id, mode === 'loud' ? 'burst' : mode === 'soft' ? 'whistle' : 'hold', 18, 0, 64, { real, floor: 70, clip: box }),
+        art(T('뿡 (Feat. 괄약근)', 'Toot (feat. Clench)'), 8, 74, 74, 5.4, { font: 'body', weight: 800, fill: '#FFFFFF' }),
+        art(`${nickOf(id)} · ${T({ loud: '정규 1집', soft: 'Acoustic', hold: 'Unplugged (무음)' }[mode], { loud: 'Debut Album', soft: 'Acoustic', hold: 'Unplugged (silent)' }[mode])}`, 8, 80.6, 74, 3.6, { font: 'body', weight: 500, fill: '#B9A9CC' }),
+        art('♥', 84, 74, 10, 5.4, { font: 'body', weight: 700, fill: '#FF6FB5', align: 'right' }),
+        { k: 'rect', x: 8, y: 87, w: 84, h: 0.9, color: '#5B4A6E', rad: 0.45 }, { k: 'rect', x: 8, y: 87, w: 84 * pct, h: 0.9, color: '#FFFFFF', rad: 0.45 },
+        { k: 'rect', x: 8 + 84 * pct - 1.3, y: 86.15, w: 2.6, h: 2.6, color: '#FFFFFF', rad: 1.3 },
+        art('0:01', 8, 89.2, 20, 2.8, { font: 'body', weight: 500, fill: '#B9A9CC' }), art('-0:02', 72, 89.2, 20, 2.8, { font: 'body', weight: 500, fill: '#B9A9CC', align: 'right' }),
+        art('◀◀    ❚❚    ▶▶', 20, 92, 60, 4.4, { font: 'body', weight: 700, fill: '#FFFFFF', align: 'center' })],
+      fx: { x: 0.5, y: 0.45 }
+    };
+  }
+};
+
+const ORIGINAL_LEGEND = {
+  // 상장: 괄약근 부문
+  award: ({ id, mode, t, real }) => {
+    const body = {
+      loud: T('모두가 숨죽인 순간에\n과감한 결단력으로 주위를\n놀라게 하였기에', 'boldly broke the silence\nwhen everyone held their breath,\nstunning all around,'),
+      soft: T('아무도 모르게 진동으로\n처리하는 노련함을\n보였기에', 'handled it quietly on vibrate\nwith veteran discretion\nthat no one noticed,'),
+      hold: T('끝내 참아내는\n놀라운 인내심으로\n귀감이 되었기에', 'held it in to the very end,\nan inspiring example\nof patience,')
+    }[mode];
+    const d = new Date(t);
+    return {
+      bg: '#FFFBEA',
+      items: [{ k: 'rect', x: 3, y: 3, w: 94, h: 94, color: 'transparent', line: '#C9A227', lw: 1.2 }, { k: 'rect', x: 5.5, y: 5.5, w: 89, h: 89, color: 'transparent', line: '#C9A227', lw: 0.35 },
+        art(`${T('제', 'No.')} ${d.getFullYear()}-${String(Math.floor(rnd(1, 999))).padStart(3, '0')}${T('호', '')}`, 9, 9, 50, 2.8, { font: 'serif', weight: 400, fill: '#333333' }),
+        art(T('상    장', 'CERTIFICATE'), 0, 13, 100, 12, { font: 'serif', weight: 900, fill: '#111111', align: 'center' }),
+        art(T('괄약근 부문', 'Clench Division'), 10, 30, 40, 3.8, { font: 'serif', weight: 700, fill: '#111111' }),
+        art(`${T('성명', 'Name')}  ${nickOf(id)}`, 50, 30, 40, 3.8, { font: 'serif', weight: 700, fill: '#111111', align: 'right' }),
+        art(`${T(`위 사람은 ${ymd(t)} ${hm(t)}경`, `On ${ymd(t)} at ${hm(t)}, the above`)}\n${body}\n${T('이 상장을 수여합니다.', 'is hereby awarded.')}`, 10, 36, 80, 4.2, { font: 'serif', weight: 400, fill: '#111111', lh: 1.62 }),
+        art(T(`${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`, ymd(t)), 0, 77, 100, 3.6, { font: 'serif', weight: 400, fill: '#111111', align: 'center' }),
+        art(T('방구뿡 위원회 위원장', 'Chair, Toot Committee'), 34, 85, 44, 4, { font: 'serif', weight: 700, fill: '#111111', align: 'right' }),
+        { k: 'rect', x: 79, y: 81.5, w: 11, h: 11, color: 'transparent', line: '#D62B1F', lw: 0.8, rad: 5.5 },
+        art(T('뿡', 'TOOT'), 79, 84, 11, 5.6, { fill: '#D62B1F', align: 'center', r: -12 }),
+        charItem(id, 'thumbs_up', 7, 74, 20, { real, floor: 94, sticker: true })],
+      fx: { x: 0.2, y: 0.8 }
+    };
+  },
+
+  // CCTV: 엘리베이터 카메라에 찍힌 용의자
+  cctv: ({ id, mode, t }) => {
+    const c = charItem(id, { loud: 'burst', soft: 'whistle', hold: 'hold' }[mode], 6, 0, 88, { real: true, floor: 100 });
+    const box = { x: c.x + c.w * 0.18, y: c.y + c.w * 0.22, w: c.w * 0.64, h: c.w * 0.42 };
+    const tag = { loud: T('범인 확정 · 99.8%', 'CULPRIT · 99.8%'), soft: T('진동 감지 · 87.1%', 'BUZZ DETECTED · 87.1%'), hold: T('수상함 · 증거 없음', 'SUSPICIOUS · NO EVIDENCE') }[mode];
+    return {
+      bg: '#0A100B',
+      items: [c, { k: 'rect', x: 0, y: 0, w: 100, h: 100, color: 'rgba(70,255,140,0.18)' },
+        ...Array.from({ length: 25 }, (_, i) => ({ k: 'rect', x: 0, y: i * 4, w: 100, h: 0.7, color: 'rgba(0,0,0,0.28)' })),
+        { k: 'rect', ...box, color: 'transparent', line: '#FF2E2E', lw: 0.6 },
+        { k: 'rect', x: box.x, y: box.y - 6, w: Math.max(30, em(tag) * 3.2 + 4), h: 5.6, color: '#FF2E2E' },
+        art(tag, box.x + 1.6, box.y - 4.8, 60, 3.2, { font: 'body', weight: 800, fill: '#FFFFFF' }),
+        art('● REC', 4, 4, 30, 4.4, { font: 'body', weight: 900, fill: '#FF2E2E' }),
+        art(T('CAM 03 · 엘리베이터', 'CAM 03 · ELEVATOR'), 40, 4.6, 56, 3.4, { ...MONO, fill: '#FFFFFF', align: 'right' }),
+        art(`${ymd(t)} ${hms(t)}`, 4, 93, 60, 3.6, { ...MONO, fill: '#FFFFFF' }),
+        art(T('동작: 뿡 감지', 'MOTION: TOOT'), 4, 88, 60, 3.6, { ...MONO, fill: '#FFE600' })],
+      fx: { x: 0.5, y: 0.6 }
+    };
+  },
+
+  // AI 분석 리포트: 근거 없는 정밀 분석
+  report: ({ id, mode, t, real }) => {
+    const db = { loud: Math.round(rnd(78, 96)), soft: Math.round(rnd(30, 45)), hold: 0 }[mode];
+    const others = ['hamster', 'tit', 'cat'].filter(c => c !== id);
+    const mine = mode === 'hold' ? rnd(40, 60) : rnd(95, 99.4), a = rnd(0.2, 0.8) * (100 - mine);
+    const odds = [[id, mine], [others[0], a], [others[1], 100 - mine - a]];
+    const timing = { loud: T('최악 (하필 지금)', 'Worst (why now)'), soft: T('애매함', 'Questionable'), hold: T('완벽 (아무 일 없음)', 'Perfect (nothing happened)') }[mode];
+    return {
+      bg: '#E9EDF3',
+      items: [{ k: 'rect', x: 5, y: 5, w: 90, h: 90, color: '#FFFFFF', rad: 4 },
+        art(T('AI 방구 분석 리포트', 'AI TOOT ANALYSIS'), 10, 10, 64, 5, { font: 'body', weight: 900, fill: '#111111' }),
+        { k: 'rect', x: 77, y: 10.2, w: 13, h: 5, color: '#111111', rad: 2.5 }, art('BETA', 77, 11.3, 13, 2.8, { font: 'body', weight: 800, fill: '#FFFFFF', align: 'center' }),
+        charItem(id, 'shameless', 10, 19, 13, { real, clip: { x: 10, y: 19, w: 13, h: 13, rad: 6.5, bg: '#FFE600' } }),
+        art(`${T('분석 대상', 'Subject')}: ${nickOf(id)}`, 26, 20, 60, 3.8, { font: 'body', weight: 700, fill: '#111111' }),
+        art(`${ymd(t)} ${hm(t)}`, 26, 25.6, 60, 3, { font: 'body', weight: 400, fill: '#6B7280' }),
+        art(T('소리', 'Sound'), 10, 37, 18, 3.6, { font: 'body', weight: 600, fill: '#6B7280' }),
+        { k: 'rect', x: 30, y: 38, w: 44, h: 2.4, color: '#E5E7EB', rad: 1.2 }, { k: 'rect', x: 30, y: 38, w: Math.max(1, 44 * db / 100), h: 2.4, color: '#FF4D4D', rad: 1.2 },
+        art(`${db} dB`, 76, 37, 14, 3.4, { font: 'body', weight: 800, fill: '#111111', align: 'right' }),
+        art(T('냄새', 'Smell'), 10, 45, 18, 3.6, { font: 'body', weight: 600, fill: '#6B7280' }),
+        art(mode === 'hold' ? '☆☆☆☆☆' : pick(['★★★★☆', '★★★★★', '★★★☆☆']), 30, 44.4, 40, 4.4, { font: 'body', weight: 700, fill: '#FFB300' }),
+        art(T('타이밍', 'Timing'), 10, 53, 18, 3.6, { font: 'body', weight: 600, fill: '#6B7280' }),
+        art(timing, 30, 53, 60, 3.6, { font: 'body', weight: 800, fill: mode === 'hold' ? '#16A34A' : '#E0262B' }),
+        { k: 'rect', x: 10, y: 61, w: 80, h: 0.3, color: '#E5E7EB' },
+        art(T('범인 확률', 'Culprit odds'), 10, 64, 40, 3.8, { font: 'body', weight: 800, fill: '#111111' }),
+        ...odds.flatMap(([c, p], i) => [
+          art(nickOf(c), 10, 70.4 + i * 6, 16, 3.2, { font: 'body', weight: 600, fill: '#374151' }),
+          { k: 'rect', x: 27, y: 71.2 + i * 6, w: 50, h: 2.4, color: '#EEF0F3', rad: 1.2 },
+          { k: 'rect', x: 27, y: 71.2 + i * 6, w: Math.max(1, 50 * p / 100), h: 2.4, color: i === 0 ? '#111111' : '#9CA3AF', rad: 1.2 },
+          art(`${p.toFixed(1)}%`, 78, 70.4 + i * 6, 12, 3.2, { font: 'body', weight: 800, fill: '#111111', align: 'right' })]),
+        art(T('* 본 분석은 아무 근거 없음', '* This analysis is based on nothing'), 10, 89.5, 80, 2.6, { font: 'body', weight: 400, fill: '#9CA3AF' })],
+      fx: { x: 0.17, y: 0.25 }
+    };
+  },
+
+  // 주식 차트: 괄약근전자 폭락 (참으면 상한가)
+  stock: ({ id, mode, t, real }) => {
+    const up = mode === 'hold';
+    const n = 26, pts = [];
+    let v = 50;
+    for (let i = 0; i < n; i++) {
+      if (i < n - 5) v += rnd(-2.2, 2.2);
+      else v += up ? -rnd(3, 5) : mode === 'loud' ? rnd(5, 7) : rnd(1, 2.4);
+      pts.push([8 + (i / (n - 1)) * 84, Math.min(80, Math.max(38, v))]);
+    }
+    const last = pts[n - 1];
+    const pct = up ? `+${rnd(24, 30).toFixed(1)}%` : mode === 'loud' ? `-${rnd(80, 92).toFixed(1)}%` : `-${rnd(9, 15).toFixed(1)}%`;
+    const color = up ? '#FF3B3B' : '#3D8BFF';
+    return {
+      bg: '#0F1115',
+      items: [art(T('괄약근전자', 'Clench Electronics'), 6, 6, 70, 5.2, { font: 'body', weight: 800, fill: '#FFFFFF' }),
+        art(T('BBNG · 뿡스닥', 'BBNG · TOOTDAQ'), 6, 12.6, 60, 3, { font: 'body', weight: 500, fill: '#8B93A1' }),
+        art(pct, 6, 18, 60, 11, { font: 'body', weight: 900, fill: color }),
+        up ? { k: 'rect', x: 66, y: 21, w: 24, h: 6.6, color: '#FF3B3B', rad: 1.2 } : { k: 'rect', x: 66, y: 21, w: 24, h: 6.6, color: '#3D8BFF', rad: 1.2 },
+        art(up ? T('상한가', 'LIMIT UP') : mode === 'loud' ? T('하한가', 'LIMIT DOWN') : T('약세', 'DOWN'), 66, 22.4, 24, 3.6, { font: 'body', weight: 900, fill: '#FFFFFF', align: 'center' }),
+        ...[40, 53, 66, 79].map(y => ({ k: 'rect', x: 8, y, w: 84, h: 0.25, color: '#262B34' })),
+        { k: 'poly', pts, color, lw: 0.8 },
+        { k: 'rect', x: last[0] - 1.4, y: last[1] - 1.4, w: 2.8, h: 2.8, color, rad: 1.4 },
+        art(`${T('방금', 'just now')} ${hm(t)} →`, 8, last[1] + (up ? 3 : -7), last[0] - 10, 3.4, { font: 'body', weight: 800, fill: '#FFFFFF', align: 'right' }),
+        art('06:00', 30, 82, 20, 2.8, { font: 'body', weight: 500, fill: '#8B93A1' }), art(hm(t), 72, 82, 20, 2.8, { font: 'body', weight: 500, fill: '#8B93A1', align: 'right' }),
+        charItem(id, up ? 'shameless' : 'eng', -2, 68, 32, { real, floor: 100, sticker: true })],
+      fx: { x: 0.82, y: 0.85 }
+    };
+  }
+};
+Object.assign(UNIQUE, ORIGINAL_UNIQUE);
+Object.assign(LEGEND, ORIGINAL_LEGEND);
 
 /**
  * 짤 하나. ctx = { id, mode, t, title(새 칭호 이름 또는 없음 = 꽝), rarity(새 칭호 등급), practice }
@@ -362,7 +562,7 @@ const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;
 const turn = it => (it.flip || it.r ? `transform:${it.flip ? 'scaleX(-1) ' : ''}${it.r ? `rotate(${it.flip ? -it.r : it.r}deg)` : ''};` : '');
 const CLASS = { sfx: 'm-sfx', impact: 'm-impact', display: 'm-display', thin: 'm-thin', small: 'm-small', bubble: 'm-bubble' };
 
-const FAMILY = { display: 'var(--display)', body: 'var(--body)', serif: "'Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif" };
+const FAMILY = { display: 'var(--display)', body: 'var(--body)', serif: "'Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif", mono: "'Courier New', ui-monospace, monospace" };
 const cssFill = f => (Array.isArray(f) ? `background:linear-gradient(180deg, ${f.join(', ')});-webkit-background-clip:text;background-clip:text;color:transparent;` : f ? `color:${f};` : '');
 function artHtml(it) {
   const lines = it.s.split('\n');
@@ -386,9 +586,14 @@ export function renderMeme(el, spec) {
     if (it.k === 'char') {
       const shades = it.shades
         ? `<img class="m-shades" src="${SHADES_URL}" style="left:${SHADES_BOX.x * 100}%;top:${SHADES_BOX.y * 100}%;width:${SHADES_BOX.w * 100}%" alt="">` : '';
-      return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}${it.alpha ? `opacity:${it.alpha};` : ''}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
+      const char = `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}${it.alpha ? `opacity:${it.alpha};` : ''}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
+      if (!it.clip) return char;
+      // 상자 안에서의 자리로 옮겨 그 상자로 잘라낸다
+      const c = it.clip, inner = { ...it, x: ((it.x - c.x) / c.w) * 100, y: ((it.y - c.y) / c.h) * 100, w: (it.w / c.w) * 100 };
+      return `<div class="m-el" style="${pos(c)}height:${c.h}%;overflow:hidden;border-radius:${c.rad || 0}cqw;background:${c.bg || 'transparent'};container-type:inline-size">${char.replace(pos(it), pos(inner))}</div>`;
     }
     if (it.k === 'art') return artHtml(it);
+    if (it.k === 'poly') return `<svg class="m-el" style="left:0;top:0;width:100%;height:100%;overflow:visible" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${it.pts.map(p => p.join(',')).join(' ')}" fill="none" stroke="${it.color}" stroke-width="${it.lw}" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
     if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color};${it.line ? `border:${it.lw}cqw solid ${it.line};box-sizing:border-box;` : ''}${it.rad ? `border-radius:${it.rad}cqw;` : ''}"></div>`;
     if (it.k === 'img') return `<img class="m-el ${it.cls || ''}" src="${it.src}" style="${pos(it)}${turn(it)}" alt="">`;
     if (it.k === 'label') return `<div class="m-el m-label" style="${pos(it)}${turn(it)}font-size:${it.size}cqw">${esc(it.s)}</div>`;
@@ -428,7 +633,7 @@ function silhouette(im) {
   return silhouettes.get(im);
 }
 
-const CANVAS_FAMILY = { display: '"Black Han Sans", sans-serif', body: 'system-ui, sans-serif', serif: '"Batang", "Nanum Myeongjo", "Noto Serif KR", serif' };
+const CANVAS_FAMILY = { display: '"Black Han Sans", sans-serif', body: 'system-ui, sans-serif', serif: '"Batang", "Nanum Myeongjo", "Noto Serif KR", serif', mono: '"Courier New", ui-monospace, monospace' };
 /** 워드아트 글자를 (0, 0) 기준 글자 칸 안에 그린다 (돌리기 · 반사는 바깥에서) */
 function drawArt(g, it, px, w) {
   const size = px(it.size), lh = size * (it.lh || 1.1);
@@ -516,6 +721,14 @@ export async function drawMeme(g, spec, x, y, S) {
         g.roundRect(x + px(it.x) + px(it.lw) / 2, y + px(it.y) + px(it.lw) / 2, w - px(it.lw), px(it.h) - px(it.lw), it.rad ? px(it.rad) : 0);
         g.stroke();
       }
+    } else if (it.k === 'poly') {
+      g.strokeStyle = it.color;
+      g.lineWidth = px(it.lw);
+      g.lineJoin = 'round';
+      g.lineCap = 'round';
+      g.beginPath();
+      it.pts.forEach(([a, b], i) => (i ? g.lineTo : g.moveTo).call(g, x + px(a), y + px(b)));
+      g.stroke();
     } else if (it.k === 'art') {
       g.translate(x + px(it.x), y + px(it.y));
       const lh = px(it.size) * (it.lh || 1.1), hgt = it.s.split('\n').length * lh;
@@ -531,6 +744,13 @@ export async function drawMeme(g, spec, x, y, S) {
       }
     } else if (it.k === 'char' || it.k === 'img') {
       const im = loaded.get(it.k === 'char' ? face(it.id, it.expr, it.real) : it.src);
+      if (im && it.clip) {   // 상자로 잘라내기 (배경색 먼저)
+        const c = it.clip;
+        g.beginPath();
+        g.roundRect(x + px(c.x), y + px(c.y), px(c.w), px(c.h), px(c.rad || 0));
+        g.clip();
+        if (c.bg) { g.fillStyle = c.bg; g.fill(); }
+      }
       if (im) {
         const h = w * im.naturalHeight / im.naturalWidth;
         g.translate(x + px(it.x) + w / 2, y + px(it.y) + h / 2);
