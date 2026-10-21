@@ -51,6 +51,7 @@ const W = {
   },
   lineup: { ko: ['범인은 이 안에 있다', '누가 뀌었나', '용의자 3명'], en: ['ONE OF THEM DID IT', 'WHO DID IT', '3 SUSPECTS'] },
   halo: { ko: ['현자 타임', '해탈', '평온'], en: ['POST-TOOT CLARITY', 'ENLIGHTENED', 'AT PEACE'] },
+  sfx: { ko: ['뿡!', '뿌웅', '부르륵', '뽀옹', '뿡'], en: ['TOOT!', 'PFFT', 'BRRT', 'POOT'] },
   box: { ko: ['숨어서 뿡', '아무도 없음', '상자는 무죄', '들킨 적 없음'], en: ['Toot in hiding', 'Nobody here', 'The box is innocent', 'Never caught'] }
 };
 
@@ -75,7 +76,7 @@ function awkward(s) {
 }
 
 // 글자 폭 어림 (한글 1em, 영문 0.62em) → 칸에 들어가는 글자 크기 (칸 너비 대비 %)
-const BASE = { impact: 11.5, display: 8.6, thin: 18, small: 5, bubble: 4.4, label: 7.2 };
+const BASE = { sfx: 14, impact: 11.5, display: 8.6, thin: 18, small: 5, bubble: 4.4, label: 7.2 };
 function fit(text, w, base) {
   const em = Math.max(...text.split('\n').map(line => [...line].reduce((n, c) => n + (/[ㄱ-힝]/.test(c) ? 1 : c === ' ' ? 0.3 : 0.62), 0)));
   return Math.min(base, (w * 0.94) / Math.max(1, em));
@@ -98,10 +99,12 @@ const bottomOf = (id, expr) => (REAL_BOTTOM[id]?.[expr] ?? 1024) / 1024;
 /** 실사 사진은 아래가 잘린 사진이라 바닥(floor)에 몸 끝을 딱 붙여 세운다. 원화는 원래 자리 y 그대로 */
 const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false, floor = null } = {}) =>
   ({ k: 'char', id, expr, x, y: real && floor != null ? floor - w * bottomOf(id, expr) : y, w, r, shades, sticker, real });
-/** 엉덩이 옆에서 나오는 방구 구름 (side = 1 오른쪽, -1 왼쪽) */
+/** 방구 소리 글자 (만화 효과음): 노랑 + 굵은 검정 테두리, 비스듬히 */
+const sfx = (x, y, w, r, s = pick(L(W.sfx))) => ({ k: 'text', s, x, y, w, r, style: 'sfx', size: fit(s, w, BASE.sfx) });
+/** 엉덩이 옆에서 터지는 효과음 (side = 1 오른쪽, -1 왼쪽) */
 function fartFor(c, side) {
-  const w = c.w * 0.62;
-  return { k: 'img', src: deco('fart_bubble'), x: side > 0 ? c.x + c.w * 0.8 : c.x + c.w * 0.2 - w, y: c.y + c.w * 0.45, w, flip: side < 0 };
+  const w = Math.min(36, c.w * 0.5);
+  return sfx(side > 0 ? Math.min(100 - w, c.x + c.w * 0.82) : Math.max(0, c.x + c.w * 0.18 - w), c.y + c.w * 0.5, w, side > 0 ? rnd(-16, -6) : rnd(6, 16));
 }
 /** 손에 든 머니건 */
 const gunFor = c => ({ k: 'img', src: deco('money_gun'), x: c.x - c.w * 0.2, y: c.y + c.w * 0.48, w: c.w * 0.62, r: -12, cls: 'm-gun' });
@@ -163,8 +166,7 @@ export const UNIQUE = {
       bg: '#E9E2D6',
       items: [rect(0, 86, 100, 14, '#CDBFA8'), c,
         { k: 'img', src: deco('box'), x: 8, y: 26, w: 84 },
-        { k: 'img', src: deco('fart_bubble'), x: 76, y: 66, w: 24, r: -8 },
-        { k: 'img', src: deco('fart_bubble'), x: 0, y: 74, w: 16, r: 10, flip: true },
+        sfx(74, 62, 26, -12), sfx(1, 72, 18, 10, L(W.sfx)[0]),
         textItem(pick(L(W.box)), 4, 4, 92, 'display', { align: 'center' })],
       fx: { x: 0.85, y: 0.75 }
     };
@@ -271,7 +273,7 @@ export function composeMeme(ctx) {
 // ---------------------------------------------------------------- 화면에 그리기 (DOM, 글자는 cqw)
 const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;
 const turn = it => (it.flip || it.r ? `transform:${it.flip ? 'scaleX(-1) ' : ''}${it.r ? `rotate(${it.flip ? -it.r : it.r}deg)` : ''};` : '');
-const CLASS = { impact: 'm-impact', display: 'm-display', thin: 'm-thin', small: 'm-small', bubble: 'm-bubble' };
+const CLASS = { sfx: 'm-sfx', impact: 'm-impact', display: 'm-display', thin: 'm-thin', small: 'm-small', bubble: 'm-bubble' };
 
 export function renderMeme(el, spec) {
   el.style.setProperty('--meme-bg', spec.bg);
@@ -284,7 +286,7 @@ export function renderMeme(el, spec) {
     if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color}"></div>`;
     if (it.k === 'img') return `<img class="m-el ${it.cls || ''}" src="${it.src}" style="${pos(it)}${turn(it)}" alt="">`;
     if (it.k === 'label') return `<div class="m-el m-label" style="${pos(it)}${turn(it)}font-size:${it.size}cqw">${esc(it.s)}</div>`;
-    return `<div class="m-el m-text ${CLASS[it.style]}" style="${pos(it)}font-size:${it.size}cqw;${it.color ? `color:${it.color};` : ''}${it.align ? `text-align:${it.align};` : ''}">${esc(it.s)}</div>`;
+    return `<div class="m-el m-text ${CLASS[it.style]}" style="${pos(it)}${turn(it)}font-size:${it.size}cqw;${it.color ? `color:${it.color};` : ''}${it.align ? `text-align:${it.align};` : ''}">${esc(it.s)}</div>`;
   }).join('');
   el.setAttribute('aria-label', spec.items.filter(it => it.s).map(it => it.s.replace(/\n/g, ' ')).join(' · '));
 }
@@ -304,6 +306,7 @@ function loadImage(src) {
 }
 
 const FONT = {
+  sfx: s => `${s}px "Black Han Sans", sans-serif`,
   impact: s => `${s}px "Black Han Sans", sans-serif`,
   display: s => `${s}px "Black Han Sans", sans-serif`,
   thin: s => `400 ${s}px system-ui, sans-serif`,
@@ -359,15 +362,28 @@ export async function drawMeme(g, spec, x, y, S) {
       g.textBaseline = 'middle';
       g.fillText(it.s, 0, 0);
     } else {
-      const size = px(it.size), lh = size * (it.style === 'bubble' ? 1.3 : it.style === 'thin' ? 1 : 1.1);
+      const size = px(it.size), lh = size * (it.style === 'bubble' ? 1.3 : it.style === 'thin' || it.style === 'sfx' ? 1 : 1.1);
       g.font = FONT[it.style](size);
       g.textBaseline = 'top';
-      const align = it.align || (['impact', 'bubble', 'small'].includes(it.style) ? 'center' : 'left');
+      const align = it.align || (['sfx', 'impact', 'bubble', 'small'].includes(it.style) ? 'center' : 'left');
       g.textAlign = align;
-      const ax = x + px(it.x) + (align === 'center' ? w / 2 : align === 'right' ? w : 0);
+      let ax = x + px(it.x) + (align === 'center' ? w / 2 : align === 'right' ? w : 0), oy = y + px(it.y);
+      if (it.r) {   // 글자 칸 가운데를 축으로 돌린다 (화면 transform 과 같게)
+        const lines = it.s.split('\n').length, cy = oy + (lines * lh) / 2;
+        g.translate(x + px(it.x) + w / 2, cy);
+        g.rotate((it.r * Math.PI) / 180);
+        ax -= x + px(it.x) + w / 2;
+        oy -= cy;
+      }
       it.s.split('\n').forEach((line, i) => {
-        const ly = y + px(it.y) + i * lh;
-        if (it.style === 'impact') {
+        const ly = oy + i * lh;
+        if (it.style === 'sfx') {
+          g.lineJoin = 'round';
+          g.lineWidth = px(2);
+          g.strokeStyle = '#111';
+          g.strokeText(line, ax, ly);
+          g.fillStyle = '#FFD400';
+        } else if (it.style === 'impact') {
           g.lineJoin = 'round';
           g.lineWidth = px(1.4);
           g.strokeStyle = '#111';

@@ -251,6 +251,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 @keyframes dealwithit { from { transform: translateY(-160cqw); } 85% { transform: translateY(0.6cqw); } to { transform: none; } }
 .m-text { color: #111; white-space: pre-line; line-height: 1.1; }
 .m-thin { white-space: nowrap; font-family: var(--body); font-weight: 400; font-size: 18cqw; letter-spacing: -0.06em; line-height: 1; text-align: right; }
+.m-sfx { white-space: pre; font-family: var(--display); line-height: 1; text-align: center; color: #FFD400; -webkit-text-stroke: 1cqw #111; paint-order: stroke fill; }
 .m-impact { white-space: pre; font-family: var(--display); font-size: 10.5cqw; text-align: center; color: #fff; -webkit-text-stroke: 0.7cqw #111; paint-order: stroke fill; }
 .m-display { font-family: var(--display); font-size: 8.6cqw; }
 .m-white { color: #fff; }

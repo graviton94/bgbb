@@ -1,9 +1,9 @@
-// 터지는 화면 위 효과: 방구 구름 뿅뿅 (원화), 거품 보글 (도트), 지폐 비 (원화). 화면이 열려 있는 동안만 돈다.
+// 터지는 화면 위 효과: 효과음 글자 '뿡' 뿅뿅, 거품 보글 (도트), 지폐 비 (원화). 화면이 열려 있는 동안만 돈다.
 import { pixelCanvas } from './pixels.js';
 
 // 원화 소품 (assets/deco). 처음 한 번만 받아 둔다.
 const IMAGES = {};
-for (const name of ['fart_bubble', 'money_bill']) {
+for (const name of ['money_bill']) {
   const im = new Image();
   im.src = `assets/deco/${name}.webp`;
   IMAGES[name] = im;
@@ -18,7 +18,7 @@ export function stopFx(canvas) {
 }
 
 /**
- * kinds: ['puff' | 'bubble' | 'rain'] 여러 개 가능. from = { x, y } (화면 비율 0~1) — 구름·거품이 나오는 곳,
+ * kinds: ['puff' | 'bubble' | 'rain'] 여러 개 가능. from = { x, y } (화면 비율 0~1) — 뿡 글자·거품이 나오는 곳,
  * gun = { x, y } — 지폐가 튀어나오는 총구.
  */
 export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 0.25, y: 0.5 } } = {}) {
@@ -31,18 +31,21 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
   g.imageSmoothingEnabled = false;
   const unit = Math.max(3, Math.round(W / 110));   // 도트 한 칸 크기
   // 크기: 도트 거품은 칸 단위, 원화는 화면 너비 비율
-  const SIZE = { toot: 0.24, bill: 0.2 };
-  const sprite = name => (name === 'bubble' ? pixelCanvas('bubble', unit * dpr) : IMAGES[name === 'toot' ? 'fart_bubble' : 'money_bill']);
+  const SIZE = { bill: 0.2 };
+  const sprite = name => (name === 'bubble' ? pixelCanvas('bubble', unit * dpr) : IMAGES.money_bill);
+  const WORDS = document.documentElement.lang.startsWith('ko') ? ['뿡', '뿡!', '뿌웅', '뽀옹'] : ['TOOT', 'PFFT', 'BRRT'];
+  const fontPx = Math.round(W * 0.11 * dpr);
   const parts = [];
   const rnd = (a, b) => a + Math.random() * (b - a);
   const t0 = performance.now();
 
-  // 방구 구름이 엉덩이 쪽에서 옆으로 뿅뿅 날아간다 (오른쪽이 앞)
+  // 효과음 글자가 엉덩이 쪽에서 옆으로 뿅뿅 날아간다 (오른쪽이 앞)
   const puff = (delay = 0) => {
     const dir = Math.random() < 0.7 ? 1 : -1;
     parts.push({
       kind: 'toot', x: from.x * W + dir * rnd(60, 110), y: from.y * H + rnd(-30, 110), vx: dir * rnd(180, 320), vy: rnd(-60, 30),
-      s: rnd(0.6, 1), grow: 0.15, life: rnd(1.1, 1.8), born: delay, flip: dir < 0
+      s: rnd(0.6, 1), grow: 0.15, life: rnd(1.1, 1.8), born: delay, tilt: dir * rnd(-0.3, -0.05),
+      word: WORDS[Math.floor(Math.random() * WORDS.length)]
     });
   };
   const bubble = (delay = 0) => parts.push({
@@ -79,16 +82,34 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
       p.y += p.vy * dt;
       if (p.kind === 'toot') { p.vx *= 0.97; p.vy *= 0.97; }
       if (p.drag) { p.vx *= p.drag; if (p.vy > 120) p.vy = 120; }
-      const img = sprite(p.kind);
-      if (!img.width) continue;   // 아직 안 받아진 그림
       const scale = p.s + (p.grow || 0) * a;
       const fade = p.flap !== undefined ? 1 : Math.min(1, (p.life - a) / 0.6);
+      if (p.word) {   // 만화 효과음: 노랑 + 검정 테두리
+        g.save();
+        g.globalAlpha = Math.max(0, fade);
+        g.translate(p.x * dpr, p.y * dpr);
+        g.rotate(p.tilt);
+        g.scale(scale, scale);
+        g.font = `${fontPx}px "Black Han Sans", sans-serif`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.lineJoin = 'round';
+        g.lineWidth = fontPx * 0.16;
+        g.strokeStyle = '#111';
+        g.strokeText(p.word, 0, 0);
+        g.fillStyle = '#FFD400';
+        g.fillText(p.word, 0, 0);
+        g.restore();
+        continue;
+      }
+      const img = sprite(p.kind);
+      if (!img.width) continue;   // 아직 안 받아진 그림
       g.save();
       g.globalAlpha = Math.max(0, fade);
       g.translate(p.x * dpr, p.y * dpr);
       if (p.rot !== undefined) { p.rot += p.vr * dt; g.rotate(p.rot); }
-      // 지폐는 세로로 납작해졌다 펴지며 팔랑인다, 방구 구름은 왼쪽으로 갈 땐 뒤집는다
-      g.scale(p.flip ? -scale : scale, p.flap !== undefined ? scale * Math.cos(age * 7 + p.flap) : scale);
+      // 지폐는 세로로 납작해졌다 펴지며 팔랑인다
+      g.scale(scale, p.flap !== undefined ? scale * Math.cos(age * 7 + p.flap) : scale);
       if (SIZE[p.kind]) {
         const w = SIZE[p.kind] * W * dpr, h = w * img.height / img.width;
         g.drawImage(img, -w / 2, -h / 2, w, h);

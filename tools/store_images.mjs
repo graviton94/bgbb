@@ -120,7 +120,7 @@ async function captureScreens(lang) {
     const ko = document.documentElement.lang === 'ko';
     let meme;   // 방구 구름이 나오는 조립형 짤이 나올 때까지
     do { meme = composeMeme({ id: 'hamster', mode: 'loud', t: d.getTime(), title: ko ? '회의실 테러범' : 'Meeting Room Menace', rarity: 'legend' }); }
-    while (meme.name !== 'assembled' || !meme.items.some(it => it.src?.includes('fart_bubble')));
+    while (meme.name !== 'assembled' || !meme.items.some(it => it.style === 'sfx'));
     await drawCard(canvas, {
       meme,
       ev: { t: d.getTime(), char: 'hamster', mode: 'loud' },
