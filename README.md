@@ -29,7 +29,8 @@ src/
   diary.js                 1080×1920 그림일기 카드
   main.js                  화면 연결
 assets/                    그림(WebP) · 효과음(WAV) · 글꼴(woff2, OFL)
-tools/bake_sounds.py       효과음 합성기 (numpy): 친구 소리 9종×3가지, UI 6종, 배경 소리 3종
+tools/fetch_sounds.py      실제 녹음 후보 받기 (Freesound CC0 · Wikimedia Commons, GitHub Actions 에서)
+tools/build_sounds.py      고른 녹음을 잘라 효과음 만들기 → assets/sounds/ (출처: tools/sound_credits.json)
 tools/prepare_sprites.py   캐릭터 그림 손질 (흰 테두리 제거, 동작 그림 크기 맞추기)
 tools/make_icons.py        앱 아이콘 (햄찌 + 방구 구름)
 tools/subset_fonts.py      글꼴을 자주 쓰는 한글 2,350자로 줄이기
@@ -62,7 +63,8 @@ android/                   WebView 껍데기 + 불시 작전 엔진
 npm start                               # 브라우저 미리보기 (ES 모듈이라 file:// 로는 안 열림)
 npm test                                # 일정 규칙 테스트
 cd android && ./gradlew testDebugUnitTest assembleDebug
-python3 tools/bake_sounds.py            # 효과음 다시 굽기
+python3 tools/fetch_sounds.py      실제 녹음 후보 받기 (Freesound CC0 · Wikimedia Commons, GitHub Actions 에서)
+tools/build_sounds.py      고른 녹음을 잘라 효과음 만들기 → assets/sounds/ (출처: tools/sound_credits.json)
 ```
 
 `main` 에 푸시하거나 PR 을 열면 GitHub Actions 가 테스트 → 디버그 APK → 출시용 AAB 를 만든다.

@@ -1,0 +1,27 @@
+name: Verify sound credits
+
+# tools/sound_credits.json 이 바뀌면 원본 페이지에서 작성자·라이선스를 확인해 커밋한다.
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "ccr-b01aedf5-h320aa" ]
+    paths: [ "tools/sound_credits.json", "tools/verify_credits.py" ]
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/verify_credits.py
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/sound_credits.json
+          git commit -m "소리 출처 확인 (원본 페이지)" || echo "nothing new"
+          git push
