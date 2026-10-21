@@ -91,6 +91,36 @@
  },
  {
   "source": "freesound",
+  "page": "https://freesound.org/people/mellonius/sounds/846008/",
+  "license": "CC0",
+  "title": "Volta ao mundo",
+  "used_as": [
+   "hamster_epic"
+  ],
+  "author": "mellonius"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Elektrocell/sounds/20751/",
+  "license": "CC0",
+  "title": "fart100bpm.wav",
+  "used_as": [
+   "hamster_epic_2"
+  ],
+  "author": "Elektrocell"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/JavonniNathanOtero/sounds/524096/",
+  "license": "CC0",
+  "title": "explosivetubfart.wav",
+  "used_as": [
+   "hamster_epic_3"
+  ],
+  "author": "JavonniNathanOtero"
+ },
+ {
+  "source": "freesound",
   "page": "https://freesound.org/people/SilentStrikeZ/sounds/389628/",
   "license": "CC0",
   "title": "Human_Farting_1.wav",
@@ -118,36 +148,6 @@
    "hamster_loud_3"
   ],
   "author": "Zott820"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/mellonius/sounds/846008/",
-  "license": "CC0",
-  "title": "Volta ao mundo",
-  "used_as": [
-   "hamster_loud_4"
-  ],
-  "author": "mellonius"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/Elektrocell/sounds/20751/",
-  "license": "CC0",
-  "title": "fart100bpm.wav",
-  "used_as": [
-   "hamster_loud_5"
-  ],
-  "author": "Elektrocell"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/JavonniNathanOtero/sounds/524096/",
-  "license": "CC0",
-  "title": "explosivetubfart.wav",
-  "used_as": [
-   "hamster_loud_6"
-  ],
-  "author": "JavonniNathanOtero"
  },
  {
   "source": "freesound",
@@ -288,16 +288,6 @@
    "tit_loud_2"
   ],
   "author": "JackWilDesign"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/Mastersoundboy2005/sounds/727396/",
-  "license": "CC0",
-  "title": "Cartoon Chicken Loud Single Screaming Squawk sound effect",
-  "used_as": [
-   "tit_loud_3"
-  ],
-  "author": "Mastersoundboy2005"
  },
  {
   "source": "freesound",

@@ -29,6 +29,7 @@ final class PrankPlayer {
 
     static final String DIY_FILE = "diy_sound";
     private static final Random RANDOM = new Random();
+    private static final double EPIC_CHANCE = 0.02;
 
     private PrankPlayer() {}
 
@@ -87,6 +88,8 @@ final class PrankPlayer {
                 mp.setDataSource(diy.getAbsolutePath());
             } else {
                 String style = "soft".equals(sound) || "loud".equals(sound) ? sound : "main";
+                // 햄찌는 아주 가끔(2%) 스타일과 상관없이 레어 방구 (웹 audio.js 의 EPIC_CHANCE 와 같다)
+                if ("hamster".equals(charId) && RANDOM.nextDouble() < EPIC_CHANCE) style = "epic";
                 // 같은 소리도 매번 다르게: <캐릭터>_<스타일>, _2, _3 … 있는 것 중 하나
                 String base = charId + "_" + style;
                 List<Integer> takes = new ArrayList<>();

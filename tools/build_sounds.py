@@ -19,7 +19,7 @@ CAND = os.path.join(HERE, "sound_candidates")
 OUT = os.path.join(HERE, "..", "assets", "sounds")
 
 # 결과 파일 → (후보 파일, 최대 길이 초, 음량 dB RMS)
-# 캐릭터 소리는 <친구>_<스타일> · _2 · _3 … = 서로 다른 녹음 (재생할 때마다 하나를 고른다). 햄찌 6개, 새·고양이 3개
+# 캐릭터 소리는 <친구>_<스타일> · _2 · _3 … = 서로 다른 녹음 (재생할 때마다 하나를 고른다). 햄찌 소심·기본 6개 · 우렁찬 3개 + 레어 3개, 새 우렁찬 2개, 나머지 3개
 SOFT, MAIN, LOUD, UI = -21.0, -17.0, -14.0, -22.0
 CHOICES = {
     "hamster_soft":   ("fart_squeak/01.ogg", 1.0, SOFT),
@@ -31,16 +31,17 @@ CHOICES = {
     "hamster_loud":   ("fart_long/05.ogg", 2.6, LOUD),
     "hamster_loud_2": ("fart_long/06.ogg", 2.6, LOUD),
     "hamster_loud_3": ("fart_short/06.ogg", 1.0, LOUD),
-    # 방구 종류 늘리기: 햄찌는 스타일마다 6가지 (작은 뽁 · 새는 삐용 · 축축 · 방석 · 따다닥 연발 · 낮은 부르릉 · 욕조)
+    # 방구 종류 늘리기: 작은 뽁 · 새는 삐용 · 축축 · 방석
     "hamster_soft_4": ("fart_tiny/01.ogg", 1.0, SOFT),
     "hamster_soft_5": ("fart_tiny/02.ogg", 1.0, SOFT),
     "hamster_soft_6": ("fart_tiny/04.ogg", 1.0, SOFT),
     "hamster_main_4": ("fart_wet/01.ogg", 1.4, MAIN),
     "hamster_main_5": ("fart_whoopee/01.ogg", 1.4, MAIN),
     "hamster_main_6": ("fart_squeal/01.ogg", 1.4, MAIN),
-    "hamster_loud_4": ("fart_rapid/01.ogg", 3.0, LOUD),
-    "hamster_loud_5": ("fart_deep/04.ogg", 2.2, LOUD),
-    "hamster_loud_6": ("fart_bath/02.ogg", 2.6, LOUD),
+    # 레어 방구: 햄찌가 낼 때 2% 확률로만 (스타일 상관없이). 따다닥 연발 · 낮은 부르릉 · 욕조
+    "hamster_epic":   ("fart_rapid/01.ogg", 3.0, LOUD),
+    "hamster_epic_2": ("fart_deep/04.ogg", 2.2, LOUD),
+    "hamster_epic_3": ("fart_bath/02.ogg", 2.6, LOUD),
     "tit_main":       ("bird_tweet/05.ogg", 1.6, MAIN),
     "tit_main_2":     ("bird_tweet/04.ogg", 1.6, MAIN),
     "tit_main_3":     ("bird_tweet/01.ogg", 1.6, MAIN),
@@ -49,7 +50,6 @@ CHOICES = {
     "tit_soft_3":     ("wings/01.ogg", 1.2, SOFT),
     "tit_loud":       ("bird_alarm/01.ogg", 1.6, LOUD),
     "tit_loud_2":     ("bird_alarm/03.ogg", 1.6, LOUD),
-    "tit_loud_3":     ("bird_alarm/04.ogg", 1.6, LOUD),
     "cat_main":       ("cat_meow/01.ogg", 1.5, MAIN),
     "cat_main_2":     ("cat_meow/02.ogg", 1.5, MAIN),
     "cat_main_3":     ("cat_meow/05.ogg", 1.0, MAIN),

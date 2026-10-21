@@ -1,8 +1,14 @@
 // 효과음: WAV 를 처음 한 번만 디코딩해 두고 버퍼를 재사용한다.
 import { CHARACTERS } from './data.js';
 
-// 캐릭터 소리마다 서로 다른 녹음 수 (tools/build_sounds.py). 햄찌는 방구 종류가 많다.
-const TAKES = { hamster: 6, tit: 3, cat: 3 };
+// 캐릭터 · 스타일마다 서로 다른 녹음 수 (tools/build_sounds.py)
+const TAKES = {
+  hamster: { soft: 6, main: 6, loud: 3, epic: 3 },
+  tit: { soft: 3, main: 3, loud: 2 },
+  cat: { soft: 3, main: 3, loud: 3 }
+};
+// 햄찌는 아주 가끔 스타일과 상관없이 레어 방구 (앱 PrankPlayer 와 같은 확률)
+export const EPIC_CHANCE = 0.02;
 let ctx = null;
 let master = null;
 const buffers = new Map();
@@ -27,7 +33,7 @@ addEventListener('pointerdown', () => {
   if (!context()) return;
   const names = ['ui_pop', 'ui_freeze', 'ui_levelup', 'ui_treasure'];
   CHARACTERS.forEach(c => ['main', 'soft', 'loud'].forEach(s => {
-    for (let n = 1; n <= TAKES[c.id]; n++) names.push(takeName(`${c.id}_${s}`, n));
+    for (let n = 1; n <= TAKES[c.id][s]; n++) names.push(takeName(`${c.id}_${s}`, n));
   }));
   names.forEach(n => load(fileUrl(n)));
 }, { once: true, capture: true });
@@ -67,7 +73,8 @@ export function playFriend(charId, style, diyUrl, volume = 0.85) {
     if (diyUrl) playUrl(diyUrl, volume);
     return;
   }
-  const n = 1 + Math.floor(Math.random() * (TAKES[charId] || 1));
+  if (TAKES[charId]?.epic && Math.random() < EPIC_CHANCE) style = 'epic';
+  const n = 1 + Math.floor(Math.random() * (TAKES[charId]?.[style] || 1));
   playUrl(fileUrl(takeName(`${charId}_${style}`, n)), volume, 0.96 + Math.random() * 0.08);
 }
 
