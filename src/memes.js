@@ -51,7 +51,7 @@ const W = {
   },
   lineup: { ko: ['범인은 이 안에 있다', '누가 뀌었나', '용의자 3명'], en: ['ONE OF THEM DID IT', 'WHO DID IT', '3 SUSPECTS'] },
   halo: { ko: ['현자 타임', '해탈', '평온'], en: ['POST-TOOT CLARITY', 'ENLIGHTENED', 'AT PEACE'] },
-  box: { ko: ['숨어서 뿡', '여기 아무도 없음', '상자는 무죄'], en: ['Tooting\nin hiding', 'Nobody\nin here', 'The box\nis innocent'] }
+  box: { ko: ['숨어서 뿡', '아무도 없음', '상자는 무죄', '들킨 적 없음'], en: ['Toot in hiding', 'Nobody here', 'The box is innocent', 'Never caught'] }
 };
 
 function whenKey(t) {
@@ -92,9 +92,12 @@ const DARK_BG = ['#1F2747', '#2B2140'];
 
 // ---------------------------------------------------------------- 캐릭터와 붙는 것
 const rect = (x, y, w, h, color) => ({ k: 'rect', x, y, w, h, color });
-const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false } = {}) => ({ k: 'char', id, expr, x, y, w, r, shades, sticker, real });
-/** 실사 사진은 아래가 잘린 사진이라 바닥(floor)에 붙여 세운다. 원화는 원래 자리 y 그대로 */
-const stand = (real, y, w, floor = 100) => (real ? floor - w : y);
+// 실사 사진에서 몸이 끝나는 높이 (1024 기준). 햄스터만 아래 여백이 있고 나머지는 사진 끝까지 몸
+const REAL_BOTTOM = { hamster: { blank: 951, eng: 1024, shameless: 940, hold: 958, burst: 968, whistle: 973, thumbs_up: 952 } };
+const bottomOf = (id, expr) => (REAL_BOTTOM[id]?.[expr] ?? 1024) / 1024;
+/** 실사 사진은 아래가 잘린 사진이라 바닥(floor)에 몸 끝을 딱 붙여 세운다. 원화는 원래 자리 y 그대로 */
+const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false, floor = null } = {}) =>
+  ({ k: 'char', id, expr, x, y: real && floor != null ? floor - w * bottomOf(id, expr) : y, w, r, shades, sticker, real });
 /** 엉덩이 옆에서 나오는 방구 구름 (side = 1 오른쪽, -1 왼쪽) */
 function fartFor(c, side) {
   const w = c.w * 0.62;
@@ -112,7 +115,7 @@ export const UNIQUE = {
   }),
   deal: ({ id, real }) => ({
     bg: '#F2F2F2',
-    items: [charItem(id, 'shameless', real ? 14 : 18, stand(real, 27, real ? 72 : 70), real ? 72 : 70, { shades: true, sticker: !real, r: real ? 0 : -4, real }),
+    items: [charItem(id, 'shameless', real ? 14 : 18, 27, real ? 72 : 70, { floor: 100, shades: true, sticker: !real, r: real ? 0 : -4, real }),
       textItem(pick(L(W.deal)), 5, 4, 80, 'display')],
     fx: { x: 0.5, y: 0.6 }
   }),
@@ -123,7 +126,7 @@ export const UNIQUE = {
       bg: '#FFFFFF',
       items: [rect(50, 0, 50, 100, '#FFE1EC'), rect(49.6, 0, 0.8, 100, '#111111'),
         textItem(a, 2, 6, 46, 'display', { align: 'center' }), textItem(b, 52, 6, 46, 'display', { align: 'center' }),
-        charItem(id, 'hold', 2, stand(real, 34, 46), 46, { real }), charItem(id, 'burst', 52, stand(real, 34, 46), 46, { real })],
+        charItem(id, 'hold', 2, 34, 46, { floor: 100, real }), charItem(id, 'burst', 52, 34, 46, { floor: 100, real })],
       fx: { x: 0.75, y: 0.6 }
     };
   },
@@ -134,7 +137,7 @@ export const UNIQUE = {
       bg: '#DCE9F5',
       items: [rect(0, 50, 100, 50, '#FFF3B0'), rect(0, 49.6, 100, 0.8, '#111111'),
         textItem(a, 5, 16, 52, 'display'), textItem(b, 5, 66, 52, 'display'),
-        charItem(id, 'blank', 58, stand(real, 4, 42, 49.6), 42, { real }), charItem(id, 'shameless', 58, stand(real, 54, 42), 42, { shades: true, real })],
+        charItem(id, 'blank', 58, 4, 42, { floor: 49.6, real }), charItem(id, 'shameless', 58, 54, 42, { floor: 100, shades: true, real })],
       fx: { x: 0.8, y: 0.8 }
     };
   },
@@ -143,25 +146,31 @@ export const UNIQUE = {
     bg: '#E9E9E6',
     items: [rect(0, 34, 100, 0.5, '#9A9A95'), rect(0, 50, 100, 0.5, '#9A9A95'), rect(0, 66, 100, 0.5, '#9A9A95'), rect(0, 82, 100, 0.5, '#9A9A95'),
       textItem(pick(L(W.lineup)), 3, 5, 94, 'display', { align: 'center' }),
-      ...['hamster', 'tit', 'cat'].map((c, i) => charItem(c, c === id ? 'whistle' : 'blank', i * 33 - 2, stand(real, 36, 37), 37, { real })),
+      ...['hamster', 'tit', 'cat'].map((c, i) => charItem(c, c === id ? 'whistle' : 'blank', i * 33 - 2, 36, 37, { floor: 100, real })),
       ...['1', '2', '3'].map((n, i) => textItem(n, i * 33 + 13, real ? 54 : 92, 8, 'small', { color: '#555555' }))],
     fx: { x: 0.5, y: 0.7 }
   }),
   // 현자 타임: 머리 뒤에 해
   halo: ({ id, real }) => ({
     bg: '#FFF3B0',
-    items: [{ k: 'img', src: deco('sun'), x: 14, y: 2, w: 72 }, charItem(id, 'blank', 19, stand(real, 30, 62), 62, { real }), textItem(pick(L(W.halo)), 1, 84, 98, 'impact')],
+    items: [{ k: 'img', src: deco('sun'), x: 14, y: 2, w: 72 }, charItem(id, 'blank', 19, 30, 62, { floor: 100, real }), textItem(pick(L(W.halo)), 1, 84, 98, 'impact')],
     fx: { x: 0.5, y: 0.7 }
   }),
-  // 상자 속에서 뿡
-  box: ({ id, real }) => ({
-    bg: '#CFEFFF',
-    items: [charItem(id, 'whistle', 24, 22, 54, { real }), { k: 'img', src: deco('box'), x: 8, y: 46, w: 84 },
-      { k: 'img', src: deco('fart_bubble'), x: 66, y: 44, w: 34 }, textItem(pick(L(W.box)), 5, 5, 60, 'display')],
-    fx: { x: 0.8, y: 0.55 }
-  }),
+  // 숨어서 뿡: 상자 뒤에 숨어 눈만 내놓고, 방구는 상자 틈으로 샌다.
+  box: ({ id, real }) => {
+    const c = charItem(id, pick(['shameless', 'blank', 'whistle']), 28, 25.5, 44, { real });
+    return {
+      bg: '#E9E2D6',
+      items: [rect(0, 86, 100, 14, '#CDBFA8'), c,
+        { k: 'img', src: deco('box'), x: 8, y: 26, w: 84 },
+        { k: 'img', src: deco('fart_bubble'), x: 76, y: 66, w: 24, r: -8 },
+        { k: 'img', src: deco('fart_bubble'), x: 0, y: 74, w: 16, r: 10, flip: true },
+        textItem(pick(L(W.box)), 4, 4, 92, 'display', { align: 'center' })],
+      fx: { x: 0.85, y: 0.75 }
+    };
+  },
   money: ({ id, real }) => {
-    const c = charItem(id, 'thumbs_up', 20, stand(real, 26, 66), 66, { shades: true, real });
+    const c = charItem(id, 'thumbs_up', 20, 26, 66, { floor: 100, shades: true, real });
     return {
       bg: '#E8FFD9',
       items: [{ k: 'img', src: deco('money_rain'), x: 0, y: 6, w: 100 }, c, gunFor(c), textItem(pick(L(W.money)), 0, 3, 100, 'impact')],
@@ -173,7 +182,7 @@ export const UNIQUE = {
 // ---------------------------------------------------------------- 조립형
 const LAYOUTS = ['captions', 'bubble', 'thought', 'label', 'corner'];
 
-function assemble({ id, mode, t, title, rarity, practice }) {
+function assemble({ id, mode, t, title, rarity, practice, real }) {
   const night = isNight(t);
   const bg = pick(night ? NIGHT_BG : DAY_BG);
   const color = DARK_BG.includes(bg) ? '#FFFFFF' : '#111111';
@@ -188,7 +197,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
   switch (layout) {
     case 'captions': {   // 위아래 흰 자막
       const w = rnd(60, 68);
-      c = charItem(id, expr, (100 - w) / 2 + rnd(-4, 4), rnd(14, 18), w);
+      c = charItem(id, expr, (100 - w) / 2 + rnd(-4, 4), rnd(14, 18), w, { real, floor: 100 });
       items.push(c, textItem(top, 1, 3, 98, 'impact'), textItem(punch, 1, 81, 98, 'impact'));
       free = pick([-1, 1]);
       break;
@@ -197,7 +206,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
     case 'thought': {    // 한쪽에 캐릭터, 반대쪽 위에 말풍선 · 생각 풍선 (꼬리가 캐릭터 쪽)
       const thought = layout === 'thought';
       const left = chance(0.5), w = rnd(62, 70);
-      c = charItem(id, thought ? pick(['blank', 'hold', expr]) : expr, left ? rnd(-3, 3) : 100 - w + rnd(-3, 3), 100 - w - rnd(0, 3), w);
+      c = charItem(id, thought ? pick(['blank', 'hold', expr]) : expr, left ? rnd(-3, 3) : 100 - w + rnd(-3, 3), 100 - w - rnd(0, 3), w, { real, floor: 100 });
       const bw = rnd(50, 56), bx = left ? 100 - bw - rnd(0, 3) : rnd(0, 3);
       const say = thought ? pick(L(W.think)) : awkward(pick([...L(W.say.any), ...L(W.say[mode])]));
       items.push(c, { k: 'img', src: deco(thought ? 'thought_bubble' : 'speech_bubble'), x: bx, y: rnd(-3, 1), w: bw, flip: !left });
@@ -210,7 +219,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
     }
     case 'label': {      // 빨간 타원 라벨 + 오른쪽 위 한 마디
       const w = rnd(64, 70);
-      c = charItem(id, mode === 'loud' && chance(0.4) ? 'thumbs_up' : expr, rnd(14, 26), 100 - w - rnd(0, 3), w);
+      c = charItem(id, mode === 'loud' && chance(0.4) ? 'thumbs_up' : expr, rnd(14, 26), 100 - w - rnd(0, 3), w, { real, floor: 100 });
       const word = rarity === 'jackpot' || rarity === 'legend' ? L(W.labelRare[rarity]) : pick(L(W.label));
       items.push(c, { k: 'label', s: word, x: rnd(3, 7), y: rnd(4, 8), w: rnd(36, 42), r: rnd(-6, 2), size: fit(word, 32, BASE.label) });
       if (chance(0.6)) items.push(textItem(punch, 50, rnd(7, 12), 46, 'display', { color, align: 'right' }));
@@ -219,7 +228,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
     }
     default: {           // 왼쪽 위 두 줄 (상황 + 한 방)
       const w = rnd(62, 70);
-      c = charItem(id, expr, rnd(20, 34), 100 - w - rnd(0, 3), w);
+      c = charItem(id, expr, rnd(20, 34), 100 - w - rnd(0, 3), w, { real, floor: 100 });
       items.push(c, textItem(`${top}\n${punch}`, 5, 5, 64, 'display', { color }));
       free = -1;
     }
@@ -241,7 +250,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
 
 /**
  * 짤 하나. ctx = { id, mode, t, title(칭호 이름), rarity, practice }
- * 잭팟 = 돈 짤, 레어 · 레전드 = 유니크 짤 (둘 다 실사 사진 특전), 그 밖엔 35% 유니크 짤 · 65% 조립형.
+ * 잭팟 = 돈 짤, 레어 · 레전드 = 유니크 짤 (둘 다 실사 사진 특전), 그 밖엔 35% 유니크 짤 · 65% 조립형 (가끔 20% 실사).
  */
 export const REAL_RARITIES = ['rare', 'legend', 'jackpot'];
 export function composeMeme(ctx) {
@@ -251,11 +260,12 @@ export function composeMeme(ctx) {
     const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
     return { name, real, ...UNIQUE[name]({ ...ctx, real }) };
   }
+  const now = { ...ctx, real: chance(0.2) };
   if (chance(0.35)) {
     const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
-    return { name, ...UNIQUE[name](ctx) };
+    return { name, real: now.real, ...UNIQUE[name](now) };
   }
-  return { name: 'assembled', ...assemble(ctx) };
+  return { name: 'assembled', real: now.real, ...assemble(now) };
 }
 
 // ---------------------------------------------------------------- 화면에 그리기 (DOM, 글자는 cqw)
