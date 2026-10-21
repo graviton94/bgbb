@@ -1,6 +1,6 @@
 name: Fetch sound candidates
 
-# 손으로만 돌린다. Wikimedia Commons 에서 자유 라이선스 녹음 후보를 받아
+# Freesound(CC0) · Wikimedia Commons 에서 자유 라이선스 녹음 후보를 받아
 # tools/sound_candidates/ 에 커밋한다 (고르고 다듬기는 tools/build_sounds.py).
 on:
   workflow_dispatch:
@@ -29,5 +29,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add tools/sound_candidates
-          git commit -m "소리 후보 받기 (Wikimedia Commons, 자유 라이선스)" || echo "nothing new"
+          git commit -m "소리 후보 받기 (Freesound CC0 · Wikimedia Commons)" || echo "nothing new"
+          git pull --rebase origin "${GITHUB_REF_NAME}"
           git push
