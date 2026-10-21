@@ -78,6 +78,12 @@ export function playFriend(charId, style, diyUrl, volume = 0.85) {
   playUrl(fileUrl(takeName(`${charId}_${style}`, n)), volume, 0.96 + Math.random() * 0.08);
 }
 
+/** 곧 낼 소리를 미리 디코딩해 둔다 (방석 모드: 걸리는 순간 바로 나게) */
+export function warmFriend(charId, style) {
+  if (!context() || style === 'diy') return;
+  for (const s of [style, 'epic']) for (let n = 1; n <= (TAKES[charId]?.[s] || 0); n++) load(fileUrl(takeName(`${charId}_${s}`, n)));
+}
+
 /** 녹음이 바뀌면 이전 디코딩 결과를 버린다 */
 export function forget(url) {
   if (url) buffers.delete(url);

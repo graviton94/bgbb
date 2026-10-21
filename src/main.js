@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, FRAMES, FRAME_OF, charById, face } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -10,6 +10,7 @@ import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { pixelUrl, SHADES_BOX, SHADES_URL } from './pixels.js';
 import { startFx, stopFx } from './fx.js';
+import { openCushion } from './cushion.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -104,45 +105,50 @@ function headliner(results) {
 }
 
 function showBurst(ev, { result = null, more = 0 } = {}) {
-  const mode = MODES[ev.mode];
   const c = charById(ev.char);
   const dlg = $('burst');
-  const [cap1, cap2] = [...L(mode.captions)].sort(() => Math.random() - 0.5);
   const headline = headlineFor(ev);
-  dlg.style.setProperty('--accent', mode.color);
-  $('burstWord').textContent = L(mode.word);
-  $('burstWord').classList.toggle('long', [...L(mode.word)].length > 2);
-  // 효과: 참음 = 뻔뻔 + 선글라스 내려옴, 냄 = 터짐 + =3, 진동 = 휘파람 + 거품, 잭팟 = 엄지척 + 선글라스 + 머니건 + 지폐 비
+  const caption = pick(L(MODES[ev.mode].captions));
+  // 짤 틀과 표정: 냄 = 빨간 라벨 + 터짐, 진동 = 위아래 자막 + 휘파람, 참음 = 스티커 + 뻔뻔 + 안경,
+  // 잭팟 = 스티커 + 엄지척 + 안경 + 머니건 + 지폐 비, 연습 = 엥?
   const jackpot = result && titleById(result.title).rarity === 'jackpot';
-  const cool = ev.mode === 'hold' || jackpot;
-  $('burstImg').src = face(c.id, BURST_FACE[jackpot ? 'jackpot' : result ? ev.mode : 'practice']);
+  const kind = jackpot ? 'jackpot' : result ? ev.mode : 'practice';
+  const frame = FRAME_OF[kind];
+  dlg.dataset.frame = frame;
+  $('burstImg').src = face(c.id, BURST_FACE[kind]);
+  const cool = frame === 'deal';
   const sh = $('shades');
   sh.src = SHADES_URL;
-  Object.assign(sh.style, {
-    left: `${SHADES_BOX.x * 100}%`, top: `${SHADES_BOX.y * 100}%`, width: `${SHADES_BOX.w * 100}%`
-  });
+  Object.assign(sh.style, { left: `${SHADES_BOX.x * 100}%`, top: `${SHADES_BOX.y * 100}%`, width: `${SHADES_BOX.w * 100}%` });
   $('moneygun').src = pixelUrl('moneygun', 8);
   dlg.classList.toggle('cool', cool);
   dlg.classList.toggle('rich', !!jackpot);
-  $('cap1').textContent = cap1;
-  $('cap2').textContent = more ? t('burst.more', { n: more }) : cap2;
+  if (frame === 'label') {
+    $('fLabel').textContent = pick(L(FRAMES.label.labels));
+    $('fBubble').textContent = pick(L(FRAMES.label.bubbles));
+  } else if (frame === 'vibe') {
+    const [top, bottom] = pick(L(FRAMES.vibe.pairs));
+    $('fTop').textContent = top;
+    $('fBottom').textContent = bottom;
+  } else if (frame === 'deal') {
+    $('fCaption').textContent = pick(L(jackpot ? FRAMES.deal.jackpot : FRAMES.deal.captions));
+  }
+  const d = new Date(ev.t);
+  const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
+  $('burstWhen').textContent = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
   if (result) {
     const title = titleById(result.title);
     const own = state.titles[result.title];
-    $('burstNew').textContent = result.isNew ? t('burst.new') : t('burst.again', { n: own.n });
     $('burstTitle').textContent = L(title.name);
-    $('burstMeta').textContent = t('burst.meta', { n: ownedCount(), all: TITLES.length, rarity: L(RARITY[title.rarity].name) });
-    burstCard = cardData(ev, result.title, headline, cap1);
+    $('burstMeta').textContent = `${result.isNew ? t('burst.new') : t('burst.again', { n: own.n })} · ${t('burst.meta', { n: ownedCount(), all: TITLES.length, rarity: L(RARITY[title.rarity].name) })}`;
+    burstCard = cardData(ev, result.title, headline, caption);
   } else {
-    $('burstNew').textContent = t('burst.practice');
+    $('burstWhen').textContent = t('burst.practice');
     $('burstTitle').textContent = t('burst.practiceTitle');
     $('burstMeta').textContent = t('burst.practiceMeta');
     burstCard = null;
   }
   $('shareCard').hidden = !burstCard;
-  $('tickerTag').textContent = t(ev.mode === 'loud' ? 'burst.exclusive' : 'burst.breaking');
-  const d = new Date(ev.t);
-  $('tickerText').textContent = t('news.ticker', { time: `${two(d.getHours())}:${two(d.getMinutes())}`, headline });
   dlg.classList.remove('play');
   void dlg.offsetWidth;   // 애니메이션 다시 시작
   dlg.classList.add('play');
@@ -150,8 +156,8 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   dlg.focus();
   haptic([18, 40, 30]);
   const kinds = jackpot ? ['rain'] : [];
-  kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
-  requestAnimationFrame(() => startFx($('fx'), kinds.filter(Boolean), { from: { x: 0.5, y: 0.42 }, gun: { x: 0.33, y: 0.53 } }));
+  if (result) kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
+  requestAnimationFrame(() => startFx($('fx'), kinds.filter(Boolean), { from: { x: 0.5, y: 0.4 }, gun: { x: 0.33, y: 0.5 } }));
 }
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
@@ -251,6 +257,8 @@ $('practice').addEventListener('click', () => {
   playFriend(id, state.friends[id].style, getDiy());
   showBurst({ t: Date.now(), char: id, mode: 'loud' });
 });
+
+$('cushionBtn').addEventListener('click', openCushion);
 
 $('freeze').addEventListener('click', () => {
   state.frozen = !state.frozen;

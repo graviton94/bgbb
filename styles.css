@@ -183,6 +183,8 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #dexCount { font-size: 14px; font-weight: 600; }
 .row2 { display: grid; grid-template-columns: 1.7fr 1fr; gap: 10px; }
 .row2 .btn { white-space: nowrap; padding: 0 12px; }
+.row3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; }
+.row3 .btn { white-space: nowrap; padding: 0 8px; font-size: 15px; }
 
 /* ---------------------------------------------------------- 도감 (커뮤 게시판 감성) */
 #screen-dex { padding: 0 0 16px; background: var(--card); }
@@ -222,90 +224,123 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .tag.rare { background: #FFB3D9; }
 .tag.jackpot { background: #FFD400; }
 
-/* ---------------------------------------------------------- 터지는 순간 */
+/* ---------------------------------------------------------- 터지는 순간: 대충 만든 척하는 짤 틀 */
 .burst {
-  --accent: var(--lime);
+  --frame-bg: #FFFFFF;
   width: 100%; max-width: 100%; height: 100%; max-height: 100%;
   margin: 0; padding: 0; border: 0;
-  background: var(--accent);
-  color: var(--ink);
+  background: var(--frame-bg);
+  color: #111;
   overflow: hidden;
+  font-family: var(--body);
 }
-.burst::backdrop { background: var(--accent); }
+.burst::backdrop { background: var(--frame-bg); }
 .burst[open] { display: block; }
 .burst > * { position: absolute; }
-.burst-word {
-  left: 0; right: 0; top: calc(24px + var(--safe-top));
-  text-align: center;
-  font-family: var(--display);
-  font-size: clamp(120px, 44vw, 210px);
-  line-height: 1;
-  color: #fff;
-  -webkit-text-stroke: 6px var(--ink);
-  paint-order: stroke fill;
-  transform: rotate(-5deg);
-}
+.burst[data-frame="vibe"] { --frame-bg: #B49E89; }
+.burst[data-frame="deal"] { --frame-bg: #F2F2F2; }
+.burst > .f-eng, .burst > .f-label, .burst > .f-bubble, .burst > .f-top, .burst > .f-bottom, .burst > .f-caption { display: none; }
+
 .burst-pic {
-  left: 50%; top: 26%;
-  width: min(68vw, 300px);
-  margin-left: calc(min(68vw, 300px) / -2);
+  left: 50%; top: 20%;
+  width: min(88vw, 400px);
+  margin-left: calc(min(88vw, 400px) / -2);
 }
-#burstImg { width: 100%; display: block; filter: drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff); }
+#burstImg { width: 100%; display: block; }
+.burst[data-frame="deal"] #burstImg {
+  filter: drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(0 8px 10px rgba(0,0,0,.2));
+}
+.burst[data-frame="deal"] .burst-pic { transform: rotate(-4deg); }
 .burst .shades, .burst .moneygun { image-rendering: pixelated; }
 .burst .shades { position: absolute; display: none; }
 .burst.cool .shades { display: block; animation: dealwithit 1.1s 0.5s cubic-bezier(.5, 0, .6, 1) both; }
 @keyframes dealwithit { from { transform: translateY(-80vh); } 85% { transform: translateY(4px); } to { transform: none; } }
-.burst .moneygun { display: none; left: -2%; top: 51%; width: 40vw; max-width: 170px; transform: rotate(-18deg); }
+.burst .moneygun { display: none; left: -2%; top: 48%; width: 40vw; max-width: 170px; transform: rotate(-18deg); }
 .burst.rich .moneygun { display: block; animation: recoil 0.18s 0.6s ease-in-out 10 alternate both; }
 @keyframes recoil { from { translate: 0 0; } to { translate: -6px 4px; } }
 .fx { left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
-.cap {
-  font-family: var(--display);
-  font-size: 26px;
-  color: #fff;
-  -webkit-text-stroke: 5px var(--ink);
-  paint-order: stroke fill;
-  white-space: nowrap;
-}
-.cap.c1 { left: 18px; top: 30%; transform: rotate(-8deg); }
-.cap.c2 { right: 16px; top: 54%; transform: rotate(6deg); }
-.unlock {
-  left: 20px; right: 20px; bottom: calc(176px + var(--safe-bottom));
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-}
-.unlock .new { background: var(--ink); color: var(--accent); font-weight: 900; font-size: 13px; padding: 4px 10px; letter-spacing: 1px; }
-.unlock strong {
-  font-family: var(--display); font-weight: 400;
-  font-size: clamp(30px, 10vw, 42px); line-height: 1.1;
-  padding: 4px 12px; background: #fff; border: 3px solid var(--ink);
-}
-.unlock .meta { font-size: 14px; font-weight: 700; }
-.ticker {
-  left: 0; right: 0; bottom: calc(100px + var(--safe-bottom));
-  display: flex; height: 40px;
-  color: #fff; font-size: 15px;
-}
-.ticker b { flex: none; display: flex; align-items: center; padding: 0 12px; background: var(--red); font-weight: 900; }
-.ticker-run { flex: 1; display: flex; align-items: center; overflow: hidden; background: var(--ink); white-space: nowrap; }
-.ticker-run i { font-style: normal; font-weight: 700; padding-left: 100%; animation: run 9s linear infinite; }
-@keyframes run { to { transform: translateX(-100%); } }
-.burst-actions {
-  left: 20px; right: 20px; bottom: calc(24px + var(--safe-bottom));
-  display: grid; grid-template-columns: 2fr 1fr; gap: 10px;
-}
-.burst-actions .btn { border-width: 3px; }
 
-.burst.play .burst-word { animation: slam 0.5s cubic-bezier(.2, 1.6, .4, 1) both; }
-.burst.play .burst-pic { animation: pop 0.6s 0.08s cubic-bezier(.2, 1.5, .4, 1) both, shake 0.4s 0.6s ease 2; }
-.burst.play .cap.c1 { animation: stick 0.35s 0.35s both; }
-.burst.play .cap.c2 { animation: stick 0.35s 0.5s both; }
-.burst.play .unlock { animation: up 0.4s 0.65s both; }
-.burst.play .ticker, .burst.play .burst-actions { animation: up 0.4s 0.8s both; }
-@keyframes slam { from { transform: rotate(-5deg) scale(2.6); opacity: 0; } to { transform: rotate(-5deg) scale(1); opacity: 1; } }
-@keyframes pop { from { transform: scale(0.2) rotate(-20deg); opacity: 0; } to { transform: scale(1) rotate(4deg); opacity: 1; } }
-@keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
+/* ① 엥? : 얼굴이 화면을 꽉 채우고 옆에 얇은 고딕 한 마디 */
+.burst[data-frame="eng"] .burst-pic { left: -22%; top: calc(-4% + var(--safe-top)); width: 144%; margin-left: 0; }
+.burst[data-frame="eng"] .f-eng {
+  display: block; right: 14px; top: calc(40px + var(--safe-top));
+  font-family: var(--body); font-weight: 400; font-size: clamp(72px, 24vw, 104px); line-height: 1; letter-spacing: -4px;
+}
+/* ② 빨간 타원 라벨 + 이상하게 줄바꿈된 말풍선 */
+.burst[data-frame="label"] .f-label {
+  display: flex; align-items: center; justify-content: center;
+  left: 6%; top: calc(9% + var(--safe-top)); width: 40%; aspect-ratio: 1.75;
+  border-radius: 50%; background: #D62B1F; color: #fff;
+  font-weight: 700; font-size: clamp(22px, 7.5vw, 32px); transform: rotate(-4deg);
+}
+.burst[data-frame="label"] .f-bubble {
+  display: block; right: 5%; top: calc(14% + var(--safe-top)); width: 40%;
+  padding: 20px 14px; border: 2px solid #111; border-radius: 50%; background: #fff;
+  font-weight: 700; font-size: clamp(16px, 5vw, 20px); line-height: 1.3; text-align: center; white-space: pre-line;
+}
+.burst[data-frame="label"] .burst-pic { top: 27%; }
+/* ③ 위아래 흰 자막 (NO STRESS JUST VIBING) */
+.burst[data-frame="vibe"] .f-top, .burst[data-frame="vibe"] .f-bottom {
+  display: block; left: 0; right: 0; text-align: center;
+  font-family: var(--display); font-size: clamp(42px, 15vw, 64px); line-height: 1.05;
+  color: #fff; -webkit-text-stroke: 3px #111; paint-order: stroke fill;
+}
+.burst[data-frame="vibe"] .f-top { top: calc(28px + var(--safe-top)); }
+.burst[data-frame="vibe"] .f-bottom { top: 62%; }
+.burst[data-frame="vibe"] .burst-pic { top: 14%; }
+/* ④ 스티커 + 도트 안경 + 손글씨 같은 한 줄 */
+.burst[data-frame="deal"] .f-caption {
+  display: block; left: 20px; right: 20px; top: calc(28px + var(--safe-top));
+  font-family: var(--display); font-size: clamp(32px, 10vw, 42px); line-height: 1.1; white-space: pre-line;
+}
+.burst[data-frame="deal"] .burst-pic { top: 22%; }
+
+.unlock {
+  left: 20px; right: 20px; bottom: calc(100px + var(--safe-bottom));
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+}
+.unlock .meta { font-size: 13px; color: #444; }
+.burst[data-frame="vibe"] .unlock .meta { color: #2A2118; }
+.unlock strong {
+  font-weight: 900; font-size: clamp(22px, 7vw, 28px); line-height: 1.2;
+  background: linear-gradient(transparent 45%, #FFF200 45%, #FFF200 92%, transparent 92%);
+  padding: 0 4px;
+}
+.burst-actions {
+  left: 20px; right: 20px; bottom: calc(28px + var(--safe-bottom));
+  display: grid; grid-template-columns: 2fr 1fr; gap: 8px;
+}
+.burst-actions .btn { min-height: 50px; border-width: 1px; border-radius: 6px; font-weight: 700; }
+
+.burst.play .burst-pic { animation: pop 0.5s cubic-bezier(.2, 1.5, .4, 1) both; }
+.burst.play .f-label, .burst.play .f-top { animation: stick 0.3s 0.35s both; }
+.burst.play .f-bubble, .burst.play .f-bottom, .burst.play .f-caption, .burst.play .f-eng { animation: stick 0.3s 0.55s both; }
+.burst.play .unlock, .burst.play .burst-actions { animation: up 0.35s 0.75s both; }
+@keyframes pop { from { scale: 0.3; opacity: 0; } to { scale: 1; opacity: 1; } }
 @keyframes stick { from { opacity: 0; scale: 1.8; } to { opacity: 1; scale: 1; } }
 @keyframes up { from { opacity: 0; translate: 0 24px; } to { opacity: 1; translate: 0 0; } }
+
+/* ---------------------------------------------------------- 방석 모드 */
+.cushion {
+  width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+  margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--ink);
+}
+.cushion::backdrop { background: var(--bg); }
+.cushion[open] { display: flex; }
+.cushion.dark, .cushion.dark::backdrop { background: #000; }
+.cushion > section { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px;
+  padding: calc(24px + var(--safe-top)) 24px calc(24px + var(--safe-bottom)); max-width: 480px; margin: 0 auto; }
+.cushion h2 { margin: 0; font-family: var(--display); font-weight: 400; font-size: 44px; line-height: 1.05; }
+.cushion p { margin: 0; }
+.c-face { width: 52%; max-width: 220px; align-self: center; }
+.c-face.big { width: 80%; max-width: 340px; }
+.c-count { font-weight: 700; }
+.c-countdown { align-items: center; text-align: center; }
+.c-countdown strong { font-family: var(--display); font-size: 160px; line-height: 1; }
+.c-armed { align-items: center; justify-content: flex-end !important; color: #161616; font-size: 12px; }
+.c-caught { text-align: center; align-items: stretch; }
+.c-caught .c-face { animation: pop 0.5s cubic-bezier(.2, 1.5, .4, 1) both, shake 0.4s 0.5s ease 3; }
+@keyframes shake { 25% { translate: -6px 0; } 75% { translate: 6px 0; } }
 
 /* ---------------------------------------------------------- 시트 */
 .sheet {
@@ -406,10 +441,6 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   .hero { width: 46%; }
   .latest { min-height: 54px; padding: 6px 14px; }
   .btn { min-height: 48px; }
-  .burst-pic { top: 24%; width: min(56vw, 240px); margin-left: calc(min(56vw, 240px) / -2); }
-  .cap.c2 { top: 50%; }
-  .unlock { bottom: calc(160px + var(--safe-bottom)); }
-  .unlock strong { font-size: 30px; }
-  .ticker { bottom: calc(88px + var(--safe-bottom)); }
+  .burst-pic { width: min(72vw, 300px); margin-left: calc(min(72vw, 300px) / -2); }
+  .unlock { bottom: calc(88px + var(--safe-bottom)); }
 }
-.burst-word.long { font-size: clamp(76px, 25vw, 130px); top: calc(56px + var(--safe-top)); }

@@ -15,6 +15,7 @@ import android.provider.MediaStore;
 import android.util.Base64;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
@@ -236,6 +237,25 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public String appVersion() {
             return versionName();
+        }
+
+        /** 방석 모드: 장전 중엔 화면이 꺼지지 않게 */
+        @JavascriptInterface
+        public void setKeepAwake(boolean on) {
+            runOnUiThread(() -> {
+                if (on) getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+                else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+            });
+        }
+
+        /** 방석 모드: 장전 중엔 화면을 가장 어둡게 (꺼진 척) */
+        @JavascriptInterface
+        public void setDim(boolean on) {
+            runOnUiThread(() -> {
+                WindowManager.LayoutParams lp = getWindow().getAttributes();
+                lp.screenBrightness = on ? 0.01f : WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+                getWindow().setAttributes(lp);
+            });
         }
 
         /** 터진 뒤 알림 문구 켜기/끄기 */
