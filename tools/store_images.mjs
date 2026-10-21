@@ -46,7 +46,7 @@ function demoState() {
   const t = Date.now() - 86400e3;
   const ev = (char, mode) => ({ t, char, mode });
   const titles = {};
-  for (const [id, char, mode, n] of [['meeting_hold', 'cat', 'hold', 2], ['dawn_quiet', 'tit', 'soft', 1], ['hold3', 'cat', 'hold', 3],
+  for (const [id, char, mode, n] of [['meeting_hold', 'cat', 'hold', 2], ['night_quiet', 'tit', 'soft', 1], ['hold3', 'cat', 'hold', 3],
     ['broke', 'hamster', 'loud', 1], ['streak7', 'hamster', 'hold', 1], ['afternoon', 'tit', 'soft', 6], ['hold_basic', 'cat', 'hold', 9],
     ['first_today', 'hamster', 'loud', 5], ['cat', 'cat', 'hold', 4], ['tit_soft', 'tit', 'soft', 2], ['morning', 'hamster', 'soft', 3]])
     titles[id] = { n, first: t - 6 * 86400e3, last: ev(char, mode) };

@@ -3,7 +3,7 @@
 //  - 브라우저: 같은 규칙(plan.js)으로 탭이 열려 있는 동안만 setTimeout 으로 흉내 낸다.
 import { CHARACTERS, FREQUENCIES } from './data.js';
 import { state, commit, flush } from './store.js';
-import { windowLength, windowStart, inWindow as inWin, advancePlan } from './plan.js';
+import { windowLength, windowStart, inWindow as inWin, inRest, advancePlan } from './plan.js';
 
 export const native = window.BgbbNative || null;
 const HOUR = 3600e3;
@@ -17,6 +17,9 @@ export function windowLabel({ start, end } = state.schedule) {
 export const anyFriendOn = () => CHARACTERS.some(c => state.friends[c.id].on);
 export const isActive = () => state.schedule.on && !state.frozen && anyFriendOn();
 export const inWindow = (now = Date.now()) => inWin(now, state.schedule);
+export const resting = (now = Date.now()) => inRest(now, state.schedule.rest);
+const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+export const restLabel = (rest = state.schedule.rest) => `${hm(rest.from)}~${hm(rest.to)}`;
 
 export function remainingToday() {
   if (!isActive()) return 0;
@@ -37,6 +40,7 @@ function configJson() {
     start: state.schedule.start,
     end: state.schedule.end,
     freq: state.schedule.freq,
+    rest: state.schedule.rest,
     sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, sound: state.friends[c.id].style }))
   });
 }
@@ -66,12 +70,12 @@ export function armWebTimer(onFire = lastOnFire) {
   if (native || !isActive()) return;
   const now = Date.now();
   const before = JSON.stringify(state.plan);
-  state.plan = advancePlan(state.plan, now, state.schedule, dailyCount);
+  state.plan = advancePlan(state.plan, now, state.schedule, dailyCount, Math.random, state.recent[0]?.t || 0);
   if (JSON.stringify(state.plan) !== before) commit();
   const due = state.plan.times[0];
   if (!due) return;
   timer = setTimeout(() => {
-    if (Date.now() >= due) onFire?.();
+    if (Date.now() >= due && !resting()) onFire?.();
     armWebTimer();
   }, Math.min(due - now, 6 * HOUR));
 }

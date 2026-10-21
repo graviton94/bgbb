@@ -11,7 +11,7 @@ function initial() {
     onboarded: false,
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, style: 'main' }])),
     hero: 'hamster',      // 홈에 서 있는 친구
-    schedule: { on: true, start: 9, end: 18, freq: 'normal' },
+    schedule: { on: true, start: 7, end: 22, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 } },   // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음)
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
     notify: true,         // 터진 뒤 알림 문구 (앱)
@@ -38,6 +38,7 @@ function load() {
       if (!(k in saved)) continue;
       const b = base[k];
       base[k] = b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...saved[k] } : saved[k];
+      if (k === 'schedule') base.schedule.rest = { ...initial().schedule.rest, ...saved.schedule?.rest };
     }
     for (const c of CHARACTERS) base.friends[c.id] = { on: true, style: 'main', ...base.friends[c.id] };
   } catch (e) {

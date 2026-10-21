@@ -1,11 +1,11 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, STYLE_NAMES, HOME_LINES, TIPS, BURST_FACE, charById, face, vibeFor } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
   state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy
 } from './store.js';
-import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow } from './schedule.js';
+import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow, resting, restLabel } from './schedule.js';
 import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
@@ -181,7 +181,7 @@ function previewOperation() {
   const c = pick(on);
   const mode = state.previewMode;
   if (mode === 'loud') playFriend(c.id, state.friends[c.id].style, getDiy());
-  if (mode === 'soft') navigator.vibrate?.([90, 50, 140]);
+  if (mode === 'soft') navigator.vibrate?.(vibeFor(c.id, state.friends[c.id].style).t);
   celebrate([{ t: Date.now(), char: c.id, mode }]);
 }
 
@@ -210,6 +210,7 @@ function renderHome() {
   if (state.frozen) { big = t('home.frozenBig'); line = t('home.frozenLine'); }
   else if (!state.schedule.on) { big = t('home.offBig'); line = t('home.offLine'); }
   else if (!anyFriendOn()) { big = t('home.nobodyBig'); line = t('home.nobodyLine'); }
+  else if (state.schedule.rest.on && resting()) { big = t('home.restBig'); line = t('home.restLine', { window: restLabel() }); }
   else if (!n) { big = t('home.done'); line = t('home.doneLine'); }
   else if (!inWindow()) { big = t('home.waitBig', { n }); line = t('home.waitLine', { window: windowLabel() }); }
   else { big = t('home.left', { n }); line = homeLine; }
@@ -217,6 +218,8 @@ function renderHome() {
   $('bigLabel').textContent = t('home.today');
   $('big').innerHTML = nl2br(big);
   $('homeLine').innerHTML = nl2br(line);
+  const td = day();
+  $('todayStats').textContent = td.loud + td.soft + td.hold ? t('home.todayStats', td) : '';
 
   const c = charById(heroId());
   if ($('heroImg').dataset.id !== c.id) {
@@ -357,6 +360,8 @@ function renderSettings() {
   $('previewBox').hidden = !!native;
   $('previewModes').innerHTML = ['loud', 'soft', 'hold'].map(m =>
     `<button class="chip ${state.previewMode === m ? 'on' : ''}" data-m="${m}" type="button">${t(`settings.mode.${m}`)}</button>`).join('');
+  $('restOn').checked = state.schedule.rest.on;
+  $('restInfo').textContent = state.schedule.rest.on ? t('settings.restOn', { window: restLabel() }) : t('settings.restOff');
   $('scheduleInfo').textContent = isActive() ? t('settings.left', { n: remainingToday() }) : t('settings.paused');
   const styles = ['main', 'soft', 'loud'].concat(getDiy() ? ['diy'] : []);
   $('friends').innerHTML = CHARACTERS.map(c => {
@@ -378,6 +383,45 @@ for (const id of ['winStart', 'winEnd']) {
     syncSchedule(previewOperation);
   });
 }
+// ---------------------------------------------------------- 쫄? (매일 쉬는 시간) — 위아래로 굴리는 시 · 분
+const STEP = 5;   // 분 단위
+function fillWheel(el, values) {
+  el.innerHTML = values.map(v => `<div>${two(v)}</div>`).join('');
+  el.dataset.values = values.join(',');
+}
+const wheelGet = el => {
+  const values = el.dataset.values.split(',').map(Number);
+  return values[Math.max(0, Math.min(values.length - 1, Math.round(el.scrollTop / el.firstElementChild.offsetHeight)))];
+};
+const wheelSet = (el, v) => {
+  const values = el.dataset.values.split(',').map(Number);
+  el.scrollTop = Math.max(0, values.indexOf(v)) * el.firstElementChild.offsetHeight;
+};
+const hours = [...Array(24).keys()], minutes = [...Array(60 / STEP).keys()].map(i => i * STEP);
+for (const id of ['rFromH', 'rToH']) fillWheel($(id), hours);
+for (const id of ['rFromM', 'rToM']) fillWheel($(id), minutes);
+function openRest() {
+  const { from, to } = state.schedule.rest;
+  $('restSheet').showModal();
+  wheelSet($('rFromH'), Math.floor(from / 60)); wheelSet($('rFromM'), from % 60 - (from % STEP));
+  wheelSet($('rToH'), Math.floor(to / 60)); wheelSet($('rToM'), to % 60 - (to % STEP));
+}
+$('restOpen').addEventListener('click', openRest);
+$('restOn').addEventListener('change', e => {
+  if (e.target.checked) { e.target.checked = state.schedule.rest.on; openRest(); return; }
+  state.schedule.rest.on = false;
+  syncSchedule(previewOperation);
+});
+$('restSave').addEventListener('click', () => {
+  const from = wheelGet($('rFromH')) * 60 + wheelGet($('rFromM'));
+  const to = wheelGet($('rToH')) * 60 + wheelGet($('rToM'));
+  state.schedule.rest = { on: from !== to, from, to };
+  $('restSheet').close();
+  play('ui_pop', 0.5);
+  if (state.schedule.rest.on) toast(t('rest.saved', { window: restLabel() }));
+  syncSchedule(previewOperation);
+});
+
 $('opOn').addEventListener('change', e => {
   state.schedule.on = e.target.checked;
   toast(t(e.target.checked ? 'op.started' : 'op.paused'));

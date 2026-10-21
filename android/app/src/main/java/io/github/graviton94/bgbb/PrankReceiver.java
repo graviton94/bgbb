@@ -6,7 +6,7 @@ import android.content.Intent;
 
 import org.json.JSONObject;
 
-/** 작전 알람, 재부팅, 앱 업데이트, 시간 변경 때 깨어난다. */
+/** 작전 알람, 재부팅, 앱 업데이트, 시간 변경 때 깨어난다. 쉬는 시간이면 안 터지고 다음 것만 건다. */
 public class PrankReceiver extends BroadcastReceiver {
 
     static final String ACTION_FIRE = "io.github.graviton94.bgbb.ACTION_FIRE";
@@ -17,7 +17,8 @@ public class PrankReceiver extends BroadcastReceiver {
         JSONObject cfg = PrankScheduler.config(c);
         boolean fire = ACTION_FIRE.equals(intent.getAction())
                 && PrankScheduler.isActive(cfg)
-                && PrankScheduler.inWindow(cfg, System.currentTimeMillis());
+                && PrankScheduler.inWindow(cfg, System.currentTimeMillis())
+                && !PrankScheduler.inRest(cfg, System.currentTimeMillis());
         if (!fire) {
             PrankScheduler.reschedule(c);
             return;

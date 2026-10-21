@@ -33,14 +33,14 @@ export const TITLES = [
     { ko: '다들 모였을 때', en: 'When everyone is gathered' },
     { ko: '평일 회의 시간대(10시·14~15시)에 소리 모드', en: 'Sound mode during weekday meeting hours (10am, 2–3pm)' },
     c => c.mode === 'loud' && meeting(c)),
-  T('dawn_loud', 'legend', '새벽 3시의 확성기', '3AM Megaphone',
-    { ko: '모두가 잠든 시간', en: 'While everyone sleeps' },
-    { ko: '0~5시에 소리 모드', en: 'Sound mode between midnight and 5am' },
-    c => c.mode === 'loud' && c.hour < 6),
+  T('last_call', 'legend', '마감 직전 확성기', 'Last Call Megaphone',
+    { ko: '문 닫기 직전', en: 'Right before closing' },
+    { ko: '21시 이후 소리 모드', en: 'Sound mode after 9pm' },
+    c => c.mode === 'loud' && c.hour >= 21),
   T('hold5', 'legend', '인내의 화신', 'Avatar of Patience',
     { ko: '하루 종일 참기', en: 'Hold it all day' },
-    { ko: '하루에 다섯 번 참기', en: 'Hold it in 5 times in a day' },
-    c => c.mode === 'hold' && c.today.hold >= 5),
+    { ko: '하루에 네 번 참기', en: 'Hold it in 4 times in a day' },
+    c => c.mode === 'hold' && c.today.hold >= 4),
   T('trinity', 'legend', '삼위일체', 'Holy Trinity',
     { ko: '하루에 세 가지 다', en: 'All three in one day' },
     { ko: '하루에 소리·진동·참기 모두 한 번 이상', en: 'Loud, shy and held all in one day' },
@@ -53,10 +53,10 @@ export const TITLES = [
     { ko: '세 자리 수', en: 'Three digits' },
     { ko: '누적 100번', en: '100 in total' },
     c => c.total >= 100),
-  T('midnight', 'legend', '자정의 종소리', 'Midnight Bell',
-    { ko: '날짜가 바뀌는 순간', en: 'As the date changes' },
-    { ko: '자정(0시대)에 소리 모드', en: 'Sound mode in the midnight hour' },
-    c => c.mode === 'loud' && c.hour === 0),
+  T('first_bell', 'legend', '오늘의 첫 종소리', 'First Bell',
+    { ko: '하루의 시작을 알림', en: 'Announcing the day' },
+    { ko: '7시대 그날 첫 방이 소리 모드', en: 'The first one of the day, at 7am, on sound mode' },
+    c => c.mode === 'loud' && c.hour === 7 && c.nth === 1),
 
   // ---- 레어
   T('meeting_soft', 'rare', '회의 중 진동 한 방', 'Buzz in the Meeting',
@@ -67,10 +67,10 @@ export const TITLES = [
     { ko: '다들 모였는데 꾹', en: 'Everyone is there, held in' },
     { ko: '평일 회의 시간대에 참기', en: 'Held during weekday meeting hours' },
     c => c.mode === 'hold' && meeting(c)),
-  T('dawn_quiet', 'rare', '새벽의 암살자', 'Dawn Assassin',
-    { ko: '새벽, 소리 없이', en: 'At dawn, without a sound' },
-    { ko: '0~5시에 진동이나 참기', en: 'Shy or held between midnight and 5am' },
-    c => c.mode !== 'loud' && c.hour < 6),
+  T('night_quiet', 'rare', '밤의 암살자', 'Night Assassin',
+    { ko: '밤, 소리 없이', en: 'At night, without a sound' },
+    { ko: '21시 이후 진동이나 참기', en: 'Shy or held after 9pm' },
+    c => c.mode !== 'loud' && c.hour >= 21),
   T('monday', 'rare', '월요병 그 자체', 'Monday Blues Incarnate',
     { ko: '월요일 아침', en: 'Monday morning' },
     { ko: '월요일 6~11시', en: 'Monday 6–11am' },
@@ -97,8 +97,8 @@ export const TITLES = [
     c => c.mode === 'soft' && c.today.soft >= 3),
   T('loud5', 'rare', '확성기 장인', 'Megaphone Master',
     { ko: '오늘 좀 시끄러움', en: 'A loud day' },
-    { ko: '하루에 소리 모드 다섯 번', en: 'Sound mode 5 times in a day' },
-    c => c.mode === 'loud' && c.today.loud >= 5),
+    { ko: '하루에 소리 모드 네 번', en: 'Sound mode 4 times in a day' },
+    c => c.mode === 'loud' && c.today.loud >= 4),
   T('hold3', 'rare', '3연속 참음', 'Held Three',
     { ko: '아직은 괜찮음', en: 'Still fine. For now.' },
     { ko: '하루에 세 번 참기', en: 'Hold it in 3 times in a day' },
@@ -129,8 +129,8 @@ export const TITLES = [
     c => c.charsToday >= 3),
   T('overeat', 'rare', '오늘 과식함', 'Overate Today',
     { ko: '오늘 많이 먹었나 봄', en: 'Must have eaten a lot' },
-    { ko: '하루에 다섯 번째', en: 'The fifth one today' },
-    c => c.nth >= 5),
+    { ko: '하루에 네 번째', en: 'The fourth one today' },
+    c => c.nth >= 4),
 
   // ---- 노멀
   T('loud_basic', 'normal', '어 방금 누구야', 'Wait, Who Was That',
@@ -197,11 +197,12 @@ export const TITLES = [
 
 export const titleById = id => TITLES.find(x => x.id === id);
 
+const MILESTONES = ['streak3', 'streak7', 'streak30', 'total50', 'total100'];
 const BASIC = { loud: 'loud_basic', soft: 'soft_basic', hold: 'hold_basic' };
 
 /**
  * 상황 c 에 맞는 칭호 하나. owned = { id: … } (가진 칭호).
- * 1% 는 상황과 상관없이 잭팟 (아직 없는 것 먼저). 나머지는 맞는 후보 중 아직 없는 칭호를 75% 확률로 먼저 보고, 그 안에서 레전드 > 레어 > 노멀 가중치로 뽑는다.
+ * 1% 는 상황과 상관없이 잭팟 (아직 없는 것 먼저). 기념 칭호(연속 · 누적)는 조건을 넘긴 첫 방에 무조건 주고, 그 뒤엔 다시 안 나온다 (계속 후보로 남아 레전드가 넘치지 않게). 나머지는 맞는 후보 중 아직 없는 칭호를 75% 확률로 먼저 보고, 그 안에서 레전드 > 레어 > 노멀 가중치로 뽑는다.
  */
 export const JACKPOT = 0.01;
 
@@ -212,7 +213,9 @@ export function pickTitle(c, owned = {}, random = Math.random) {
     const pool = fresh.length ? fresh : jp;
     return pool[Math.floor(random() * pool.length) % pool.length];
   }
-  const cands = TITLES.filter(x => x.test(c));
+  const milestone = TITLES.find(x => MILESTONES.includes(x.id) && !owned[x.id] && x.test(c));
+  if (milestone) return milestone;
+  const cands = TITLES.filter(x => !MILESTONES.includes(x.id) && x.test(c));
   if (!cands.length) return titleById(BASIC[c.mode] || 'hold_basic');
   const fresh = cands.filter(x => !owned[x.id]);
   const pool = fresh.length && random() < 0.75 ? fresh : cands;

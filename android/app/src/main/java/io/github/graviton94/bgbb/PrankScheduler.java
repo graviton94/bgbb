@@ -22,7 +22,8 @@ import java.util.Random;
  * 알람이 울리면 PrankReceiver 가 한 번 실행하고 다음 것을 건다. 상주 서비스도 WakeLock 도 없어서
  * 기다리는 동안 배터리를 쓰지 않는다.
  *
- * 일정 규칙은 src/schedule.js 와 같다: 시간대를 N칸으로 나누고 칸마다 한 번, 칸 양끝 10%는 비운다.
+ * 일정 규칙은 src/plan.js 와 같다: 작전 시간대에서 쉬는 시간을 뺀 열린 시간에 하루 N번,
+ * 서로 최소 1시간(GAP)은 떨어지게 아무 데나 뽑는다.
  */
 final class PrankScheduler {
 
@@ -31,6 +32,8 @@ final class PrankScheduler {
     private static final String KEY_PLAN = "plan";
     private static final String KEY_PLAN_DAY = "planDay";
     private static final String KEY_EVENTS = "events";
+    private static final String KEY_LAST = "lastFire";
+    static final long GAP = 3_600_000L;
     private static final int MAX_EVENTS = 500;
     private static final long HOUR = 3_600_000L;
     private static final Random RANDOM = new Random();
@@ -88,10 +91,11 @@ final class PrankScheduler {
 
         while (!plan.isEmpty() && plan.get(0) <= now) plan.remove(0);
         if (plan.isEmpty()) {
-            // 설정 직후엔 오늘 남은 시간부터, 오늘 일정을 다 썼으면 내일부터
+            // 설정 직후엔 오늘 남은 시간부터, 오늘 일정을 다 썼으면 내일부터. 마지막으로 터진 뒤 GAP 은 지킨다.
+            long notBefore = Math.max(now + 60_000, p.getLong(KEY_LAST, 0) + GAP);
             long day = planDay < today ? today : addDays(planDay, 1);
             for (int i = 0; plan.isEmpty() && i < 3; i++, day = addDays(day, 1)) {
-                plan = planDay(cfg, day, now);
+                plan = planDay(cfg, day, notBefore);
                 planDay = day;
             }
         }
@@ -116,18 +120,79 @@ final class PrankScheduler {
         return now >= start && now <= start + windowLength(cfg) + HOUR / 2;
     }
 
-    static List<Long> planDay(JSONObject cfg, long start, long now) {
+    // 쉬는 시간 (쫄?): rest = { on, from, to } — 하루 중 분 (0~1439), 자정 넘김 포함. src/plan.js 와 같다.
+    private static JSONObject rest(JSONObject cfg) {
+        JSONObject rest = cfg.optJSONObject("rest");
+        return rest != null && rest.optBoolean("on") && rest.optInt("from") != rest.optInt("to") ? rest : null;
+    }
+
+    private static int restMinutes(JSONObject rest) {
+        return ((rest.optInt("to") - rest.optInt("from")) % 1440 + 1440) % 1440;
+    }
+
+    /** 매일 쉬는 시간 안인지. 이때는 알람이 와도 안 터진다. */
+    static boolean inRest(JSONObject cfg, long now) {
+        JSONObject rest = rest(cfg);
+        if (rest == null) return false;
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(now);
+        int m = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE);
+        return ((m - rest.optInt("from")) % 1440 + 1440) % 1440 < restMinutes(rest);
+    }
+
+    /** 작전일 [start, start+길이) 에서 쉬는 시간을 뺀 열린 구간들 */
+    static List<long[]> openSegments(JSONObject cfg, long start) {
+        List<long[]> segs = new ArrayList<>();
+        segs.add(new long[]{start, start + windowLength(cfg)});
+        JSONObject rest = rest(cfg);
+        if (rest == null) return segs;
+        long len = restMinutes(rest) * 60_000L;
+        for (int k = -1; k <= 1; k++) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(start);
+            cal.add(Calendar.DAY_OF_MONTH, k);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            cal.add(Calendar.MINUTE, rest.optInt("from"));
+            long rs = cal.getTimeInMillis(), re = rs + len;
+            List<long[]> out = new ArrayList<>();
+            for (long[] s : segs) {
+                if (re <= s[0] || rs >= s[1]) { out.add(s); continue; }
+                if (rs > s[0]) out.add(new long[]{s[0], rs});
+                if (re < s[1]) out.add(new long[]{re, s[1]});
+            }
+            segs = out;
+        }
+        return segs;
+    }
+
+    static List<Long> planDay(JSONObject cfg, long start, long notBefore) {
         int count;
         switch (cfg.optString("freq", "normal")) {
-            case "quiet": count = 1 + RANDOM.nextInt(2); break;   // 1~2
-            case "thrill": count = 6 + RANDOM.nextInt(4); break;  // 6~9
-            default: count = 3 + RANDOM.nextInt(3);               // 3~5
+            case "quiet": count = 3 + RANDOM.nextInt(2); break;   // 3~4
+            case "thrill": count = 8 + RANDOM.nextInt(3); break;  // 8~10
+            default: count = 5 + RANDOM.nextInt(3);               // 5~7
         }
-        long slot = windowLength(cfg) / count;
+        List<long[]> segs = openSegments(cfg, start);
+        long open = 0;
+        for (long[] s : segs) open += s[1] - s[0];
         List<Long> out = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            long t = start + i * slot + (long) (slot * (0.1 + 0.8 * RANDOM.nextDouble()));
-            if (t > now + 60_000) out.add(t);
+        int n = (int) Math.min(count, open / GAP + 1);
+        if (open <= 0 || n <= 0) return out;
+        // 열린 시간에서 (n-1)×GAP 을 접은 구간에 n개를 뿌리고, 정렬한 뒤 i×GAP 을 더해 편다 → 서로 GAP 이상
+        long slack = open - (n - 1) * GAP;
+        long[] offs = new long[n];
+        for (int i = 0; i < n; i++) offs[i] = (long) (RANDOM.nextDouble() * slack);
+        java.util.Arrays.sort(offs);
+        for (int i = 0; i < n; i++) {
+            long o = offs[i] + i * GAP, t = segs.get(segs.size() - 1)[1] - 1;
+            for (long[] s : segs) {
+                if (o < s[1] - s[0]) { t = s[0] + o; break; }
+                o -= s[1] - s[0];
+            }
+            if (t > notBefore) out.add(t);
         }
         return out;
     }
@@ -136,7 +201,7 @@ final class PrankScheduler {
     static long windowStart(JSONObject cfg, long now) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now);
-        cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 9));
+        cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 7));
         cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
@@ -149,7 +214,7 @@ final class PrankScheduler {
     }
 
     static long windowLength(JSONObject cfg) {
-        int hours = ((cfg.optInt("end", 18) - cfg.optInt("start", 9)) % 24 + 24) % 24;
+        int hours = ((cfg.optInt("end", 22) - cfg.optInt("start", 7)) % 24 + 24) % 24;
         return (hours == 0 ? 24 : hours) * HOUR;
     }
 
@@ -176,6 +241,7 @@ final class PrankScheduler {
 
     static synchronized void logEvent(Context c, long t, String charId, String mode) {
         SharedPreferences p = prefs(c);
+        p.edit().putLong(KEY_LAST, t).apply();
         try {
             JSONArray arr = new JSONArray(p.getString(KEY_EVENTS, "[]"));
             arr.put(new JSONObject().put("t", t).put("char", charId).put("mode", mode));

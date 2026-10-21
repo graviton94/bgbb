@@ -29,6 +29,7 @@
         <div class="label" id="bigLabel"></div>
         <h1 class="big" id="big"></h1>
         <p class="line" id="homeLine"></p>
+        <p class="today-stats" id="todayStats"></p>
         <div class="stage">
           <button class="hero" id="hero" type="button"><img id="heroImg" alt=""></button>
           <span class="bubble" id="bubble1"></span>
@@ -133,6 +134,10 @@
         <span data-i18n="settings.window"></span>
         <span class="time"><select id="winStart" aria-label="start"></select> ~ <select id="winEnd" aria-label="end"></select></span>
       </div>
+      <div class="row">
+        <button class="row-btn" id="restOpen" type="button"><span data-i18n="settings.rest"></span><small class="muted block" id="restInfo"></small></button>
+        <input type="checkbox" class="switch" id="restOn" aria-labelledby="restOpen">
+      </div>
       <div class="row-label" data-i18n="settings.freq"></div>
       <div class="chips" id="freqs"></div>
       <label class="row" id="notifyRow">
@@ -165,6 +170,20 @@
   </dialog>
 
   <!-- 응원하기 -->
+  <!-- 쫄? 매일 쉬는 시간 -->
+  <dialog class="sheet small" id="restSheet" aria-labelledby="restTitle">
+    <div class="sheet-body rest">
+      <h2 class="rest-title" id="restTitle" data-i18n="rest.title"></h2>
+      <div class="rest-row"><div class="wheel" id="rFromH" aria-label="hour"></div><b>:</b><div class="wheel" id="rFromM" aria-label="minute"></div><span data-i18n="rest.from"></span></div>
+      <div class="rest-row"><div class="wheel" id="rToH" aria-label="hour"></div><b>:</b><div class="wheel" id="rToM" aria-label="minute"></div><span data-i18n="rest.to"></span></div>
+      <p class="rest-note" data-i18n="rest.note"></p>
+      <div class="rest-actions">
+        <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
+        <button class="btn primary" id="restSave" type="button" data-i18n="rest.save"></button>
+      </div>
+    </div>
+  </dialog>
+
   <dialog class="sheet small" id="supportSheet">
     <div class="sheet-body">
       <h3 data-i18n="support.title"></h3>

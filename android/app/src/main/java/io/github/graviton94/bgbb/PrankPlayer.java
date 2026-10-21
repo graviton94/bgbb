@@ -50,7 +50,7 @@ final class PrankPlayer {
         if ("loud".equals(mode)) {
             play(c, charId, sound, done);
         } else {
-            if ("soft".equals(mode)) vibrate(c);
+            if ("soft".equals(mode)) vibrate(c, charId, sound);
             done.run();
         }
     }
@@ -115,10 +115,38 @@ final class PrankPlayer {
         }
     }
 
-    private static void vibrate(Context c) {
+    // 진동 모드: 친구 · 소리 종류마다 세기와 길이가 다르다 (src/data.js 의 VIBES 와 같은 값).
+    // {켜짐/꺼짐 ms 번갈아}, {켜짐마다 세기 1~255}
+    private static final java.util.Map<String, long[][]> VIBES = new java.util.HashMap<>();
+    static {
+        VIBES.put("hamster_soft", new long[][]{{60, 40, 80}, {90, 120}});
+        VIBES.put("hamster_main", new long[][]{{120, 60, 220}, {160, 200}});
+        VIBES.put("hamster_loud", new long[][]{{180, 40, 160, 40, 420}, {200, 230, 255}});
+        VIBES.put("hamster_epic", new long[][]{{100, 30, 100, 30, 100, 30, 700}, {255, 255, 255, 255}});
+        VIBES.put("tit_soft", new long[][]{{40, 40, 40, 40, 40}, {80, 80, 80}});
+        VIBES.put("tit_main", new long[][]{{50, 40, 50, 40, 50, 40, 120}, {140, 140, 140, 170}});
+        VIBES.put("tit_loud", new long[][]{{60, 30, 60, 30, 60, 30, 60, 30, 300}, {220, 220, 220, 220, 255}});
+        VIBES.put("cat_soft", new long[][]{{300}, {70}});
+        VIBES.put("cat_main", new long[][]{{200, 80, 400}, {110, 150}});
+        VIBES.put("cat_loud", new long[][]{{250, 60, 700}, {200, 255}});
+        VIBES.put("diy", new long[][]{{150, 60, 300}, {150, 220}});
+    }
+
+    private static void vibrate(Context c, String charId, String sound) {
         Vibrator vib = c.getSystemService(Vibrator.class);
-        if (vib != null && vib.hasVibrator()) {
-            vib.vibrate(VibrationEffect.createWaveform(new long[]{0, 90, 50, 140}, -1));
+        if (vib == null || !vib.hasVibrator()) return;
+        String key = "diy".equals(sound) ? "diy" : charId + "_" + ("soft".equals(sound) || "loud".equals(sound) ? sound : "main");
+        // 햄찌 레어 방구는 진동도 레어 (소리와 같은 2%)
+        if ("hamster".equals(charId) && !"diy".equals(sound) && RANDOM.nextDouble() < EPIC_CHANCE) key = "hamster_epic";
+        long[][] v = VIBES.containsKey(key) ? VIBES.get(key) : VIBES.get("diy");
+        long[] on = v[0];
+        long[] timings = new long[on.length + 1];   // 맨 앞 0 = 바로 시작
+        int[] amps = new int[on.length + 1];
+        for (int i = 0; i < on.length; i++) {
+            timings[i + 1] = on[i];
+            amps[i + 1] = i % 2 == 0 ? (int) v[1][i / 2] : 0;
         }
+        if (vib.hasAmplitudeControl()) vib.vibrate(VibrationEffect.createWaveform(timings, amps, -1));
+        else vib.vibrate(VibrationEffect.createWaveform(timings, -1));
     }
 }

@@ -99,10 +99,33 @@ export const HOME_LINES = {
   en: ['When? No idea.\nThat’s the point.', 'Mind your pocket.', 'Quiet for now.\nFor now.', 'Meeting? Hit pause.', 'Your ringer decides\nloud or held.']
 };
 
+// 진동 모드일 때 소리 대신 진동 (친구 · 소리 종류마다 세기와 길이가 다르다). t = 켜짐/꺼짐 ms 번갈아, a = 켜짐마다 세기 1~255.
+// PrankPlayer.java 의 VIBES 와 같은 값.
+export const VIBES = {
+  hamster: {   // 퉁퉁한 한 방
+    soft: { t: [60, 40, 80], a: [90, 120] },
+    main: { t: [120, 60, 220], a: [160, 200] },
+    loud: { t: [180, 40, 160, 40, 420], a: [200, 230, 255] },
+    epic: { t: [100, 30, 100, 30, 100, 30, 700], a: [255, 255, 255, 255] }
+  },
+  tit: {       // 파닥파닥 잔진동
+    soft: { t: [40, 40, 40, 40, 40], a: [80, 80, 80] },
+    main: { t: [50, 40, 50, 40, 50, 40, 120], a: [140, 140, 140, 170] },
+    loud: { t: [60, 30, 60, 30, 60, 30, 60, 30, 300], a: [220, 220, 220, 220, 255] }
+  },
+  cat: {       // 느긋하게 길게
+    soft: { t: [300], a: [70] },
+    main: { t: [200, 80, 400], a: [110, 150] },
+    loud: { t: [250, 60, 700], a: [200, 255] }
+  },
+  diy: { t: [150, 60, 300], a: [150, 220] }
+};
+export const vibeFor = (charId, style) => (style === 'diy' ? VIBES.diy : VIBES[charId]?.[style] || VIBES[charId]?.main || VIBES.diy);
+
 export const FREQUENCIES = {
-  quiet: { name: { ko: '가끔', en: 'Rarely' }, range: [1, 2] },
-  normal: { name: { ko: '보통', en: 'Normal' }, range: [3, 5] },
-  thrill: { name: { ko: '자주', en: 'Often' }, range: [6, 9] }
+  quiet: { name: { ko: '가끔', en: 'Rarely' }, range: [3, 4] },
+  normal: { name: { ko: '보통', en: 'Normal' }, range: [5, 7] },
+  thrill: { name: { ko: '자주', en: 'Often' }, range: [8, 10] }
 };
 
 // Google Play 응원하기 상품 (Play Console 에 같은 ID 로 '일회성 제품' 을 만든다)

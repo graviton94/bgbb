@@ -22,11 +22,17 @@ test('모든 칭호는 어떤 상황에서든 나올 수 있다', () => {
       for (let hour = 0; hour < 24; hour++)
         for (let wd = 0; wd < 7; wd++)
           contexts.push({ ...base, mode, char, hour, wd });
-  contexts.push({ ...base, nth: 1 }, { ...base, nth: 5 }, { ...base, streak: 30 }, { ...base, total: 100 },
+  contexts.push({ ...base, nth: 1 }, { ...base, nth: 1, hour: 7 }, { ...base, nth: 5 }, { ...base, nth: 1, streak: 30 }, { ...base, nth: 1, streak: 7 }, { ...base, nth: 1, streak: 3 }, { ...base, total: 100 }, { ...base, total: 50 },
     { ...base, charsToday: 3 }, { ...base, prev: 'loud' }, { ...base, prev: 'hold' },
     { ...base, mode: 'hold', today: { loud: 0, soft: 0, hold: 5 } }, { ...base, mode: 'soft', today: { loud: 0, soft: 3, hold: 0 } },
     { ...base, today: { loud: 5, soft: 1, hold: 1 } });
   for (const x of TITLES.filter(x => x.rarity !== 'jackpot')) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
+});
+
+test('기념 칭호(연속 · 누적)는 그 순간 아직 없으면 무조건 준다', () => {
+  const c = { ...base, mode: 'loud', hour: 16, wd: 3, total: 100 };
+  assert.equal(pickTitle(c, { total50: { n: 1 } }, seq(0.5, 0.99, 0.99)).id, 'total100');
+  for (let i = 0; i < 50; i++) assert.notEqual(pickTitle(c, { total100: { n: 1 }, total50: { n: 1 } }).id, 'total100');
 });
 
 test('어떤 상황이든 결과 모드에 맞는 기본 칭호는 항상 후보다', () => {
