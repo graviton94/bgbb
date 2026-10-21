@@ -42,6 +42,7 @@ final class PrankPlayer {
         String sound = pick.optString("sound", "main");
         String mode = deviceMode(c);
         PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
+        PrankNotifier.post(c, charId, mode);
 
         if ("loud".equals(mode)) {
             play(c, charId, sound, done);

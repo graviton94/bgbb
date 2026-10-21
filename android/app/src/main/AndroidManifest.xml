@@ -5,6 +5,8 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- '내 목소리 녹음' 버튼을 누를 때만 요청. 녹음은 폰 안에만 저장된다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- 터진 뒤 소리 없는 알림 한 줄 (설정에서 끌 수 있음) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 재부팅 후 작전 알람 다시 걸기 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 

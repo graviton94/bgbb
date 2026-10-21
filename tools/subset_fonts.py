@@ -3,7 +3,7 @@
     pip install fonttools brotli
     python3 tools/subset_fonts.py <원본 ttf 폴더>
 
-Jua · Gaegu (SIL Open Font License 1.1, google/fonts 저장소) 에서
+Black Han Sans (SIL Open Font License 1.1, google/fonts 저장소) 에서
 영문·숫자·문장부호 + 자주 쓰는 한글 2,350자(KS X 1001) + 한글 자모만 남긴다.
 그 밖의 글자(드문 한글, 이모지)는 기기 글꼴로 자연스럽게 넘어간다.
 """
@@ -16,8 +16,7 @@ SRC = sys.argv[1] if len(sys.argv) > 1 else "."
 OUT = os.path.join(os.path.dirname(__file__), "..", "assets", "fonts")
 
 FONTS = {
-    "Jua-Regular.ttf": "jua.woff2",
-    "Gaegu-Regular.ttf": "gaegu.woff2",
+    "BlackHanSans-Regular.ttf": "blackhansans.woff2",
 }
 
 

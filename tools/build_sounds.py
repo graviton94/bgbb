@@ -4,7 +4,7 @@
 
 tools/sound_candidates/ 의 후보(fetch_sounds.py 가 받아 둔 CC0 녹음) 중 CHOICES 에 적은 것을
 가장 소리가 큰 구간만 잘라 → 앞뒤 무음 다듬고 → 페이드 → 스타일별 음량 맞추고 → assets/sounds/*.wav 로.
-배경 소리는 끊김 없이 반복되게 끝을 앞에 겹쳐 둔다. 출처는 tools/sound_credits.json 에 남긴다.
+출처는 tools/sound_credits.json 에 남긴다.
 """
 import json
 import os
@@ -50,21 +50,10 @@ CHOICES = {
     "cat_loud_2":     ("cat_hiss/04.ogg", 1.5, LOUD),
     "cat_loud_3":     ("cat_hiss/05.ogg", 1.5, LOUD),
     "ui_pop":         ("ui_pop/02.ogg", 0.25, UI),
-    "ui_coin":        ("ui_coin/04.ogg", 0.8, UI),
     "ui_levelup":     ("ui_levelup/02.ogg", 1.0, UI),
     "ui_treasure":    ("ui_levelup/01.ogg", 1.8, UI),
-    "ui_buy":         ("ui_buy/02.ogg", 1.4, UI),
     "ui_freeze":      ("ui_freeze/04.ogg", 1.2, UI),
 }
-# 배경 소리 → (후보 파일, 반복 길이 초)
-AMBIENT = {
-    "amb_day":   ("amb_day/02.ogg", 8.0),
-    "amb_night": ("amb_night/05.ogg", 8.0),
-    "amb_room":  ("amb_room/03.ogg", 6.0),
-}
-AMBIENT_DB = -30.0
-
-
 def load(rel):
     raw = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", os.path.join(CAND, rel), "-ac", "1", "-ar", str(SR),
                           "-f", "s16le", "-"], capture_output=True, check=True).stdout
@@ -109,17 +98,6 @@ def master(x, rms_db, fades=True):
     return np.tanh(x / peak) * peak
 
 
-def seamless(x, seconds, xf=0.8):
-    n, k = int(seconds * SR), int(xf * SR)
-    x = loudest_window(x, seconds + xf)
-    if len(x) < n + k:
-        n = len(x) - k
-    out = x[:n].copy()
-    ramp = np.linspace(0, 1, k)
-    out[:k] = out[:k] * ramp + x[n:n + k] * (1 - ramp)
-    return out
-
-
 def save(name, x):
     os.makedirs(OUT, exist_ok=True)
     pcm = (np.clip(x, -1, 1) * 32767).astype(np.int16)
@@ -142,9 +120,6 @@ def main():
     for name, (rel, seconds, db) in CHOICES.items():
         x = trim(loudest_window(trim(load(rel)), seconds))
         save(name, master(x, db))
-        credits[name] = rel
-    for name, (rel, seconds) in AMBIENT.items():
-        save(name, master(seamless(load(rel), seconds), AMBIENT_DB, fades=False))
         credits[name] = rel
     # 출처 (파일별로 어느 녹음인지). 작성자·제목은 verify_credits.py 가 원본 페이지에서 확인해 채운다.
     used = {}

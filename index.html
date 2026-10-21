@@ -3,118 +3,99 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#FFF6E5">
+  <meta name="theme-color" content="#F2F2F0">
   <title>방구뿡</title>
-  <meta name="description" content="주머니 속 다마고치 - 하루 몇 번, 친구들이 불시에 소리를 낸다. 소리면 대담, 진동이면 소심, 무음이면 꾹참!">
-  <link rel="preload" href="assets/fonts/jua.woff2" as="font" type="font/woff2" crossorigin>
+  <meta name="description" content="주머니에 셋이 숨어 있음. 하루 몇 번, 아무 때나 뿡. 터질 때마다 칭호 하나.">
+  <link rel="preload" href="assets/fonts/blackhansans.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="src/main.js"></script>
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <button class="status" id="status" type="button">
-        <span class="dot" id="statusDot"></span>
-        <span id="statusText" data-i18n="status.preparing"></span>
-      </button>
-      <span class="acorns" id="acorns">🌰 0</span>
-      <button class="icon-btn" id="openSettings" type="button" data-i18n-attr="aria-label:settings.title">⚙️</button>
+    <header class="top">
+      <span class="logo" data-i18n="appName"></span>
+      <span class="top-right">
+        <span class="muted" id="streak"></span>
+        <button class="icon-btn" id="openSettings" type="button" data-i18n-attr="aria-label:settings.title">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>
+        </button>
+      </span>
     </header>
 
     <main>
-      <!-- 아지트 -->
+      <!-- 홈: 무표정 -->
       <section class="screen active" id="screen-home">
-        <div class="world">
-          <canvas id="world" role="img" data-i18n-attr="aria-label:home.worldLabel"></canvas>
-          <button class="world-chip" id="themeChip" type="button"></button>
+        <button class="status" id="status" type="button"><span class="dot" id="statusDot"></span><span id="statusText"></span></button>
+        <div class="label" id="bigLabel"></div>
+        <h1 class="big" id="big"></h1>
+        <p class="line" id="homeLine"></p>
+        <div class="stage">
+          <button class="hero" id="hero" type="button"><img id="heroImg" alt=""></button>
+          <span class="bubble" id="bubble1"></span>
+          <span class="bubble accent" id="bubble2"></span>
         </div>
-        <div class="today" id="today"></div>
-        <div class="home-actions">
-          <button class="btn" id="openDecor" type="button" data-i18n="home.decor"></button>
-          <button class="btn freeze" id="freeze" type="button"></button>
-        </div>
-        <p class="hint" id="homeHint"></p>
-      </section>
-
-      <!-- 기록 -->
-      <section class="screen" id="screen-records">
-        <h2 data-i18n="records.title"></h2>
-        <div class="card summary" id="summary"></div>
-        <div class="card">
-          <h3 data-i18n="records.week"></h3>
-          <div class="legend" id="legend"></div>
-          <div class="week" id="week" role="img"></div>
-        </div>
-        <div class="card">
-          <h3><span data-i18n="records.treasures"></span> <span class="muted" id="treasureCount"></span></h3>
-          <div class="shelf" id="shelf"></div>
-        </div>
-        <div class="card">
-          <h3 data-i18n="records.best"></h3>
-          <ol class="best" id="best"></ol>
+        <div class="home-bottom">
+          <button class="latest" id="latest" type="button">
+            <span class="latest-text"><small data-i18n="home.latest"></small><b id="latestName"></b></span>
+            <span id="dexCount"></span>
+          </button>
+          <div class="row2">
+            <button class="btn primary" id="practice" type="button" data-i18n="home.practice"></button>
+            <button class="btn" id="freeze" type="button"></button>
+          </div>
         </div>
       </section>
 
-      <!-- 일기 -->
-      <section class="screen" id="screen-diary">
-        <h2 data-i18n="diary.title"></h2>
-        <div class="chips" id="weather"></div>
-        <input class="note" id="note" maxlength="28" autocomplete="off" data-i18n-attr="placeholder:diary.placeholder">
-        <div class="paper"><canvas id="diary" width="1080" height="1920"></canvas></div>
-        <button class="btn primary wide" id="shareDiary" type="button" data-i18n="diary.share"></button>
+      <!-- 칭호 도감 -->
+      <section class="screen" id="screen-dex">
+        <div class="dex-head">
+          <h2 data-i18n="dex.title"></h2>
+          <span class="dex-count" id="dexBig"></span>
+        </div>
+        <p class="muted small" id="dexStats"></p>
+        <div class="filters" id="filters"></div>
+        <ul class="dex" id="dexList"></ul>
       </section>
     </main>
 
-    <nav class="tabbar">
-      <button class="tab active" data-screen="home" type="button">🏡<span data-i18n="tab.home"></span></button>
-      <button class="tab" data-screen="records" type="button">🏆<span data-i18n="tab.records"></span></button>
-      <button class="tab" data-screen="diary" type="button">📖<span data-i18n="tab.diary"></span></button>
+    <nav class="nav">
+      <button class="tab active" data-screen="home" type="button" data-i18n="tab.home"></button>
+      <button class="tab" data-screen="dex" type="button" data-i18n="tab.dex"></button>
+      <button class="tab" id="tabSettings" type="button" data-i18n="tab.settings"></button>
     </nav>
   </div>
 
-  <!-- 친구 시트 -->
-  <dialog class="sheet" id="friendSheet">
+  <!-- 터지는 순간 -->
+  <dialog class="burst" id="burst" tabindex="-1" aria-labelledby="burstTitle">
+    <div class="burst-word" id="burstWord"></div>
+    <img class="burst-img" id="burstImg" alt="">
+    <span class="cap c1" id="cap1"></span>
+    <span class="cap c2" id="cap2"></span>
+    <div class="unlock">
+      <span class="new" id="burstNew"></span>
+      <strong id="burstTitle"></strong>
+      <span class="meta" id="burstMeta"></span>
+    </div>
+    <div class="ticker"><b id="tickerTag"></b><span class="ticker-run"><i id="tickerText"></i></span></div>
+    <div class="burst-actions">
+      <button class="btn dark" id="shareCard" type="button" data-i18n="burst.share"></button>
+      <button class="btn" data-close type="button" data-i18n="burst.ok"></button>
+    </div>
+  </dialog>
+
+  <!-- 칭호 상세 -->
+  <dialog class="sheet small" id="titleSheet">
     <div class="sheet-body">
-      <div class="friend-head">
-        <img id="friendImg" alt="">
-        <div>
-          <h3 id="friendName"></h3>
-          <p class="muted" id="friendIntro"></p>
-          <div class="level"><span id="friendLevel"></span><div class="bar"><i id="friendBar"></i></div></div>
-        </div>
-      </div>
-      <div class="actions3">
-        <button class="btn" id="feed" type="button"></button>
-        <button class="btn" id="pat" type="button" data-i18n="friend.pat"></button>
-        <button class="btn" id="listen" type="button" data-i18n="friend.listen"></button>
-      </div>
-      <label class="row">
-        <span data-i18n="friend.on"></span>
-        <input type="checkbox" class="switch" id="friendOn">
-      </label>
-      <div class="row-label" data-i18n="friend.sound"></div>
-      <div class="chips" id="styles"></div>
-      <div class="diy">
-        <button class="btn" id="record" type="button" data-i18n="friend.record"></button>
-        <span class="muted" id="recordState"></span>
-      </div>
+      <span class="rarity" id="tsRarity"></span>
+      <h3 class="ts-name" id="tsName"></h3>
+      <p id="tsHow"></p>
+      <p class="muted small" id="tsMeta"></p>
+      <button class="btn dark wide" id="tsShare" type="button" data-i18n="burst.share"></button>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
-  <!-- 꾸미기 시트 -->
-  <dialog class="sheet" id="decorSheet">
-    <div class="sheet-body">
-      <h3 data-i18n="decor.title"></h3>
-      <div class="row-label" data-i18n="decor.bg"></div>
-      <div class="chips" id="themes"></div>
-      <div class="row-label"><span data-i18n="decor.props"></span> <span class="muted" data-i18n="decor.propsHint"></span></div>
-      <div class="props" id="props"></div>
-      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
-    </div>
-  </dialog>
-
-  <!-- 설정 시트 -->
+  <!-- 설정 -->
   <dialog class="sheet" id="settingsSheet">
     <div class="sheet-body">
       <h3 data-i18n="settings.title"></h3>
@@ -123,28 +104,35 @@
         <span data-i18n="settings.op"></span>
         <input type="checkbox" class="switch" id="opOn">
       </label>
-      <label class="row">
-        <span data-i18n="settings.ambient"></span>
-        <input type="checkbox" class="switch" id="ambientOn">
-      </label>
       <div class="row">
         <span data-i18n="settings.window"></span>
         <span class="time"><select id="winStart" aria-label="start"></select> ~ <select id="winEnd" aria-label="end"></select></span>
       </div>
       <div class="row-label" data-i18n="settings.freq"></div>
       <div class="chips" id="freqs"></div>
+      <label class="row" id="notifyRow">
+        <span><span data-i18n="settings.notify"></span><small class="muted block" data-i18n="settings.notifyHint"></small></span>
+        <input type="checkbox" class="switch" id="notifyOn">
+      </label>
       <div id="previewBox">
         <div class="row-label"><span data-i18n="settings.preview"></span> <span class="muted" data-i18n="settings.previewHint"></span></div>
         <div class="chips" id="previewModes"></div>
       </div>
-      <p class="muted" id="scheduleInfo"></p>
-      <button class="btn wide" id="fireNow" type="button" data-i18n="settings.fireNow"></button>
+      <p class="muted small" id="scheduleInfo"></p>
+
+      <div class="row-label" data-i18n="settings.friends"></div>
+      <div class="friends" id="friends"></div>
+      <div class="diy">
+        <button class="btn" id="record" type="button" data-i18n="friend.record"></button>
+        <span class="muted small" id="recordState"></span>
+      </div>
+
       <button class="btn primary wide" id="openSupport" type="button" data-i18n="settings.support"></button>
       <button class="btn wide" id="feedback" type="button" data-i18n="settings.feedback"></button>
       <button class="btn ghost wide danger" id="reset" type="button" data-i18n="settings.reset"></button>
       <p class="links">
-        <a href="https://graviton94.github.io/bgbb/privacy/" id="privacyLink" target="_blank" rel="noopener" data-i18n="settings.privacy"></a> ·
-        <a href="https://graviton94.github.io/bgbb/#credits" id="creditsLink" target="_blank" rel="noopener" data-i18n="settings.licenses"></a> ·
+        <a href="https://graviton94.github.io/bgbb/privacy/" target="_blank" rel="noopener" data-i18n="settings.privacy"></a> ·
+        <a href="https://graviton94.github.io/bgbb/#credits" target="_blank" rel="noopener" data-i18n="settings.licenses"></a> ·
         <span id="version"></span>
       </p>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
@@ -153,41 +141,31 @@
 
   <!-- 응원하기 -->
   <dialog class="sheet small" id="supportSheet">
-    <div class="sheet-body center">
+    <div class="sheet-body">
       <h3 data-i18n="support.title"></h3>
       <p data-i18n="support.body"></p>
       <div class="tips" id="tips"></div>
-      <p class="muted" data-i18n="support.note"></p>
+      <p class="muted small" data-i18n="support.note"></p>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
-  <!-- 보물 상세 -->
-  <dialog class="sheet small" id="treasureSheet">
-    <div class="sheet-body center">
-      <img id="treasureImg" class="treasure-img" alt="">
-      <h3 id="treasureName"></h3>
-      <p id="treasureLore"></p>
-      <p class="cond" id="treasureCond"></p>
-      <button class="btn wide" data-close type="button" data-i18n="common.ok"></button>
-    </div>
-  </dialog>
-
-  <!-- 첫 실행 안내 -->
+  <!-- 첫 실행 -->
   <dialog class="sheet small" id="welcome">
-    <div class="sheet-body center">
-      <h3 data-i18n="welcome.title"></h3>
-      <p data-i18n-html="welcome.body"></p>
-      <ul class="welcome-modes">
+    <div class="sheet-body">
+      <h3 class="welcome-title" data-i18n-html="welcome.title"></h3>
+      <ul class="welcome-list">
         <li data-i18n-html="welcome.loud"></li>
         <li data-i18n-html="welcome.soft"></li>
         <li data-i18n-html="welcome.hold"></li>
       </ul>
-      <p class="muted" data-i18n="welcome.freeze"></p>
+      <p data-i18n-html="welcome.titles"></p>
+      <p class="muted small" data-i18n="welcome.freeze"></p>
       <button class="btn primary wide" data-close type="button" data-i18n="welcome.start"></button>
     </div>
   </dialog>
 
+  <canvas id="card" width="1080" height="1920" hidden></canvas>
   <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>
 </body>
 </html>

@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Pocket Toot</string>
+    <string name="channel_news">Toot news</string>
+    <string name="channel_news_desc">One silent line after each surprise toot</string>
+    <string name="news_sub">Tap to see your title</string>
+    <string name="nick_hamster">Hammy</string>
+    <string name="nick_tit">Birdie</string>
+    <string name="nick_cat">Kitty</string>
+    <string-array name="news_loud">
+        <item>BREAKING: %1$s finally lets one go</item>
+        <item>That was %1$s. Not me.</item>
+        <item>%1$s: yep, that was loud. Check your title.</item>
+    </string-array>
+    <string-array name="news_soft">
+        <item>%1$s: just a little buzz. Nobody knows.</item>
+        <item>Bzzt… %1$s’s shy little one</item>
+    </string-array>
+    <string-array name="news_hold">
+        <item>%1$s: silent mode, so I held it. Not next time.</item>
+        <item>EXCLUSIVE: %1$s blocked by silent mode, holds it in</item>
+    </string-array>
 </resources>

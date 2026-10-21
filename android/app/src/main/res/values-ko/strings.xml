@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">방구뿡</string>
+    <string name="channel_news">뿡 속보</string>
+    <string name="channel_news_desc">터질 때마다 소리 없이 한 줄</string>
+    <string name="news_sub">눌러서 칭호 확인</string>
+    <string name="nick_hamster">햄찌</string>
+    <string name="nick_tit">오목이</string>
+    <string name="nick_cat">냥이</string>
+    <string-array name="news_loud">
+        <item>[속보] %1$s, 끝내 참지 못해</item>
+        <item>방금 그거 %1$s임. 나 아님.</item>
+        <item>%1$s: ㅇㅇ 크게 냄. 칭호 확인 ㄱ</item>
+    </string-array>
+    <string-array name="news_soft">
+        <item>%1$s: 진동으로 살짝 냄. 아무도 모름.</item>
+        <item>부르르… %1$s의 소심한 한 방</item>
+    </string-array>
+    <string-array name="news_hold">
+        <item>%1$s: 무음이라 참음. 다음엔 안 참음.</item>
+        <item>[단독] %1$s, 무음 모드에 막혀 꾹 참아</item>
+    </string-array>
 </resources>

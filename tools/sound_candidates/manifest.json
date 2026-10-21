@@ -159,42 +159,6 @@
    "file": "wings/05.ogg"
   }
  ],
- "amb_day": [
-  {
-   "source": "freesound",
-   "title": "Bayerwald Wiesn - Bavaria Meadow",
-   "url": "https://cdn.freesound.org/previews/857/857809_18387771-hq.mp3",
-   "page": "https://freesound.org/s/857809/",
-   "artist": "greysound",
-   "license": "CC0",
-   "duration": 31.7367,
-   "file": "amb_day/02.ogg"
-  }
- ],
- "amb_night": [
-  {
-   "source": "freesound",
-   "title": "Sound of crickets at night",
-   "url": "https://cdn.freesound.org/previews/424/424871_8521755-hq.mp3",
-   "page": "https://freesound.org/s/424871/",
-   "artist": "PostProdDog",
-   "license": "CC0",
-   "duration": 11.5635,
-   "file": "amb_night/05.ogg"
-  }
- ],
- "amb_room": [
-  {
-   "source": "freesound",
-   "title": "ticking of the clock 01.wav",
-   "url": "https://cdn.freesound.org/previews/412/412751_4451798-hq.mp3",
-   "page": "https://freesound.org/s/412751/",
-   "artist": "giddster",
-   "license": "CC0",
-   "duration": 7.91179,
-   "file": "amb_room/03.ogg"
-  }
- ],
  "ui_pop": [
   {
    "source": "freesound",
@@ -205,18 +169,6 @@
    "license": "CC0",
    "duration": 0.21966,
    "file": "ui_pop/02.ogg"
-  }
- ],
- "ui_coin": [
-  {
-   "source": "freesound",
-   "title": "CoinFlic5.mp3",
-   "url": "https://cdn.freesound.org/previews/334/334303_5477651-hq.mp3",
-   "page": "https://freesound.org/s/334303/",
-   "artist": "HoseNoseSounds",
-   "license": "CC0",
-   "duration": 0.829688,
-   "file": "ui_coin/04.ogg"
   }
  ],
  "fart_short": [
@@ -367,18 +319,6 @@
    "license": "CC0",
    "duration": 0.621646,
    "file": "ui_levelup/02.ogg"
-  }
- ],
- "ui_buy": [
-  {
-   "source": "freesound",
-   "title": "Cash Register Purchase",
-   "url": "https://cdn.freesound.org/previews/209/209578_2558531-hq.mp3",
-   "page": "https://freesound.org/s/209578/",
-   "artist": "13GPanska_Jirova_Tereza",
-   "license": "CC0",
-   "duration": 2.75449,
-   "file": "ui_buy/02.ogg"
   }
  ],
  "ui_freeze": [

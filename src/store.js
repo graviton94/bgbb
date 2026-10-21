@@ -1,26 +1,24 @@
 // 앱 상태 하나 + 저장 + 변경 알림. 화면은 subscribe 해서 다시 그린다.
-import { CHARACTERS, MODES, PROPS, TREASURES, DAILY_TAP_ACORNS, LEVEL_STEP, LEVEL_UP_BONUS } from './data.js';
+import { CHARACTERS, MODES } from './data.js';
+import { TITLES, pickTitle, contextOf } from './titles.js';
 
-const KEY = 'bgbb.v1';
+const KEY = 'bgbb.v2';
 const DIY_KEY = 'bgbb.v1.diy';   // 녹음은 커서 따로 둔다 (상태 저장 때마다 다시 쓰지 않게)
+const RECENT = 30;
 
 function initial() {
   return {
     onboarded: false,
-    friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, style: 'main', bond: 0 }])),
-    theme: 'auto',
-    placed: PROPS.filter(p => !p.price).map(p => p.id),
-    owned: [],
+    friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, style: 'main' }])),
+    hero: 'hamster',      // 홈에 서 있는 친구
     schedule: { on: true, start: 9, end: 18, freq: 'normal' },
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
-    acorns: 0,
-    days: {},             // 'YYYY-MM-DD' → { loud, soft, hold, tap }
-    fed: false,
-    diary: { weather: 0, note: '', saves: 0 },   // weather 는 WEATHERS 의 번호
-    seenTreasures: [],
+    notify: true,         // 터진 뒤 알림 문구 (앱)
+    days: {},             // 'YYYY-MM-DD' → { loud, soft, hold, chars: [], last }
+    titles: {},           // 칭호 id → { n, first, last: { t, char, mode } }
+    recent: [],           // 최근 터진 기록 [{ t, char, mode, title }]
     tips: [],             // 응원한 상품 ID (Google Play 가 확인해 준 것만)
-    ambient: false,       // 아지트 배경 소리 (회의 중에 앱을 열 수도 있으니 기본은 끔)
     plan: null,           // 웹 미리보기용 작전 일정 { day, times }
     sentConfig: ''        // 마지막으로 적용한 작전 설정
   };
@@ -40,7 +38,7 @@ function load() {
       const b = base[k];
       base[k] = b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...saved[k] } : saved[k];
     }
-    for (const c of CHARACTERS) base.friends[c.id] = { on: true, style: 'main', bond: 0, ...base.friends[c.id] };
+    for (const c of CHARACTERS) base.friends[c.id] = { on: true, style: 'main', ...base.friends[c.id] };
   } catch (e) {
     console.warn('저장된 상태를 읽지 못했어요', e);
   }
@@ -78,6 +76,7 @@ document.addEventListener('visibilitychange', () => document.hidden && flush());
 export function resetAll() {
   localStorage.removeItem(KEY);
   localStorage.removeItem(DIY_KEY);
+  localStorage.removeItem('bgbb.v1');
 }
 
 export const getDiy = () => diy;
@@ -92,70 +91,52 @@ export function dayKey(t = Date.now()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-export function day(key = dayKey()) {
-  return state.days[key] || { loud: 0, soft: 0, hold: 0, tap: 0 };
-}
+const emptyDay = () => ({ loud: 0, soft: 0, hold: 0, chars: [], last: null });
+export const day = (key = dayKey()) => state.days[key] || emptyDay();
+const count = d => d.loud + d.soft + d.hold;
 
-function dayMut(key) {
-  return (state.days[key] ||= { loud: 0, soft: 0, hold: 0, tap: 0 });
-}
-
-/** 작전 1회 기록. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로. */
-export function recordOperation({ t, mode }) {
-  const m = MODES[mode] ? mode : 'hold';
-  dayMut(dayKey(t))[m]++;
-  state.acorns += MODES[m].reward;
-  return m;
-}
-
-/** 쓰다듬기 등으로 얻는 도토리 (하루 상한). 실제로 준 개수를 돌려준다. */
-export function grantTapAcorns(n) {
-  const d = dayMut(dayKey());
-  const give = Math.max(0, Math.min(n, DAILY_TAP_ACORNS - d.tap));
-  d.tap += give;
-  state.acorns += give;
-  return give;
-}
-
-export const levelOf = bond => Math.min(10, 1 + Math.floor(bond / LEVEL_STEP));
-
-/** 교감 1회. 레벨이 오르면 보너스 도토리. 새 레벨(올랐을 때만)을 돌려준다. */
-export function bond(charId) {
-  const f = state.friends[charId];
-  const before = levelOf(f.bond);
-  f.bond++;
-  const after = levelOf(f.bond);
-  if (after > before) {
-    state.acorns += LEVEL_UP_BONUS;
-    return after;
-  }
-  return 0;
-}
-
-export function streak() {
+export function streak(from = Date.now()) {
   let n = 0;
-  const d = new Date();
-  const has = k => { const s = state.days[k]; return s && s.loud + s.soft + s.hold > 0; };
+  const d = new Date(from);
+  const has = k => state.days[k] && count(state.days[k]) > 0;
   if (!has(dayKey(d))) d.setDate(d.getDate() - 1);   // 오늘 아직 없으면 어제부터 센다
   while (has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
   return n;
 }
 
-export function stats() {
-  const total = { loud: 0, soft: 0, hold: 0, all: 0 };
-  let bestHoldDay = 0;
-  for (const d of Object.values(state.days)) {
-    total.loud += d.loud; total.soft += d.soft; total.hold += d.hold;
-    bestHoldDay = Math.max(bestHoldDay, d.hold);
-  }
-  total.all = total.loud + total.soft + total.hold;
-  return { total, bestHoldDay, fed: state.fed, owned: state.owned, diarySaves: state.diary.saves };
+export function totals() {
+  const s = { loud: 0, soft: 0, hold: 0, all: 0 };
+  for (const d of Object.values(state.days)) { s.loud += d.loud; s.soft += d.soft; s.hold += d.hold; }
+  s.all = s.loud + s.soft + s.hold;
+  return s;
 }
 
-/** 새로 열린 보물 목록 (한 번만 알려준다) */
-export function takeNewTreasures() {
-  const s = stats();
-  const fresh = TREASURES.filter(t => t.test(s) && !state.seenTreasures.includes(t.id));
-  fresh.forEach(t => state.seenTreasures.push(t.id));
-  return fresh;
+export const ownedCount = () => TITLES.filter(x => state.titles[x.id]).length;
+
+/**
+ * 터진 것 1회 기록 + 칭호. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로.
+ * 돌려주는 것: { t, char, mode, title(id), isNew }
+ */
+export function recordOperation({ t, char, mode }) {
+  const m = MODES[mode] ? mode : 'hold';
+  const who = CHARACTERS.some(c => c.id === char) ? char : 'hamster';
+  const d = (state.days[dayKey(t)] ||= emptyDay());
+  d.chars ||= [];
+  const prev = d.last || null;
+  d[m]++;
+  if (!d.chars.includes(who)) d.chars.push(who);
+  d.last = m;
+  const ev = { t, char: who, mode: m };
+  const c = contextOf(ev, {
+    today: { loud: d.loud, soft: d.soft, hold: d.hold }, prev, charsToday: d.chars.length,
+    streak: streak(t), total: totals().all, nth: count(d)
+  });
+  const title = pickTitle(c, state.titles);
+  const isNew = !state.titles[title.id];
+  const own = (state.titles[title.id] ||= { n: 0, first: t });
+  own.n++;
+  own.last = ev;
+  state.recent.unshift({ ...ev, title: title.id });
+  state.recent.length = Math.min(state.recent.length, RECENT);
+  return { ...ev, title: title.id, isNew };
 }

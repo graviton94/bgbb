@@ -1,7 +1,7 @@
 // 효과음: WAV 를 처음 한 번만 디코딩해 두고 버퍼를 재사용한다.
 import { CHARACTERS } from './data.js';
 
-const TAKES = 3;        // 캐릭터 소리마다 조금씩 다른 3가지 (tools/bake_sounds.py)
+const TAKES = 3;        // 캐릭터 소리마다 서로 다른 녹음 3개 (tools/build_sounds.py)
 let ctx = null;
 let master = null;
 const buffers = new Map();
@@ -24,12 +24,11 @@ const takeName = (base, n) => (n === 1 ? base : `${base}_${n}`);
 // 자동재생 정책: 첫 터치 때 오디오를 깨우고 효과음을 미리 받아 둔다
 addEventListener('pointerdown', () => {
   if (!context()) return;
-  const names = ['ui_pop', 'ui_coin', 'ui_freeze', 'ui_levelup', 'ui_treasure', 'ui_buy'];
+  const names = ['ui_pop', 'ui_freeze', 'ui_levelup', 'ui_treasure'];
   CHARACTERS.forEach(c => ['main', 'soft', 'loud'].forEach(s => {
     for (let n = 1; n <= TAKES; n++) names.push(takeName(`${c.id}_${s}`, n));
   }));
   names.forEach(n => load(fileUrl(n)));
-  if (ambientWanted) startAmbient(ambientWanted);
 }, { once: true, capture: true });
 
 function load(url) {
@@ -74,45 +73,4 @@ export function playFriend(charId, style, diyUrl, volume = 0.85) {
 /** 녹음이 바뀌면 이전 디코딩 결과를 버린다 */
 export function forget(url) {
   if (url) buffers.delete(url);
-}
-
-// ---------------------------------------------------------- 아지트 배경 소리 (켜 두었을 때만)
-let ambientWanted = null;   // 'amb_day' | 'amb_night' | 'amb_room' | null
-let ambient = null;         // { name, src, gain }
-
-/** name 이 null 이면 서서히 끈다. 같은 이름이면 그대로 둔다. */
-export function setAmbient(name) {
-  ambientWanted = name;
-  if (!ctx) return;   // 첫 터치 전에는 소리를 낼 수 없다 → pointerdown 때 시작
-  if (ambient?.name === name) return;
-  stopAmbient();
-  if (name) startAmbient(name);
-}
-
-function startAmbient(name) {
-  const c = context();
-  if (!c) return;
-  load(fileUrl(name)).then(buf => {
-    if (ambientWanted !== name || ambient?.name === name) return;
-    const src = c.createBufferSource();
-    const gain = c.createGain();
-    src.buffer = buf;
-    src.loop = true;
-    gain.gain.setValueAtTime(0, c.currentTime);
-    gain.gain.linearRampToValueAtTime(0.5, c.currentTime + 1.5);
-    src.connect(gain).connect(master);
-    src.start();
-    ambient = { name, src, gain };
-  }).catch(() => {});
-}
-
-function stopAmbient() {
-  if (!ambient) return;
-  const { src, gain } = ambient;
-  ambient = null;
-  const now = ctx.currentTime;
-  gain.gain.cancelScheduledValues(now);
-  gain.gain.setValueAtTime(gain.gain.value, now);
-  gain.gain.linearRampToValueAtTime(0, now + 0.8);
-  src.stop(now + 0.9);
 }

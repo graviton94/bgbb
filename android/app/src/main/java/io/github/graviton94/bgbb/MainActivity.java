@@ -49,8 +49,9 @@ public class MainActivity extends Activity {
      */
     private static final String HOST = "appassets.androidplatform.net";
     private static final String CONTACT = "ruahn49@gmail.com";
-    private static final int PAPER = 0xFFFFF6E5;
+    private static final int PAPER = 0xFFF2F2F0;
     private static final int REQ_MIC = 1;
+    private static final int REQ_NOTIFY = 2;
     private static final String RESUME_JS = "window.bgbbOnNativeResume && window.bgbbOnNativeResume()";
     private static final Map<String, String> MIME = Map.of(
             "html", "text/html", "css", "text/css", "js", "text/javascript",
@@ -139,6 +140,10 @@ public class MainActivity extends Activity {
 
     @Override
     public void onRequestPermissionsResult(int code, String[] permissions, int[] results) {
+        if (code == REQ_NOTIFY) {
+            web.evaluateJavascript(RESUME_JS, null);
+            return;
+        }
         if (code != REQ_MIC || pendingMic == null) return;
         if (results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED) {
             pendingMic.grant(pendingMic.getResources());
@@ -233,6 +238,29 @@ public class MainActivity extends Activity {
             return versionName();
         }
 
+        /** 터진 뒤 알림 문구 켜기/끄기 */
+        @JavascriptInterface
+        public void setNotify(boolean on) {
+            PrankNotifier.setEnabled(getApplicationContext(), on);
+        }
+
+        @JavascriptInterface
+        public boolean notificationsAllowed() {
+            return PrankNotifier.allowed(getApplicationContext());
+        }
+
+        /** Android 13+ 알림 권한을 묻는다. 물어볼 수 없으면(이미 거절 등) false → 폰 설정 안내. */
+        @JavascriptInterface
+        public boolean requestNotifications() {
+            if (PrankNotifier.allowed(getApplicationContext())) return true;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false;
+            if (getSharedPreferences("bgbb_notify", MODE_PRIVATE).getBoolean("asked", false)
+                    && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) return false;
+            getSharedPreferences("bgbb_notify", MODE_PRIVATE).edit().putBoolean("asked", true).apply();
+            runOnUiThread(() -> requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFY));
+            return true;
+        }
+
         /** 설정의 '지금 바로 1회': 진짜 폰 상태로 한 번 실행하고 결과를 JS 에 알린다. */
         @JavascriptInterface
         public void fireNow() {
@@ -301,7 +329,7 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> support.buy(productId));
         }
 
-        /** 그림일기 PNG 를 갤러리(Pictures/방구뿡)에 저장하고 공유창을 띄운다. Android 10+ (권한 불필요). */
+        /** 속보 카드 PNG 를 갤러리(Pictures/방구뿡)에 저장하고 공유창을 띄운다. Android 10+ (권한 불필요). */
         @JavascriptInterface
         public boolean saveAndShareImage(String base64, String fileName) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false;
