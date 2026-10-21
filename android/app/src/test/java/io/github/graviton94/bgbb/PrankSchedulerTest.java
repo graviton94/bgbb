@@ -43,16 +43,32 @@ public class PrankSchedulerTest {
     }
 
     @Test
-    public void planStaysInsideWindowWithRightCount() throws Exception {
-        long start = at("2026-10-20T09:00");
-        long end = at("2026-10-20T18:00");
+    public void planStaysInsideWindowWithRightCountAndGap() throws Exception {
+        long start = at("2026-10-20T06:00");
+        long end = at("2026-10-21T00:00");
         for (int i = 0; i < 200; i++) {
-            List<Long> times = PrankScheduler.planDay(cfg(9, 18, "thrill"), start, 0);
-            assertTrue(times.size() >= 6 && times.size() <= 9);
-            for (long t : times) assertTrue(t > start && t < end);
-            List<Long> quiet = PrankScheduler.planDay(cfg(9, 18, "quiet"), start, 0);
-            assertTrue(quiet.size() >= 1 && quiet.size() <= 2);
+            List<Long> times = PrankScheduler.planDay(cfg(6, 0, "thrill"), start, 0);
+            assertTrue(times.size() >= 8 && times.size() <= 10);
+            for (int k = 0; k < times.size(); k++) {
+                assertTrue(times.get(k) >= start && times.get(k) < end);
+                if (k > 0) assertTrue(times.get(k) - times.get(k - 1) >= PrankScheduler.GAP);
+            }
+            List<Long> quiet = PrankScheduler.planDay(cfg(6, 0, "quiet"), start, 0);
+            assertTrue(quiet.size() >= 3 && quiet.size() <= 4);
         }
-        assertTrue(PrankScheduler.planDay(cfg(9, 18, "normal"), start, end).isEmpty());
+        assertTrue(PrankScheduler.planDay(cfg(6, 0, "normal"), start, end).isEmpty());
+        // 3시간짜리 시간대엔 1시간 간격으로 최대 4번
+        assertTrue(PrankScheduler.planDay(cfg(9, 12, "thrill"), at("2026-10-20T09:00"), 0).size() <= 4);
+    }
+
+    @Test
+    public void restHoursAreNeverPlannedAndBlockFiring() throws Exception {
+        JSONObject c = cfg(6, 0, "thrill").put("rest", new JSONObject().put("on", true).put("from", 12 * 60 + 30).put("to", 14 * 60));
+        for (int i = 0; i < 200; i++) {
+            for (long t : PrankScheduler.planDay(c, at("2026-10-20T06:00"), 0)) assertTrue(!PrankScheduler.inRest(c, t));
+        }
+        assertTrue(PrankScheduler.inRest(c, at("2026-10-20T12:30")));
+        assertTrue(PrankScheduler.inRest(c, at("2026-10-20T13:59")));
+        assertTrue(!PrankScheduler.inRest(c, at("2026-10-20T14:00")));
     }
 }
