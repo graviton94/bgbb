@@ -1,6 +1,7 @@
 // 짤: 터질 때마다 그 상황으로 조립하는 정사각형 한 칸.
 //  - 조립형: 배경 · 캐릭터 자리와 크기 · 문구(상황 + 한 방) · 문구 자리 · 소품을 매번 랜덤으로
 //  - 캐릭터에 붙는 것(선글라스 = 얼굴, 방구 구름 = 엉덩이 옆, 머니건 = 손)은 캐릭터 상자 기준 좌표
+//  - 레어 이상 칭호는 유니크 짤을 실사 사진으로 (assets/faces_real, 아래가 잘린 사진이라 바닥에 세운다)
 //  - 유니크 짤 (엥? · 스티커+안경 · 참은 나 vs 뀐 나 · 들어갈 때 vs 나올 때 · 범인은 이 안에 · 현자 타임 · 상자 · 잭팟 돈)은 미리 만든 틀
 // 결과는 spec (칸 대비 % 좌표 목록) 이라 화면(DOM)과 자랑 카드(canvas)가 같은 짤을 그린다.
 import { face } from './data.js';
@@ -91,7 +92,9 @@ const DARK_BG = ['#1F2747', '#2B2140'];
 
 // ---------------------------------------------------------------- 캐릭터와 붙는 것
 const rect = (x, y, w, h, color) => ({ k: 'rect', x, y, w, h, color });
-const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0 } = {}) => ({ k: 'char', id, expr, x, y, w, r, shades, sticker });
+const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0, real = false } = {}) => ({ k: 'char', id, expr, x, y, w, r, shades, sticker, real });
+/** 실사 사진은 아래가 잘린 사진이라 바닥(floor)에 붙여 세운다. 원화는 원래 자리 y 그대로 */
+const stand = (real, y, w, floor = 100) => (real ? floor - w : y);
 /** 엉덩이 옆에서 나오는 방구 구름 (side = 1 오른쪽, -1 왼쪽) */
 function fartFor(c, side) {
   const w = c.w * 0.62;
@@ -102,62 +105,63 @@ const gunFor = c => ({ k: 'img', src: deco('money_gun'), x: c.x - c.w * 0.2, y: 
 
 // ---------------------------------------------------------------- 유니크 짤 (미리 만든 틀)
 export const UNIQUE = {
-  eng: ({ id }) => ({
+  eng: ({ id, real }) => ({
     bg: '#FFFFFF',
-    items: [charItem(id, 'eng', -12, -4, 124), textItem(pick(L(W.eng)), 26, 4, 68, 'thin', { align: 'right' })],
+    items: [charItem(id, 'eng', -12, -4, 124, { real }), textItem(pick(L(W.eng)), 26, 4, 68, 'thin', { align: 'right' })],
     fx: { x: 0.5, y: 0.6 }
   }),
-  deal: ({ id }) => ({
+  deal: ({ id, real }) => ({
     bg: '#F2F2F2',
-    items: [charItem(id, 'shameless', 18, 27, 70, { shades: true, sticker: true, r: -4 }), textItem(pick(L(W.deal)), 5, 4, 80, 'display')],
+    items: [charItem(id, 'shameless', real ? 14 : 18, stand(real, 27, real ? 72 : 70), real ? 72 : 70, { shades: true, sticker: !real, r: real ? 0 : -4, real }),
+      textItem(pick(L(W.deal)), 5, 4, 80, 'display')],
     fx: { x: 0.5, y: 0.6 }
   }),
   // 참은 나 vs 뀐 나: 반반
-  versus: ({ id }) => {
+  versus: ({ id, real }) => {
     const [a, b] = pick(L(W.versus));
     return {
       bg: '#FFFFFF',
       items: [rect(50, 0, 50, 100, '#FFE1EC'), rect(49.6, 0, 0.8, 100, '#111111'),
         textItem(a, 2, 6, 46, 'display', { align: 'center' }), textItem(b, 52, 6, 46, 'display', { align: 'center' }),
-        charItem(id, 'hold', 2, 34, 46), charItem(id, 'burst', 52, 34, 46)],
+        charItem(id, 'hold', 2, stand(real, 34, 46), 46, { real }), charItem(id, 'burst', 52, stand(real, 34, 46), 46, { real })],
       fx: { x: 0.75, y: 0.6 }
     };
   },
   // 들어갈 때 vs 나올 때: 위아래
-  expect: ({ id }) => {
+  expect: ({ id, real }) => {
     const [a, b] = pick(L(W.expect));
     return {
       bg: '#DCE9F5',
       items: [rect(0, 50, 100, 50, '#FFF3B0'), rect(0, 49.6, 100, 0.8, '#111111'),
         textItem(a, 5, 16, 52, 'display'), textItem(b, 5, 66, 52, 'display'),
-        charItem(id, 'blank', 58, 4, 42), charItem(id, 'shameless', 58, 54, 42, { shades: true })],
+        charItem(id, 'blank', 58, stand(real, 4, 42, 49.6), 42, { real }), charItem(id, 'shameless', 58, stand(real, 54, 42), 42, { shades: true, real })],
       fx: { x: 0.8, y: 0.8 }
     };
   },
   // 범인은 이 안에 있다: 셋이 키 재는 벽 앞에. 진짜 범인만 휘파람
-  lineup: ({ id }) => ({
+  lineup: ({ id, real }) => ({
     bg: '#E9E9E6',
     items: [rect(0, 34, 100, 0.5, '#9A9A95'), rect(0, 50, 100, 0.5, '#9A9A95'), rect(0, 66, 100, 0.5, '#9A9A95'), rect(0, 82, 100, 0.5, '#9A9A95'),
       textItem(pick(L(W.lineup)), 3, 5, 94, 'display', { align: 'center' }),
-      ...['hamster', 'tit', 'cat'].map((c, i) => charItem(c, c === id ? 'whistle' : 'blank', i * 33 - 2, 36, 37)),
-      ...['1', '2', '3'].map((n, i) => textItem(n, i * 33 + 13, 92, 8, 'small', { color: '#555555' }))],
+      ...['hamster', 'tit', 'cat'].map((c, i) => charItem(c, c === id ? 'whistle' : 'blank', i * 33 - 2, stand(real, 36, 37), 37, { real })),
+      ...['1', '2', '3'].map((n, i) => textItem(n, i * 33 + 13, real ? 54 : 92, 8, 'small', { color: '#555555' }))],
     fx: { x: 0.5, y: 0.7 }
   }),
   // 현자 타임: 머리 뒤에 해
-  halo: ({ id }) => ({
+  halo: ({ id, real }) => ({
     bg: '#FFF3B0',
-    items: [{ k: 'img', src: deco('sun'), x: 14, y: 2, w: 72 }, charItem(id, 'blank', 19, 30, 62), textItem(pick(L(W.halo)), 1, 84, 98, 'impact')],
+    items: [{ k: 'img', src: deco('sun'), x: 14, y: 2, w: 72 }, charItem(id, 'blank', 19, stand(real, 30, 62), 62, { real }), textItem(pick(L(W.halo)), 1, 84, 98, 'impact')],
     fx: { x: 0.5, y: 0.7 }
   }),
   // 상자 속에서 뿡
-  box: ({ id }) => ({
+  box: ({ id, real }) => ({
     bg: '#CFEFFF',
-    items: [charItem(id, 'whistle', 24, 22, 54), { k: 'img', src: deco('box'), x: 8, y: 46, w: 84 },
+    items: [charItem(id, 'whistle', 24, 22, 54, { real }), { k: 'img', src: deco('box'), x: 8, y: 46, w: 84 },
       { k: 'img', src: deco('fart_bubble'), x: 66, y: 44, w: 34 }, textItem(pick(L(W.box)), 5, 5, 60, 'display')],
     fx: { x: 0.8, y: 0.55 }
   }),
-  money: ({ id }) => {
-    const c = charItem(id, 'thumbs_up', 20, 26, 66, { shades: true });
+  money: ({ id, real }) => {
+    const c = charItem(id, 'thumbs_up', 20, stand(real, 26, 66), 66, { shades: true, real });
     return {
       bg: '#E8FFD9',
       items: [{ k: 'img', src: deco('money_rain'), x: 0, y: 6, w: 100 }, c, gunFor(c), textItem(pick(L(W.money)), 0, 3, 100, 'impact')],
@@ -237,10 +241,16 @@ function assemble({ id, mode, t, title, rarity, practice }) {
 
 /**
  * 짤 하나. ctx = { id, mode, t, title(칭호 이름), rarity, practice }
- * 잭팟 = 돈 짤, 그 밖엔 35% 유니크 짤 · 65% 조립형.
+ * 잭팟 = 돈 짤, 레어 · 레전드 = 유니크 짤 (둘 다 실사 사진 특전), 그 밖엔 35% 유니크 짤 · 65% 조립형.
  */
+export const REAL_RARITIES = ['rare', 'legend', 'jackpot'];
 export function composeMeme(ctx) {
-  if (ctx.rarity === 'jackpot') return { name: 'money', ...UNIQUE.money(ctx) };
+  const real = REAL_RARITIES.includes(ctx.rarity);
+  if (ctx.rarity === 'jackpot') return { name: 'money', real, ...UNIQUE.money({ ...ctx, real }) };
+  if (real) {
+    const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
+    return { name, real, ...UNIQUE[name]({ ...ctx, real }) };
+  }
   if (chance(0.35)) {
     const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
     return { name, ...UNIQUE[name](ctx) };
@@ -259,7 +269,7 @@ export function renderMeme(el, spec) {
     if (it.k === 'char') {
       const shades = it.shades
         ? `<img class="m-shades" src="${SHADES_URL}" style="left:${SHADES_BOX.x * 100}%;top:${SHADES_BOX.y * 100}%;width:${SHADES_BOX.w * 100}%" alt="">` : '';
-      return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}"><img src="${face(it.id, it.expr)}" alt="">${shades}</div>`;
+      return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
     }
     if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color}"></div>`;
     if (it.k === 'img') return `<img class="m-el ${it.cls || ''}" src="${it.src}" style="${pos(it)}${turn(it)}" alt="">`;
@@ -294,7 +304,7 @@ const FONT = {
 /** spec 을 (x, y) 에서 한 변 S 픽셀 정사각형으로 그린다 (화면과 같은 짤) */
 export async function drawMeme(g, spec, x, y, S) {
   const px = v => (v / 100) * S;
-  const srcs = spec.items.flatMap(it => (it.k === 'char' ? [face(it.id, it.expr), ...(it.shades ? [SHADES_URL] : [])] : it.k === 'img' ? [it.src] : []));
+  const srcs = spec.items.flatMap(it => (it.k === 'char' ? [face(it.id, it.expr, it.real), ...(it.shades ? [SHADES_URL] : [])] : it.k === 'img' ? [it.src] : []));
   const loaded = new Map(await Promise.all(srcs.map(async s => [s, await loadImage(s)])));
   await document.fonts?.load?.('40px "Black Han Sans"');
   g.save();
@@ -310,7 +320,7 @@ export async function drawMeme(g, spec, x, y, S) {
       g.fillStyle = it.color;
       g.fillRect(x + px(it.x), y + px(it.y), w, px(it.h));
     } else if (it.k === 'char' || it.k === 'img') {
-      const im = loaded.get(it.k === 'char' ? face(it.id, it.expr) : it.src);
+      const im = loaded.get(it.k === 'char' ? face(it.id, it.expr, it.real) : it.src);
       if (im) {
         const h = w * im.naturalHeight / im.naturalWidth;
         g.translate(x + px(it.x) + w / 2, y + px(it.y) + h / 2);

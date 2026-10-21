@@ -49,7 +49,8 @@ export const charById = id => CHARACTERS.find(c => c.id === id);
 
 // 원화 표정 7종 (tools/prepare_faces.py). 셋 다 같은 눈 자리라 선글라스를 그대로 겹친다.
 export const EXPRESSIONS = ['blank', 'eng', 'shameless', 'hold', 'burst', 'whistle', 'thumbs_up'];
-export const face = (charId, expr = 'blank') => `assets/faces/${charId}_${expr}.webp`;
+// real = 실사 사진 (레어 이상 칭호 특전 짤 전용, 눈 좌표는 원화와 같다)
+export const face = (charId, expr = 'blank', real = false) => `assets/${real ? 'faces_real' : 'faces'}/${charId}_${expr}.webp`;
 
 // 터지는 순간 표정: 냄 = 터짐, 진동 = 모른 척 휘파람, 참음 = 뻔뻔 (+ 선글라스), 잭팟 = 엄지척 (+ 선글라스), 연습 = 엥?
 export const BURST_FACE = { loud: 'burst', soft: 'whistle', hold: 'shameless', jackpot: 'thumbs_up', practice: 'eng' };
