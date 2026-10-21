@@ -27,20 +27,22 @@ NEEDS = {
     "fart_short":  (["fart", "fart short"], (0.3, 2.5), ["fart", "flatulence"]),
     "fart_squeak": (["squeaky fart", "small fart"], (0.2, 2.5), ["fart"]),
     "fart_long":   (["long fart", "big fart"], (1.2, 6), ["fart"]),
+    # 방구 종류 늘리기 (v2)
+    "fart_tiny":   (["tiny fart", "small fart pop", "little fart"], (0.1, 1.2), ["fart"]),
+    "fart_rapid":  (["fart rapid", "multiple farts", "fart series", "machine gun fart"], (1, 6), ["fart"]),
+    "fart_squeal": (["high pitched fart", "squeaky long fart", "whistling fart"], (0.5, 4), ["fart"]),
+    "fart_deep":   (["deep fart", "bass fart", "rumbling fart"], (0.5, 4), ["fart"]),
+    "fart_wet":    (["wet fart", "sloppy fart"], (0.3, 3), ["fart"]),
+    "fart_bath":   (["bath fart", "fart bubbles water", "underwater fart"], (0.5, 5), ["fart"]),
+    "fart_whoopee": (["whoopee cushion"], (0.5, 4), ["whoopee cushion"]),
     "cat_meow":    (["cat meow", "meow"], (0.3, 3), ["cat meow"]),
     "cat_purr":    (["cat purr", "purring"], (2, 20), ["cat purring"]),
     "cat_hiss":    (["cat hiss", "cat hissing"], (0.3, 3), ["cat hissing"]),
     "bird_tweet":  (["small bird chirp", "tit bird call", "chickadee", "bird tweet"], (0.3, 4), ["Yellowstone sound library chickadee", "chickadee"]),
     "bird_alarm":  (["bird alarm call", "bird squawk", "bird distress call"], (0.3, 4), ["bird alarm call"]),
     "wings":       (["bird wings flap", "wing flap", "pigeon flutter"], (0.3, 3), ["wings flapping"]),
-    "amb_day":     (["birds ambience meadow", "birdsong park ambience", "countryside birds"], (10, 90), ["birdsong"]),
-    "amb_night":   (["crickets night", "night crickets ambience"], (10, 90), ["crickets", "cricket chirping"]),
-    "amb_room":    (["clock ticking", "wall clock tick"], (5, 60), ["clock ticking"]),
     "ui_pop":      (["pop", "bubble pop", "mouth pop"], (0.05, 0.8), ["pop"]),
-    "ui_coin":     (["coin", "coin pickup", "coins drop"], (0.1, 2), ["coin dropped"]),
-    "ui_chime":    (["chime", "success chime", "glockenspiel"], (0.3, 3), ["chime", "bell"]),
     "ui_levelup":  (["level up", "achievement", "positive jingle"], (0.4, 3), ["fanfare"]),
-    "ui_buy":      (["cash register", "purchase", "cha ching"], (0.3, 3), ["cash register"]),
     "ui_freeze":   (["ice freeze", "freeze magic", "ice crack"], (0.2, 3), ["ice"]),
 }
 
@@ -155,12 +157,16 @@ def to_preview(src_url, dst):
 
 
 def main():
-    only = set(sys.argv[1:])
+    # 받을 용도: 명령줄 · FETCH_ONLY 환경변수 · 없으면 아직 폴더가 없는 용도만 (이미 고른 후보를 덮어쓰지 않게)
+    only = set(sys.argv[1:]) | set(filter(None, os.environ.get("FETCH_ONLY", "").replace(",", " ").split()))
+    if not only:
+        only = {n for n in NEEDS if not os.path.isdir(os.path.join(OUT, n))}
+    print("fetch:", sorted(only))
     os.makedirs(OUT, exist_ok=True)
     path = os.path.join(OUT, "manifest.json")
     manifest = json.load(open(path)) if os.path.exists(path) else {}
     for need, (fs_queries, dur, cm_queries) in NEEDS.items():
-        if only and need not in only:
+        if need not in only:
             continue
         chosen, seen = [], set()
         for q in fs_queries:
