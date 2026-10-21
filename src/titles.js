@@ -1,10 +1,11 @@
-// 칭호 40개. 터질 때마다 그 순간의 상황(시간·요일·폰 상태·누가·오늘 몇 번째…)에 맞는 후보 중
+// 칭호 45개 (잭팟 5 + 상황 칭호 40). 터질 때마다 그 순간의 상황(시간·요일·폰 상태·누가·오늘 몇 번째…)에 맞는 후보 중
 // 하나를 고른다. 순수 함수만 두어 tests/titles.test.mjs 에서 검사한다.
 //
 // c = { mode: 'loud'|'soft'|'hold', char, hour, wd(0=일요일), nth(오늘 몇 번째), today{loud,soft,hold},
 //       prev(오늘 바로 전 결과 또는 null), charsToday(오늘 나온 친구 수), streak, total }
 
 export const RARITY = {
+  jackpot: { name: { ko: '잭팟', en: 'Jackpot' }, weight: 0 },
   legend: { name: { ko: '레전드', en: 'Legend' }, weight: 6 },
   rare: { name: { ko: '레어', en: 'Rare' }, weight: 3 },
   normal: { name: { ko: '노멀', en: 'Normal' }, weight: 1 }
@@ -15,6 +16,18 @@ const meeting = c => weekday(c) && (c.hour === 10 || c.hour === 14 || c.hour ===
 const T = (id, rarity, ko, en, hint, how, test) => ({ id, rarity, name: { ko, en }, hint, how, test });
 
 export const TITLES = [
+  // ---- 잭팟: 상황과 상관없이 1% 확률 (JACKPOT)
+  T('jp_heritage', 'jackpot', '국가 지정 무형문화재', 'National Intangible Heritage',
+    { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
+  T('jp_lotto', 'jackpot', '로또보다 희귀한 뿡', 'Rarer Than the Lottery',
+    { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
+  T('jp_heir', 'jackpot', '방구 재벌 3세', 'Toot Tycoon Heir',
+    { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
+  T('jp_the', 'jackpot', '전설의 그 방구', 'THE Toot',
+    { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
+  T('jp_rain', 'jackpot', '돈 뿌리는 엉덩이', 'Make It Rain',
+    { ko: '운', en: 'Luck' }, { ko: '아무 때나 1% 확률', en: '1% chance, any time' }, () => false),
+
   // ---- 레전드
   T('meeting_loud', 'legend', '회의실 테러범', 'Meeting Room Menace',
     { ko: '다들 모였을 때', en: 'When everyone is gathered' },
@@ -120,63 +133,63 @@ export const TITLES = [
     c => c.nth >= 5),
 
   // ---- 노멀
-  T('loud_basic', 'normal', '확성기 견습생', 'Megaphone Apprentice',
+  T('loud_basic', 'normal', '어 방금 누구야', 'Wait, Who Was That',
     { ko: '소리 모드', en: 'Sound mode' },
     { ko: '소리 모드에서 한 번', en: 'Once on sound mode' },
     c => c.mode === 'loud'),
-  T('soft_basic', 'normal', '진동 요정', 'Buzz Fairy',
+  T('soft_basic', 'normal', '주머니만 앎', 'Only the Pocket Knows',
     { ko: '진동 모드', en: 'Vibrate mode' },
     { ko: '진동 모드에서 한 번', en: 'Once on vibrate' },
     c => c.mode === 'soft'),
-  T('hold_basic', 'normal', '참을 인 하나', 'One Patience',
+  T('hold_basic', 'normal', '괄약근 1단', 'Clench Level 1',
     { ko: '무음 모드', en: 'Silent mode' },
     { ko: '무음·방해금지에서 한 번', en: 'Once on silent or Do Not Disturb' },
     c => c.mode === 'hold'),
-  T('morning', 'normal', '모닝 가스', 'Morning Gas',
+  T('morning', 'normal', '모닝커피의 배신', 'Betrayed by Morning Coffee',
     { ko: '아침', en: 'Morning' },
     { ko: '6~9시', en: '6–9am' },
     c => c.hour >= 6 && c.hour < 10),
-  T('lunch', 'normal', '점심 소화 중', 'Digesting Lunch',
+  T('lunch', 'normal', '제육의 역습', 'Revenge of the Pork',
     { ko: '점심', en: 'Lunchtime' },
     { ko: '11~13시', en: '11am–1pm' },
     c => c.hour >= 11 && c.hour < 14),
-  T('afternoon', 'normal', '평범한 오후', 'Ordinary Afternoon',
+  T('afternoon', 'normal', '오후 3시의 정적 파괴', 'Broke the 3PM Silence',
     { ko: '오후', en: 'Afternoon' },
     { ko: '14~17시', en: '2–5pm' },
     c => c.hour >= 14 && c.hour < 18),
-  T('evening', 'normal', '퇴근길 동행', 'Commute Buddy',
+  T('evening', 'normal', '퇴근길 지하철 빌런', 'Rush Hour Villain',
     { ko: '퇴근 시간', en: 'Going home' },
     { ko: '18~19시', en: '6–7pm' },
     c => c.hour >= 18 && c.hour < 20),
-  T('night', 'normal', '야식의 대가', 'Midnight Snacker',
+  T('night', 'normal', '치킨이 문제였다', 'It Was the Fried Chicken',
     { ko: '밤', en: 'Night' },
     { ko: '20~23시', en: '8–11pm' },
     c => c.hour >= 20),
-  T('first_today', 'normal', '오늘의 첫 타자', 'First at Bat',
+  T('first_today', 'normal', '오늘 개시', 'Open for Business',
     { ko: '오늘 처음', en: 'First today' },
     { ko: '그날 첫 번째', en: 'The first one of the day' },
     c => c.nth === 1),
-  T('streak3', 'normal', '3일 개근', 'Three Days Straight',
+  T('streak3', 'normal', '사흘 연속 범행', 'Three-Day Crime Spree',
     { ko: '사흘째', en: 'Third day' },
     { ko: '3일 연속', en: '3 days in a row' },
     c => c.streak >= 3),
-  T('hamster', 'normal', '햄찌의 하루', 'A Day in Hamster Life',
+  T('hamster', 'normal', '해바라기씨 과다 섭취', 'Too Many Sunflower Seeds',
     { ko: '햄찌 차례', en: 'Hamster’s turn' },
     { ko: '햄찌가 낸 소리', en: 'The hamster went' },
     c => c.char === 'hamster'),
-  T('tit', 'normal', '오목이의 수다', 'Birdie Chatter',
+  T('tit', 'normal', '새가 그랬다고 함', 'Blamed It on the Bird',
     { ko: '오목이 차례', en: 'Birdie’s turn' },
     { ko: '오목이가 낸 소리', en: 'The bird went' },
     c => c.char === 'tit'),
-  T('cat', 'normal', '냥이의 낮잠 방해', 'Cat Nap Interrupted',
+  T('cat', 'normal', '고양이 핑계 대기', 'Blamed It on the Cat',
     { ko: '냥이 차례', en: 'Cat’s turn' },
     { ko: '냥이가 낸 소리', en: 'The cat went' },
     c => c.char === 'cat'),
-  T('hamster_loud', 'normal', '햄찌 풀파워', 'Hamster Full Power',
+  T('hamster_loud', 'normal', '볼주머니 아님 엉덩이임', 'Not the Cheek Pouch',
     { ko: '햄찌가 크게', en: 'Hamster, loudly' },
     { ko: '햄찌 차례에 소리 모드', en: 'Hamster on sound mode' },
     c => c.char === 'hamster' && c.mode === 'loud'),
-  T('tit_soft', 'normal', '오목이 날갯짓', 'Birdie Flutter',
+  T('tit_soft', 'normal', '날갯짓으로 위장', 'Disguised as a Flutter',
     { ko: '오목이가 살짝', en: 'Birdie, softly' },
     { ko: '오목이 차례에 진동', en: 'Birdie on vibrate' },
     c => c.char === 'tit' && c.mode === 'soft')
@@ -188,9 +201,17 @@ const BASIC = { loud: 'loud_basic', soft: 'soft_basic', hold: 'hold_basic' };
 
 /**
  * 상황 c 에 맞는 칭호 하나. owned = { id: … } (가진 칭호).
- * 맞는 후보 중 아직 없는 칭호를 75% 확률로 먼저 보고, 그 안에서 레전드 > 레어 > 노멀 가중치로 뽑는다.
+ * 1% 는 상황과 상관없이 잭팟 (아직 없는 것 먼저). 나머지는 맞는 후보 중 아직 없는 칭호를 75% 확률로 먼저 보고, 그 안에서 레전드 > 레어 > 노멀 가중치로 뽑는다.
  */
+export const JACKPOT = 0.01;
+
 export function pickTitle(c, owned = {}, random = Math.random) {
+  if (random() < JACKPOT) {
+    const jp = TITLES.filter(x => x.rarity === 'jackpot');
+    const fresh = jp.filter(x => !owned[x.id]);
+    const pool = fresh.length ? fresh : jp;
+    return pool[Math.floor(random() * pool.length) % pool.length];
+  }
   const cands = TITLES.filter(x => x.test(c));
   if (!cands.length) return titleById(BASIC[c.mode] || 'hold_basic');
   const fresh = cands.filter(x => !owned[x.id]);

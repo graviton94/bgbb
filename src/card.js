@@ -1,6 +1,7 @@
 // 9:16 속보 자랑 카드 (1080×1920). 인스타 스토리에 바로 올릴 수 있는 크기.
 import { charById, MODES } from './data.js';
 import { t, L } from './i18n.js';
+import { pixelCanvas, FACE } from './pixels.js';
 
 const W = 1080, H = 1920;
 const DISPLAY = '"Black Han Sans", sans-serif';
@@ -39,12 +40,13 @@ function outlined(g, text, x, y, size, stroke = 14) {
 const two = n => String(n).padStart(2, '0');
 
 /**
- * data: { ev: { t, char, mode }, title, rarity, owned, all, nth, streak, headline, caption }
+ * data: { ev: { t, char, mode }, title, rarity, jackpot, owned, all, nth, streak, headline, caption }
  */
 export async function drawCard(canvas, data) {
   const c = charById(data.ev.char) || charById('hamster');
   const mode = MODES[data.ev.mode] || MODES.hold;
-  const img = await loadImage(c.sprites.react);
+  const cool = data.ev.mode === 'hold' || data.jackpot;
+  const img = await loadImage(cool ? c.portrait : c.sprites.react);
   await document.fonts?.load?.(`80px "Black Han Sans"`);
   canvas.width = W;
   canvas.height = H;
@@ -57,14 +59,43 @@ export async function drawCard(canvas, data) {
   g.fillStyle = mode.color;
   g.fillRect(0, 0, W, 1300);
 
+  // 도트 효과 (터지는 화면과 같은 규칙): 냄 = "=3", 진동 = 거품, 참음·잭팟 = 선글라스, 잭팟 = 머니건 + 지폐
+  g.imageSmoothingEnabled = false;
+  const dot = (name, x, y, scale, rot = 0, flip = false) => {
+    const im = pixelCanvas(name, scale);
+    g.save();
+    g.translate(x, y);
+    g.rotate(rot);
+    if (flip) g.scale(-1, 1);
+    g.drawImage(im, -im.width / 2, -im.height / 2);
+    g.restore();
+  };
+  if (data.jackpot) {
+    [[180, 300, 0.4], [820, 240, -0.3], [930, 520, 0.6], [140, 640, -0.5], [760, 900, 0.2], [300, 180, -0.1], [600, 160, 0.5]]
+      .forEach(([x, y, r], i) => dot(i % 2 ? 'bill' : 'bill2', x, y, 14, r));
+  }
   if (img) {
     const h = 760, w = h * img.naturalWidth / img.naturalHeight;
     g.save();
     g.translate(W / 2, 260 + h / 2);
     g.rotate(-0.05);
     g.drawImage(img, -w / 2, -h / 2, w, h);
+    if (cool) {
+      const f = FACE[c.id];
+      const sh = pixelCanvas('shades', 1);
+      const sw = f.w * w, shh = sw * sh.height / sh.width;
+      g.imageSmoothingEnabled = false;
+      g.drawImage(sh, -w / 2 + (f.x - f.w / 2) * w, -h / 2 + f.y * h - shh / 2, sw, shh);
+    }
     g.restore();
   }
+  if (data.ev.mode === 'loud' && !data.jackpot) {
+    dot('toot', 860, 860, 16, -0.1);
+    dot('toot', 960, 740, 11, -0.2);
+    dot('toot', 170, 760, 12, 0.1, true);
+  }
+  if (data.ev.mode === 'soft') [[180, 420, 14], [870, 360, 10], [930, 620, 16], [140, 820, 9], [820, 180, 8]].forEach(([x, y, s]) => dot('bubble', x, y, s));
+  if (data.jackpot) dot('moneygun', 200, 880, 14, -0.3);
 
   // 화면 위: LIVE · 채널 · 날짜
   g.textBaseline = 'middle';

@@ -8,6 +8,8 @@ import {
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow } from './schedule.js';
 import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
+import { pixelUrl, FACE } from './pixels.js';
+import { startFx, stopFx } from './fx.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -57,7 +59,7 @@ function cardData(ev, titleId, headline = headlineFor(ev), caption = pick(L(MODE
   const d = day(dayKey(ev.t));
   return {
     ev, headline, caption,
-    title: L(title.name), rarity: L(RARITY[title.rarity].name),
+    title: L(title.name), rarity: L(RARITY[title.rarity].name), jackpot: title.rarity === 'jackpot',
     owned: ownedCount(), all: TITLES.length,
     nth: Math.max(1, d.loud + d.soft + d.hold), streak: Math.max(1, streak(ev.t))
   };
@@ -96,7 +98,8 @@ let burstCard = null;
 
 /** 여러 번 쌓였으면 새 칭호 > 높은 등급 > 마지막 순으로 하나를 크게 보여준다 */
 function headliner(results) {
-  const score = r => (r.isNew ? 100 : 0) + RARITY[titleById(r.title).rarity].weight * 10 + r.t / 1e13;
+  const rank = r => { const x = titleById(r.title).rarity; return x === 'jackpot' ? 1000 : RARITY[x].weight * 10; };
+  const score = r => (r.isNew ? 100 : 0) + rank(r) + r.t / 1e13;
   return results.reduce((a, b) => (score(b) > score(a) ? b : a));
 }
 
@@ -109,7 +112,21 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   dlg.style.setProperty('--accent', mode.color);
   $('burstWord').textContent = L(mode.word);
   $('burstWord').classList.toggle('long', [...L(mode.word)].length > 2);
-  $('burstImg').src = c.sprites.react;
+  // 효과: 참음 = 선글라스 내려옴 (정면 그림), 냄 = 방구 구름, 진동 = 거품, 잭팟 = 머니건 + 지폐 비 + 선글라스
+  const jackpot = result && titleById(result.title).rarity === 'jackpot';
+  const cool = ev.mode === 'hold' || jackpot;
+  $('burstImg').src = cool ? c.portrait : c.sprites.react;
+  if (cool) {
+    const f = FACE[c.id], sh = $('shades');
+    sh.src = pixelUrl('shades', 8);
+    sh.style.width = `${f.w * 100}%`;
+    sh.style.left = `${(f.x - f.w / 2) * 100}%`;
+    sh.style.top = `${f.y * 100}%`;
+    sh.style.marginTop = `${-f.w * 100 * 5 / 26 / 2}%`;   // 세로 % 여백은 너비 기준 → 안경 높이의 절반만큼 위로
+  }
+  $('moneygun').src = pixelUrl('moneygun', 8);
+  dlg.classList.toggle('cool', cool);
+  dlg.classList.toggle('rich', !!jackpot);
   $('cap1').textContent = cap1;
   $('cap2').textContent = more ? t('burst.more', { n: more }) : cap2;
   if (result) {
@@ -135,7 +152,11 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   if (!dlg.open) dlg.showModal();
   dlg.focus();
   haptic([18, 40, 30]);
+  const kinds = jackpot ? ['rain'] : [];
+  kinds.push({ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]);
+  requestAnimationFrame(() => startFx($('fx'), kinds.filter(Boolean), { from: { x: 0.5, y: 0.42 }, gun: { x: 0.33, y: 0.53 } }));
 }
+$('burst').addEventListener('close', () => stopFx($('fx')));
 
 $('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));
 
@@ -147,7 +168,7 @@ function celebrate(events) {
   commit();
   showBurst(top, { result: top, more: results.length - 1 });
   const title = titleById(top.title);
-  if (top.isNew) play(title.rarity === 'legend' ? 'ui_treasure' : 'ui_levelup', 0.6);
+  if (top.isNew) play(title.rarity === 'legend' || title.rarity === 'jackpot' ? 'ui_treasure' : 'ui_levelup', 0.6);
 }
 
 /** 브라우저 미리보기용 작전 1회 (앱에서는 네이티브가 진짜 폰 상태로 한다) */
@@ -238,7 +259,7 @@ $('latest').addEventListener('click', () => {
 });
 
 // ---------------------------------------------------------- 칭호 도감
-const FILTERS = ['all', 'legend', 'rare', 'normal', 'locked'];
+const FILTERS = ['all', 'jackpot', 'legend', 'rare', 'normal', 'locked'];
 
 function renderDex() {
   const s = totals();
@@ -246,7 +267,7 @@ function renderDex() {
   $('dexStats').textContent = t('dex.stats', s);
   $('filters').innerHTML = FILTERS.map(f =>
     `<button class="chip ${dexFilter === f ? 'on' : ''}" data-f="${f}" type="button">${f === 'all' ? t('dex.all') : f === 'locked' ? t('dex.locked') : L(RARITY[f].name)}</button>`).join('');
-  const order = { legend: 0, rare: 1, normal: 2 };
+  const order = { jackpot: -1, legend: 0, rare: 1, normal: 2 };
   const list = TITLES.filter(x => dexFilter === 'all' || (dexFilter === 'locked' ? !state.titles[x.id] : x.rarity === dexFilter))
     .sort((a, b) => !!state.titles[b.id] - !!state.titles[a.id] || order[a.rarity] - order[b.rarity]);
   $('dexList').innerHTML = list.map(x => {

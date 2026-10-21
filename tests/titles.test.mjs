@@ -1,13 +1,14 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { TITLES, RARITY, pickTitle, contextOf, titleById } from '../src/titles.js';
+import { TITLES, RARITY, JACKPOT, pickTitle, contextOf, titleById } from '../src/titles.js';
 
 const base = { mode: 'loud', char: 'hamster', hour: 16, wd: 3, nth: 2, today: { loud: 1, soft: 0, hold: 0 }, prev: null, charsToday: 1, streak: 1, total: 2 };
 const seq = (...xs) => { let i = 0; return () => xs[i++ % xs.length]; };
 
-test('칭호는 40개, id 는 겹치지 않고 글은 두 언어 다 있다', () => {
-  assert.equal(TITLES.length, 40);
-  assert.equal(new Set(TITLES.map(x => x.id)).size, 40);
+test('칭호는 45개 (잭팟 5), id 는 겹치지 않고 글은 두 언어 다 있다', () => {
+  assert.equal(TITLES.length, 45);
+  assert.equal(TITLES.filter(x => x.rarity === 'jackpot').length, 5);
+  assert.equal(new Set(TITLES.map(x => x.id)).size, 45);
   for (const x of TITLES) {
     assert.ok(RARITY[x.rarity], x.id);
     for (const k of ['name', 'hint', 'how']) assert.ok(x[k].ko && x[k].en, `${x.id}.${k}`);
@@ -25,12 +26,12 @@ test('모든 칭호는 어떤 상황에서든 나올 수 있다', () => {
     { ...base, charsToday: 3 }, { ...base, prev: 'loud' }, { ...base, prev: 'hold' },
     { ...base, mode: 'hold', today: { loud: 0, soft: 0, hold: 5 } }, { ...base, mode: 'soft', today: { loud: 0, soft: 3, hold: 0 } },
     { ...base, today: { loud: 5, soft: 1, hold: 1 } });
-  for (const x of TITLES) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
+  for (const x of TITLES.filter(x => x.rarity !== 'jackpot')) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
 });
 
 test('어떤 상황이든 결과 모드에 맞는 기본 칭호는 항상 후보다', () => {
   for (const mode of ['loud', 'soft', 'hold']) {
-    const got = pickTitle({ ...base, mode, hour: 16 }, {}, seq(0.99, 0));
+    const got = pickTitle({ ...base, mode, hour: 16 }, {}, seq(0.5, 0.99, 0));
     assert.ok(got.test({ ...base, mode, hour: 16 }));
   }
 });
@@ -39,9 +40,9 @@ test('아직 없는 칭호를 먼저 고르고, 다 가졌으면 전체에서 �
   const c = { ...base, mode: 'loud', char: 'hamster', hour: 16, wd: 3 };
   const cands = TITLES.filter(x => x.test(c)).map(x => x.id);
   const ownedAllButOne = Object.fromEntries(cands.slice(1).map(id => [id, { n: 1 }]));
-  assert.equal(pickTitle(c, ownedAllButOne, seq(0.1, 0.5)).id, cands[0]);
+  assert.equal(pickTitle(c, ownedAllButOne, seq(0.5, 0.1, 0.5)).id, cands[0]);
   const ownedAll = Object.fromEntries(cands.map(id => [id, { n: 1 }]));
-  assert.ok(cands.includes(pickTitle(c, ownedAll, seq(0.1, 0.5)).id));
+  assert.ok(cands.includes(pickTitle(c, ownedAll, seq(0.5, 0.1, 0.5)).id));
 });
 
 test('회의 시간 소리 모드는 회의실 테러범이 후보에 든다', () => {
@@ -56,4 +57,12 @@ test('contextOf 는 시각에서 시·요일을 뽑는다', () => {
   assert.equal(c.hour, 14);
   assert.equal(c.wd, 1);
   assert.equal(c.char, 'cat');
+});
+
+test('1% 는 잭팟: 아직 없는 잭팟을 먼저 준다', () => {
+  const jp = TITLES.filter(x => x.rarity === 'jackpot');
+  assert.equal(pickTitle(base, {}, seq(JACKPOT / 2, 0)).rarity, 'jackpot');
+  const ownedAllButLast = Object.fromEntries(jp.slice(0, -1).map(x => [x.id, { n: 1 }]));
+  assert.equal(pickTitle(base, ownedAllButLast, seq(0, 0.9)).id, jp[jp.length - 1].id);
+  assert.notEqual(pickTitle(base, {}, seq(JACKPOT, 0)).rarity, 'jackpot');
 });

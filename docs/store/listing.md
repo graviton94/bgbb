@@ -22,7 +22,7 @@
 · 무음·방해금지면 참음
 
 ■ 터질 때마다 칭호 하나
-시간·요일·폰 모드·오늘 몇 번째인지에 따라 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐", "월요병 그 자체"… 레전드·레어·노멀 40개. 미획득 칭호는 힌트만 보임.
+시간·요일·폰 모드·오늘 몇 번째인지에 따라 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐", "월요병 그 자체"… 레전드·레어·노멀 40개 + 1% 잭팟 5개. 미획득 칭호는 힌트만 보임.
 
 ■ 속보 카드로 퍼뜨리기
 "[단독] 햄찌, 회의 중 끝내 참지 못해" 9:16 속보 카드를 바로 저장·공유. 인스타 스토리 크기 그대로.
@@ -59,7 +59,7 @@ At that moment, if your phone is…
 · on silent or Do Not Disturb, they hold it in
 
 ■ A title every time
-The time, the day, your ringer mode and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew", "Monday Blues Incarnate"… 40 titles across Legend, Rare and Normal. Locked ones only show a hint.
+The time, the day, your ringer mode and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew", "Monday Blues Incarnate"… 40 titles across Legend, Rare and Normal, plus 5 one-in-a-hundred jackpots. Locked ones only show a hint.
 
 ■ Spread the news
 Save and share a 9:16 breaking-news card: "EXCLUSIVE: Hammy finally lets one go". Story-sized, ready to post.
