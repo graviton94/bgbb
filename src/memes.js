@@ -1,7 +1,7 @@
 // 짤: 터질 때마다 그 상황으로 조립하는 정사각형 한 칸.
 //  - 조립형: 배경 · 캐릭터 자리와 크기 · 문구(상황 + 한 방) · 문구 자리 · 소품을 매번 랜덤으로
 //  - 캐릭터에 붙는 것(선글라스 = 얼굴, 방구 구름 = 엉덩이 옆, 머니건 = 손)은 캐릭터 상자 기준 좌표
-//  - 유니크 짤 몇 개(엥? · 스티커+안경 · 잭팟 돈)만 미리 만든 틀
+//  - 유니크 짤 (엥? · 스티커+안경 · 참은 나 vs 뀐 나 · 들어갈 때 vs 나올 때 · 범인은 이 안에 · 현자 타임 · 상자 · 잭팟 돈)은 미리 만든 틀
 // 결과는 spec (칸 대비 % 좌표 목록) 이라 화면(DOM)과 자랑 카드(canvas)가 같은 짤을 그린다.
 import { face } from './data.js';
 import { L } from './i18n.js';
@@ -42,7 +42,15 @@ const W = {
   think: { ko: ['들켰나…?', '방금 그거\n나였나?', '아무도\n못 들었겠지'], en: ['did they\nhear?', 'was that…\nme?', 'nobody heard.\nright?'] },
   eng: { ko: ['엥?', '뭐임?'], en: ['huh?', 'wait what'] },
   deal: { ko: ['냄새?\n난 모르는 일', '아무 일도\n없었음', '증거 없음', '나 아님.\n진짜로'], en: ['Smell?\nNot my problem', 'Nothing\nhappened', 'No evidence', "Wasn't me.\nReally"] },
-  money: { ko: ['돈 뿌리는\n엉덩이', '잭팟 터짐'], en: ['MAKE IT\nRAIN', 'JACKPOT'] }
+  money: { ko: ['돈 뿌리는\n엉덩이', '잭팟 터짐'], en: ['MAKE IT\nRAIN', 'JACKPOT'] },
+  versus: { ko: [['참은 나', '뀐 나'], ['계획', '현실'], ['5분 전', '방금']], en: [['Me holding', 'Me not'], ['The plan', 'Reality'], ['5 min ago', 'Just now']] },
+  expect: {
+    ko: [['회의 들어갈 때', '회의 나올 때'], ['엘리베이터 탈 때', '엘리베이터 내릴 때'], ['도서관 입장', '도서관 퇴장']],
+    en: [['Walking into\nthe meeting', 'Walking out'], ['Getting in\nthe elevator', 'Getting out'], ['Entering\nthe library', 'Leaving']]
+  },
+  lineup: { ko: ['범인은 이 안에 있다', '누가 뀌었나', '용의자 3명'], en: ['ONE OF THEM DID IT', 'WHO DID IT', '3 SUSPECTS'] },
+  halo: { ko: ['현자 타임', '해탈', '평온'], en: ['POST-TOOT CLARITY', 'ENLIGHTENED', 'AT PEACE'] },
+  box: { ko: ['숨어서 뿡', '여기 아무도 없음', '상자는 무죄'], en: ['Tooting\nin hiding', 'Nobody\nin here', 'The box\nis innocent'] }
 };
 
 function whenKey(t) {
@@ -82,6 +90,7 @@ const NIGHT_BG = ['#1F2747', '#2B2140', '#FFFFFF', '#B49E89'];
 const DARK_BG = ['#1F2747', '#2B2140'];
 
 // ---------------------------------------------------------------- 캐릭터와 붙는 것
+const rect = (x, y, w, h, color) => ({ k: 'rect', x, y, w, h, color });
 const charItem = (id, expr, x, y, w, { shades = false, sticker = false, r = 0 } = {}) => ({ k: 'char', id, expr, x, y, w, r, shades, sticker });
 /** 엉덩이 옆에서 나오는 방구 구름 (side = 1 오른쪽, -1 왼쪽) */
 function fartFor(c, side) {
@@ -92,7 +101,7 @@ function fartFor(c, side) {
 const gunFor = c => ({ k: 'img', src: deco('money_gun'), x: c.x - c.w * 0.2, y: c.y + c.w * 0.48, w: c.w * 0.62, r: -12, cls: 'm-gun' });
 
 // ---------------------------------------------------------------- 유니크 짤 (미리 만든 틀)
-const UNIQUE = {
+export const UNIQUE = {
   eng: ({ id }) => ({
     bg: '#FFFFFF',
     items: [charItem(id, 'eng', -12, -4, 124), textItem(pick(L(W.eng)), 26, 4, 68, 'thin', { align: 'right' })],
@@ -102,6 +111,50 @@ const UNIQUE = {
     bg: '#F2F2F2',
     items: [charItem(id, 'shameless', 18, 27, 70, { shades: true, sticker: true, r: -4 }), textItem(pick(L(W.deal)), 5, 4, 80, 'display')],
     fx: { x: 0.5, y: 0.6 }
+  }),
+  // 참은 나 vs 뀐 나: 반반
+  versus: ({ id }) => {
+    const [a, b] = pick(L(W.versus));
+    return {
+      bg: '#FFFFFF',
+      items: [rect(50, 0, 50, 100, '#FFE1EC'), rect(49.6, 0, 0.8, 100, '#111111'),
+        textItem(a, 2, 6, 46, 'display', { align: 'center' }), textItem(b, 52, 6, 46, 'display', { align: 'center' }),
+        charItem(id, 'hold', 2, 34, 46), charItem(id, 'burst', 52, 34, 46)],
+      fx: { x: 0.75, y: 0.6 }
+    };
+  },
+  // 들어갈 때 vs 나올 때: 위아래
+  expect: ({ id }) => {
+    const [a, b] = pick(L(W.expect));
+    return {
+      bg: '#DCE9F5',
+      items: [rect(0, 50, 100, 50, '#FFF3B0'), rect(0, 49.6, 100, 0.8, '#111111'),
+        textItem(a, 5, 16, 52, 'display'), textItem(b, 5, 66, 52, 'display'),
+        charItem(id, 'blank', 58, 4, 42), charItem(id, 'shameless', 58, 54, 42, { shades: true })],
+      fx: { x: 0.8, y: 0.8 }
+    };
+  },
+  // 범인은 이 안에 있다: 셋이 키 재는 벽 앞에. 진짜 범인만 휘파람
+  lineup: ({ id }) => ({
+    bg: '#E9E9E6',
+    items: [rect(0, 34, 100, 0.5, '#9A9A95'), rect(0, 50, 100, 0.5, '#9A9A95'), rect(0, 66, 100, 0.5, '#9A9A95'), rect(0, 82, 100, 0.5, '#9A9A95'),
+      textItem(pick(L(W.lineup)), 3, 5, 94, 'display', { align: 'center' }),
+      ...['hamster', 'tit', 'cat'].map((c, i) => charItem(c, c === id ? 'whistle' : 'blank', i * 33 - 2, 36, 37)),
+      ...['1', '2', '3'].map((n, i) => textItem(n, i * 33 + 13, 92, 8, 'small', { color: '#555555' }))],
+    fx: { x: 0.5, y: 0.7 }
+  }),
+  // 현자 타임: 머리 뒤에 해
+  halo: ({ id }) => ({
+    bg: '#FFF3B0',
+    items: [{ k: 'img', src: deco('sun'), x: 14, y: 2, w: 72 }, charItem(id, 'blank', 19, 30, 62), textItem(pick(L(W.halo)), 1, 84, 98, 'impact')],
+    fx: { x: 0.5, y: 0.7 }
+  }),
+  // 상자 속에서 뿡
+  box: ({ id }) => ({
+    bg: '#CFEFFF',
+    items: [charItem(id, 'whistle', 24, 22, 54), { k: 'img', src: deco('box'), x: 8, y: 46, w: 84 },
+      { k: 'img', src: deco('fart_bubble'), x: 66, y: 44, w: 34 }, textItem(pick(L(W.box)), 5, 5, 60, 'display')],
+    fx: { x: 0.8, y: 0.55 }
   }),
   money: ({ id }) => {
     const c = charItem(id, 'thumbs_up', 20, 26, 66, { shades: true });
@@ -145,7 +198,7 @@ function assemble({ id, mode, t, title, rarity, practice }) {
       const say = thought ? pick(L(W.think)) : awkward(pick([...L(W.say.any), ...L(W.say[mode])]));
       items.push(c, { k: 'img', src: deco(thought ? 'thought_bubble' : 'speech_bubble'), x: bx, y: rnd(-3, 1), w: bw, flip: !left });
       // 글자는 풍선 몸통 가운데에 (몸통 가운데 ≈ 풍선 그림 높이의 38%)
-      const by = items[items.length - 1].y, txt = textItem(say, bx + bw * 0.16, 0, bw * 0.68, 'bubble', { color: '#111111' });
+      const by = items[items.length - 1].y, txt = textItem(say, bx + bw * 0.2, 0, bw * 0.6, 'bubble', { color: '#111111' });
       txt.y = by + bw * 0.38 - (say.split('\n').length * txt.size * 1.3) / 2;
       items.push(txt);
       free = left ? 1 : -1;
@@ -184,12 +237,12 @@ function assemble({ id, mode, t, title, rarity, practice }) {
 
 /**
  * 짤 하나. ctx = { id, mode, t, title(칭호 이름), rarity, practice }
- * 잭팟 = 돈 짤, 그 밖엔 25% 유니크 짤 · 75% 조립형.
+ * 잭팟 = 돈 짤, 그 밖엔 35% 유니크 짤 · 65% 조립형.
  */
 export function composeMeme(ctx) {
   if (ctx.rarity === 'jackpot') return { name: 'money', ...UNIQUE.money(ctx) };
-  if (chance(0.25)) {
-    const name = pick(['eng', 'deal']);
+  if (chance(0.35)) {
+    const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money'));
     return { name, ...UNIQUE[name](ctx) };
   }
   return { name: 'assembled', ...assemble(ctx) };
@@ -208,6 +261,7 @@ export function renderMeme(el, spec) {
         ? `<img class="m-shades" src="${SHADES_URL}" style="left:${SHADES_BOX.x * 100}%;top:${SHADES_BOX.y * 100}%;width:${SHADES_BOX.w * 100}%" alt="">` : '';
       return `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}"><img src="${face(it.id, it.expr)}" alt="">${shades}</div>`;
     }
+    if (it.k === 'rect') return `<div class="m-el" style="${pos(it)}height:${it.h}%;background:${it.color}"></div>`;
     if (it.k === 'img') return `<img class="m-el ${it.cls || ''}" src="${it.src}" style="${pos(it)}${turn(it)}" alt="">`;
     if (it.k === 'label') return `<div class="m-el m-label" style="${pos(it)}${turn(it)}font-size:${it.size}cqw">${esc(it.s)}</div>`;
     return `<div class="m-el m-text ${CLASS[it.style]}" style="${pos(it)}font-size:${it.size}cqw;${it.color ? `color:${it.color};` : ''}${it.align ? `text-align:${it.align};` : ''}">${esc(it.s)}</div>`;
@@ -252,7 +306,10 @@ export async function drawMeme(g, spec, x, y, S) {
   for (const it of spec.items) {
     g.save();
     const w = px(it.w);
-    if (it.k === 'char' || it.k === 'img') {
+    if (it.k === 'rect') {
+      g.fillStyle = it.color;
+      g.fillRect(x + px(it.x), y + px(it.y), w, px(it.h));
+    } else if (it.k === 'char' || it.k === 'img') {
       const im = loaded.get(it.k === 'char' ? face(it.id, it.expr) : it.src);
       if (im) {
         const h = w * im.naturalHeight / im.naturalWidth;

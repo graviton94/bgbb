@@ -5,10 +5,10 @@
 //       prev(오늘 바로 전 결과 또는 null), charsToday(오늘 나온 친구 수), streak, total }
 
 export const RARITY = {
-  jackpot: { name: { ko: '잭팟', en: 'Jackpot' }, weight: 0 },
-  legend: { name: { ko: '레전드', en: 'Legend' }, weight: 6 },
-  rare: { name: { ko: '레어', en: 'Rare' }, weight: 3 },
-  normal: { name: { ko: '노멀', en: 'Normal' }, weight: 1 }
+  jackpot: { name: { ko: '잭팟', en: 'Jackpot' }, weight: 0, color: '#FFD400' },
+  legend: { name: { ko: '레전드', en: 'Legend' }, weight: 6, color: '#D7FF3D' },
+  rare: { name: { ko: '레어', en: 'Rare' }, weight: 3, color: '#FFB3D9' },
+  normal: { name: { ko: '노멀', en: 'Normal' }, weight: 1, color: '#FFFFFF' }
 };
 
 const weekday = c => c.wd >= 1 && c.wd <= 5;

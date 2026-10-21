@@ -60,7 +60,7 @@ function cardData(ev, titleId, headline = headlineFor(ev), caption = pick(L(MODE
   const d = day(dayKey(ev.t));
   return {
     ev, headline, caption,
-    title: L(title.name), rarity: L(RARITY[title.rarity].name), jackpot: title.rarity === 'jackpot',
+    title: L(title.name), rarity: L(RARITY[title.rarity].name), rarityColor: RARITY[title.rarity].color, isNew: state.titles[titleId]?.n === 1,
     owned: ownedCount(), all: TITLES.length,
     nth: Math.max(1, d.loud + d.soft + d.hold), streak: Math.max(1, streak(ev.t))
   };
@@ -118,16 +118,29 @@ function showBurst(ev, { result = null, more = 0 } = {}) {
   renderMeme(box, meme);
   const d = new Date(ev.t);
   const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
-  $('burstWhen').textContent = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
+  // 속보 띠 (카드와 같은 문구)
+  $('chTag').textContent = t(ev.mode === 'loud' ? 'burst.exclusive' : 'burst.breaking');
+  $('chText').textContent = result ? headline : t('burst.practiceMeta');
+  const info = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
+  const box2 = dlg.querySelector('.unlock');
   if (result) {
     const own = state.titles[result.title];
+    const rar = RARITY[title.rarity];
+    box2.style.setProperty('--chip', rar.color);
+    $('burstChip').hidden = false;
+    $('burstChip').textContent = L(rar.name);
+    $('burstWhen').textContent = `${result.isNew ? t('burst.new') : t('burst.again', { n: own.n })} · ${info}`;
     $('burstTitle').textContent = L(title.name);
-    $('burstMeta').textContent = `${result.isNew ? t('burst.new') : t('burst.again', { n: own.n })} · ${t('burst.meta', { n: ownedCount(), all: TITLES.length, rarity: L(RARITY[title.rarity].name) })}`;
+    $('burstBar').style.width = '0%';
+    requestAnimationFrame(() => { $('burstBar').style.width = `${(ownedCount() / TITLES.length) * 100}%`; });
+    $('burstMeta').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
     burstCard = { ...cardData(ev, result.title, headline, caption), meme };
   } else {
+    $('burstChip').hidden = true;
     $('burstWhen').textContent = t('burst.practice');
     $('burstTitle').textContent = t('burst.practiceTitle');
-    $('burstMeta').textContent = t('burst.practiceMeta');
+    $('burstBar').style.width = '0%';
+    $('burstMeta').textContent = '';
     burstCard = null;
   }
   $('shareCard').hidden = !burstCard;

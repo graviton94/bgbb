@@ -70,9 +70,11 @@
   <dialog class="burst" id="burst" tabindex="-1" aria-labelledby="burstTitle">
     <div class="meme" id="meme" role="img"></div>
     <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+    <div class="chyron"><b id="chTag"></b><span id="chText"></span></div>
     <div class="unlock">
-      <span class="meta" id="burstWhen"></span>
+      <div class="u-row"><span class="r-chip" id="burstChip"></span><span class="meta" id="burstWhen"></span></div>
       <strong id="burstTitle"></strong>
+      <div class="u-bar" aria-hidden="true"><i id="burstBar"></i></div>
       <span class="meta" id="burstMeta"></span>
     </div>
     <div class="burst-actions">

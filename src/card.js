@@ -1,7 +1,7 @@
 // 9:16 속보 자랑 카드 (1080×1920). 인스타 스토리에 바로 올릴 수 있는 크기.
 import { MODES } from './data.js';
 import { drawMeme } from './memes.js';
-import { t, L } from './i18n.js';
+import { t, L, LANG } from './i18n.js';
 
 const W = 1080, H = 1920;
 const DISPLAY = '"Black Han Sans", sans-serif';
@@ -17,7 +17,7 @@ function fitFont(g, text, family, size, maxWidth, weight = '') {
 const two = n => String(n).padStart(2, '0');
 
 /**
- * data: { ev: { t, char, mode }, meme (memes.js spec), title, rarity, owned, all, nth, streak, headline }
+ * data: { ev: { t, char, mode }, meme (memes.js spec), title, rarity, rarityColor, isNew, owned, all, nth, streak, headline }
  */
 export async function drawCard(canvas, data) {
   const mode = MODES[data.ev.mode] || MODES.hold;
@@ -45,39 +45,81 @@ export async function drawCard(canvas, data) {
   g.fillText(`${d.getFullYear()}.${two(d.getMonth() + 1)}.${two(d.getDate())} ${two(d.getHours())}:${two(d.getMinutes())}`, W - 44, 56);
   await drawMeme(g, data.meme, 0, 110, W);
 
-  // 속보 띠
+  // 속보 띠: TV 하단 자막처럼 빨간 탭 + 흰 헤드라인 + 노란 정보 줄
   const tag = t(data.ev.mode === 'loud' ? 'burst.exclusive' : 'burst.breaking');
-  const y = 1190, bandH = 132;
-  g.font = `900 56px ${BODY}`;
-  const tagW = g.measureText(tag).width + 70;
-  g.fillStyle = '#E8261C';
-  g.fillRect(0, y, tagW, bandH);
+  const time = `${two(d.getHours())}:${two(d.getMinutes())}`;
+  let y = 1190;
+  g.textBaseline = 'middle';
+  g.font = `900 40px ${BODY}`;
+  const tagW = g.measureText(tag).width + 64;
+  slant(g, 0, y + 18, tagW, 64, '#E8261C');          // 빨간 탭 (오른쪽이 비스듬)
   g.fillStyle = '#fff';
-  g.fillRect(tagW, y, W - tagW, bandH);
-  g.textAlign = 'center';
-  g.fillText(tag, tagW / 2, y + bandH / 2);
   g.textAlign = 'left';
+  g.fillText(tag, 28, y + 51);
+  g.fillStyle = '#FFD400';
+  g.font = `800 36px ${BODY}`;
+  g.fillText(`● ${time}`, tagW + 22, y + 51);
+  y += 82;
+  g.fillStyle = '#fff';
+  g.fillRect(0, y, W, 128);
+  g.fillStyle = '#FFD400';
+  g.fillRect(0, y, 18, 128);
   g.fillStyle = '#111';
-  fitFont(g, data.headline, BODY, 54, W - tagW - 70, '900');
-  g.fillText(data.headline, tagW + 34, y + bandH / 2);
-  g.fillStyle = '#222';
-  g.fillRect(0, y + bandH, W, 86);
-  g.fillStyle = '#ddd';
-  g.font = `500 36px ${BODY}`;
-  g.fillText(t('card.sub', { nth: data.nth, streak: data.streak, mode: L(mode.name) }), 40, y + bandH + 43, W - 80);
+  fitFont(g, data.headline, BODY, 58, W - 96, '900');
+  g.fillText(data.headline, 48, y + 66);
+  y += 128;
+  g.fillStyle = '#FFD400';
+  g.fillRect(0, y, W, 64);
+  g.fillStyle = '#111';
+  g.font = `800 32px ${BODY}`;
+  g.fillText(`${t('card.channel')}  ·  ${t('card.sub', { nth: data.nth, streak: data.streak, mode: L(mode.name) })}`, 48, y + 33, W - 96);
 
-  // 오늘의 칭호
+  // 칭호: 등급 칩 + 큰 이름(등급 색) + 도감 진행 막대
+  y = 1500;
+  g.font = `900 34px ${BODY}`;
+  const chipW = g.measureText(data.rarity).width + 48;
+  pill(g, 56, y, chipW, 58, data.rarityColor || '#fff');
+  g.fillStyle = '#111';
+  g.fillText(data.rarity, 80, y + 30);
+  g.fillStyle = '#9A9A95';
+  g.font = `600 34px ${BODY}`;
+  g.fillText(data.isNew ? t('burst.new') : t('card.titleLabel'), 56 + chipW + 20, y + 30);
+  g.fillStyle = data.rarityColor || '#fff';
+  fitFont(g, data.title, DISPLAY, 128, W - 112);
   g.textBaseline = 'alphabetic';
-  g.fillStyle = '#aaa';
-  g.font = `500 40px ${BODY}`;
-  g.fillText(`${t('card.titleLabel')} · ${data.rarity}`, 56, 1530);
-  g.fillStyle = mode.color;
-  fitFont(g, data.title, DISPLAY, 132, W - 112);
-  g.fillText(data.title, 56, 1690);
+  g.fillText(data.title, 56, y + 200);
 
-  g.fillStyle = '#888';
-  g.font = `500 34px ${BODY}`;
-  g.fillText(t('card.footer'), 56, H - 60);
-  g.textAlign = 'right';
-  g.fillText(t('home.dexCount', { n: data.owned, all: data.all }), W - 56, H - 60);
+  const barY = 1735, barW = W - 112;
+  pill(g, 56, barY, barW, 18, '#2C2C2A');
+  pill(g, 56, barY, Math.max(18, barW * data.owned / data.all), 18, data.rarityColor || '#fff');
+  g.textBaseline = 'middle';
+  g.fillStyle = '#9A9A95';
+  g.font = `600 30px ${BODY}`;
+  g.fillText(t('home.dexCount', { n: data.owned, all: data.all }), 56, barY + 56);
+
+  g.fillStyle = '#fff';
+  g.font = `40px ${DISPLAY}`;
+  g.fillText(t('appName'), 56, H - 52);
+  const appW = g.measureText(t('appName')).width;
+  g.fillStyle = '#777';
+  g.font = `500 30px ${BODY}`;
+  g.fillText(t('card.footer'), 56 + appW + (LANG === 'ko' ? 6 : 16), H - 50);
+}
+
+function slant(g, x, y, w, h, color) {
+  g.fillStyle = color;
+  g.beginPath();
+  g.moveTo(x, y);
+  g.lineTo(x + w, y);
+  g.lineTo(x + w - h * 0.35, y + h);
+  g.lineTo(x, y + h);
+  g.closePath();
+  g.fill();
+}
+
+function pill(g, x, y, w, h, color) {
+  g.fillStyle = color;
+  g.beginPath();
+  g.roundRect(x, y, w, h, h / 2);
+  g.fill();
 }

@@ -125,7 +125,7 @@ async function captureScreens(lang) {
       meme,
       ev: { t: d.getTime(), char: 'hamster', mode: 'loud' },
       title: document.documentElement.lang === 'ko' ? '회의실 테러범' : 'Meeting Room Menace',
-      rarity: document.documentElement.lang === 'ko' ? '레전드' : 'Legend',
+      rarity: document.documentElement.lang === 'ko' ? '레전드' : 'Legend', rarityColor: '#D7FF3D', isNew: true,
       owned: 12, all: 45, nth: 2, streak: 7,
       headline: document.documentElement.lang === 'ko' ? '햄찌, 끝내 참지 못해' : 'Hammy finally lets one go',
       caption: document.documentElement.lang === 'ko' ? '방금 그거 뭐임' : 'what was that'
