@@ -589,38 +589,73 @@ def synth_7_thumbs_up_option_a(base_rgba: Image.Image, hamster_7_rgba: Image.Ima
     yy, xx = np.meshgrid(np.arange(h, dtype=np.float32), np.arange(w, dtype=np.float32), indexing="ij")
 
     if char_id == "tit":
-        # Pure continuous 2D warp of `base_rgba` (ZERO hamster hands, ZERO seams, ZERO eye distortion!):
-        #   - Strictly lock the entire central face & eyes (245 < x < 779) with a smooth gate so eyes NEVER move.
-        #   - In the upper-outer shoulder zone (y = 330..520), sample from (x + 58, y + 148) on left
-        #     and (x - 58, y + 148) on right, which pulls the real dark-brown wings UPWARD & OUTWARD into a proud raised-wing pose!
-        #   - In the lower-outer side zone (y = 525..740), sample from the white chest interior (x + 135 on left, x - 135 on right)
-        #     so the original downward-sloping brown wings are tucked into fluffy white chest feathers!
-        dx = np.zeros((h, w), dtype=np.float32)
-        dy = np.zeros((h, w), dtype=np.float32)
+        # 1) Start with 100% untouched `base_rgba` (zero wavy cheek warp, zero eye distortion!).
+        #    On `tit_1`, the downward-sloping brown wings sit strictly in the outer side zones (x < 235 or x > 789, y > 430).
+        #    By remapping the dark brown pigment in those outer side zones to snow-white chest plumage while preserving
+        #    the high-frequency feather strand grain, the downward side wings vanish 100% seamlessly into the round white body!
+        tit_np = np.asarray(base_rgba, dtype=np.float32).copy()
+        outer_wing_zone = np.clip((235.0 - xx) / 35.0, 0.0, 1.0) + np.clip((xx - 789.0) / 35.0, 0.0, 1.0)
+        outer_wing_zone = np.clip(outer_wing_zone, 0.0, 1.0) * np.clip((yy - 425.0) / 30.0, 0.0, 1.0)
 
-        # Gate that is 1.0 only on the outer sides (x < 235 or x > 789), 0.0 everywhere on the face/eyes/beak
-        left_side_gate = np.clip((242.0 - xx) / 38.0, 0.0, 1.0)
-        right_side_gate = np.clip((xx - 782.0) / 38.0, 0.0, 1.0)
+        t_lum = 0.299 * tit_np[..., 0] + 0.587 * tit_np[..., 1] + 0.114 * tit_np[..., 2]
+        # Feather detail grain
+        t_grain = tit_np[..., :3] - ndimage.gaussian_filter(tit_np[..., :3], sigma=(2.5, 2.5, 0))
+        # Remap dark brown (lum 30..210) to fluffy snow-white plumage (226..244) + original feather strand grain!
+        white_plumage = np.clip(228.0 + (t_lum - 100.0) * 0.10, 218.0, 246.0)[..., None] + t_grain * 0.55
+        white_plumage = np.clip(white_plumage, 0, 255)
 
-        # 1) Upper wing-raise field (y around 330..525): pulls brown wing from y~560 up to y~410!
-        up_env_l = gaussian_2d(xx, yy, 115.0, 425.0, 78.0, 75.0) * left_side_gate
-        up_env_r = gaussian_2d(xx, yy, 909.0, 425.0, 78.0, 75.0) * right_side_gate
+        darkness_weight = np.clip((228.0 - t_lum) / 75.0, 0.0, 1.0) * outer_wing_zone
+        tit_np[..., :3] = tit_np[..., :3] * (1.0 - darkness_weight[..., None]) + white_plumage * darkness_weight[..., None]
 
-        dx -= up_env_l * 62.0
-        dy -= up_env_l * 155.0
-        dx += up_env_r * 62.0
-        dy -= up_env_r * 155.0
+        # 2) Now add the two raised feathered wing-thumbs (`👍 👍`) in front of the chest (matching `cat_7`'s clean 3D thumbs-up),
+        #    colored in snow-white plumage with dark charcoal-brown wing-tip shading on the outer edge!
+        h7_np = np.asarray(hamster_7_rgba, dtype=np.float32)
+        paw_dx = np.zeros((h, w), dtype=np.float32)
+        paw_dy = np.zeros((h, w), dtype=np.float32)
+        for cx_p in (148.0, 876.0):
+            rx = xx - cx_p
+            ry = yy - 680.0
+            env = gaussian_2d(xx, yy, cx_p, 680.0, 85.0, 115.0)
+            paw_dx += rx * 0.24 * env
+            paw_dy += ry * 0.14 * env
 
-        # 2) Lower wing-tuck field (y around 535..730): pulls white chest feathers outward over the old downward wing
-        tuck_env_l = gaussian_2d(xx, yy, 145.0, 605.0, 72.0, 85.0) * left_side_gate * np.clip((yy - 505.0) / 35.0, 0.0, 1.0)
-        tuck_env_r = gaussian_2d(xx, yy, 879.0, 605.0, 72.0, 85.0) * right_side_gate * np.clip((yy - 505.0) / 35.0, 0.0, 1.0)
+        plump_h7 = np.asarray(apply_displacement_warp(hamster_7_rgba, paw_dx, paw_dy), dtype=np.float32)
+        r, g, b = plump_h7[..., 0], plump_h7[..., 1], plump_h7[..., 2]
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        f_grain = tit_np[..., 0] - ndimage.gaussian_filter(tit_np[..., 0], sigma=3.0)
 
-        dx -= tuck_env_l * 140.0
-        dy -= tuck_env_l * 25.0
-        dx += tuck_env_r * 140.0
-        dy -= tuck_env_r * 25.0
+        # Snow-white fluffy feather thumbs with warm dark-brown wing-tip tint on the outer rim
+        fur_lum = np.clip((lum - 135.0) * 0.78 + 208.0 + f_grain * 0.65, 135.0, 252.0)
+        outer_tip_tint = np.clip((155.0 - xx) / 55.0, 0.0, 1.0) + np.clip((xx - 869.0) / 55.0, 0.0, 1.0)
+        outer_tip_tint = np.clip(outer_tip_tint, 0.0, 1.0) * 0.52
 
-        return apply_displacement_warp(base_rgba, dx, dy)
+        wing_rgb = np.dstack([
+            np.clip(fur_lum * (1.0 - outer_tip_tint * 0.55), 0, 255),
+            np.clip(fur_lum * 0.985 * (1.0 - outer_tip_tint * 0.62), 0, 255),
+            np.clip(fur_lum * 0.970 * (1.0 - outer_tip_tint * 0.68), 0, 255),
+        ])
+
+        left_w_rgb = np.roll( np.roll(wing_rgb, 42, axis=1), -55, axis=0)
+        left_w_a = np.roll(np.roll(plump_h7[..., 3], 42, axis=1), -55, axis=0)
+        right_w_rgb = np.roll(np.roll(wing_rgb, -42, axis=1), -55, axis=0)
+        right_w_a = np.roll(np.roll(plump_h7[..., 3], -42, axis=1), -55, axis=0)
+
+        left_a_clean = ndimage.gaussian_filter(ndimage.grey_erosion(left_w_a, size=(5, 5)).astype(np.float32) / 255.0, sigma=2.0)
+        right_a_clean = ndimage.gaussian_filter(ndimage.grey_erosion(right_w_a, size=(5, 5)).astype(np.float32) / 255.0, sigma=2.0)
+
+        mask_l = np.clip(gaussian_2d(xx, yy, 190.0, 625.0, 62.0, 102.0) * 1.45, 0.0, 1.0) * left_a_clean
+        mask_r = np.clip(gaussian_2d(xx, yy, 834.0, 625.0, 62.0, 102.0) * 1.45, 0.0, 1.0) * right_a_clean
+
+        shadow_l = gaussian_2d(xx, yy, 208.0, 638.0, 68.0, 108.0) * (1.0 - mask_l * 0.7)
+        shadow_r = gaussian_2d(xx, yy, 816.0, 638.0, 68.0, 108.0) * (1.0 - mask_r * 0.7)
+        chest_shadow = np.clip(shadow_l + shadow_r, 0.0, 1.0)
+
+        tit_np[..., :3] *= (1.0 - 0.24 * chest_shadow[..., None])
+        tit_np[..., :3] = tit_np[..., :3] * (1.0 - mask_l[..., None]) + left_w_rgb * mask_l[..., None]
+        tit_np[..., :3] = tit_np[..., :3] * (1.0 - mask_r[..., None]) + right_w_rgb * mask_r[..., None]
+        tit_np[..., 3] = np.maximum(tit_np[..., 3], np.maximum(mask_l, mask_r) * 255.0)
+
+        return Image.fromarray(np.clip(tit_np, 0, 255).astype(np.uint8), "RGBA")
     else:
         # Cat (#7 엄지척):
         # Use the real 3D photographic thumbs-up geometry & chest shadow from `hamster_7_rgba`,
