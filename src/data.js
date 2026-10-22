@@ -105,6 +105,14 @@ export const MODES = {
 };
 
 // 홈 화면 한 줄 (무표정)
+// 홈 말풍선 난장판에 섞이는 아무 말 (친구 말버릇과 같이)
+export const CHATTER = {
+  ko: ['ㅋ', '뿡?', '방금 그거 나 아님', '냄새 확인 중', '쉿', '누구야', 'ㄹㅇ', '...', '!!', '배고픔', '괄약근 출근함', '곧 터짐 ㄱㄷ',
+    '여기 아무도 없음', '진동 아님', '회의 언제 끝남', '참는 중 (3시간째)', '뿌직', '아무 일도 없었다', '증거 불충분', 'ㅇㅇ', '?', '방구 장전 완료'],
+  en: ['lol', 'toot?', "wasn't me", 'smell check', 'shh', 'who did it', 'fr', '...', '!!', 'hungry', 'clench mode on', 'any minute now',
+    'nobody here', 'not a buzz', 'when does this meeting end', 'holding (3h)', 'oops', 'nothing happened', 'no evidence', 'k', '?', 'toot loaded']
+};
+
 export const HOME_LINES = {
   ko: ['언제 터지는지는 나도 모름.\n그게 포인트임.', '주머니 조심.', '지금은 조용함.\n지금은.', '회의 있으면 멈춤 눌러.', '낼지 참을지는\n폰 모드가 정함.'],
   en: ['When? No idea.\nThat’s the point.', 'Mind your pocket.', 'Quiet for now.\nFor now.', 'Meeting? Hit pause.', 'Your ringer decides\nloud or held.']

@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, TIPS, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, TIPS, CHATTER, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -244,15 +244,23 @@ function shuffleStage() {
   hero.bottom = `calc((100% - ${H}) * ${lift.toFixed(2)} - 4px)`;
   hero.setProperty('--tx', '-50%');
   hero.setProperty('--rot', `${tilt.toFixed(0)}deg`);
-  // 말풍선: 캐릭터 머리 옆, 넓은 쪽으로 (화면 밖으로 나가면 안쪽으로 붙임)
+  // 말풍선 난장판: 앞 2개는 캐릭터 머리 옆 (넓은 쪽), 나머지는 아무 데나 · 크기 · 각도 랜덤
   const right = cx < 55;
-  ['bubble1', 'bubble2'].forEach((id, i) => {
-    const b = $(id).style, k = (0.28 + i * 0.06).toFixed(2);
-    b.left = right ? `min(calc(${cx.toFixed(1)}% + ${H} * ${k}), 52%)` : 'auto';
-    b.right = right ? 'auto' : `min(calc(${(100 - cx).toFixed(1)}% + ${H} * ${k}), 52%)`;
-    b.bottom = `clamp(0px, calc((100% - ${H}) * ${Math.max(0, lift).toFixed(2)} + ${H} * ${(0.72 - i * 0.2).toFixed(2)}), calc(100% - 40px))`;
-    $(id).classList.toggle('flip', !right);
+  const talk = Math.round(roll([[0.3, 2, 2], [0.3, 3, 3], [0.2, 4, 5], [0.13, 6, 8], [0.07, 10, 14]]));
+  bubbleLayout = Array.from({ length: talk }, (_, i) => {
+    const near = i < 2, k = (0.28 + i * 0.06).toFixed(2);
+    const side = near ? right : Math.random() < 0.5;
+    return {
+      left: near ? (right ? `min(calc(${cx.toFixed(1)}% + ${H} * ${k}), 52%)` : 'auto') : side ? `${r(0, 60).toFixed(0)}%` : 'auto',
+      right: near ? (right ? 'auto' : `min(calc(${(100 - cx).toFixed(1)}% + ${H} * ${k}), 52%)`) : side ? 'auto' : `${r(0, 60).toFixed(0)}%`,
+      bottom: near ? `clamp(0px, calc((100% - ${H}) * ${Math.max(0, lift).toFixed(2)} + ${H} * ${(0.72 - i * 0.2).toFixed(2)}), calc(100% - 40px))` : `${r(0, 88).toFixed(0)}%`,
+      flip: near ? !right : !side,
+      rot: near ? roll([[0.8, -4, 4], [0.2, -15, 15]]) : roll([[0.55, -6, 6], [0.3, -25, 25], [0.15, -90, 90]]),
+      scale: near ? 1 : roll([[0.6, 0.85, 1.1], [0.25, 0.6, 0.85], [0.15, 1.2, 2]]),
+      accent: i === 1 || (!near && Math.random() < 0.35)
+    };
   });
+  renderBubbles();
   // 소품 난장판: 몇 개 · 어디 · 얼마나 크게 · 몇 도로 다 랜덤 (자리만 뽑아 두고 그림은 renderProps 가)
   const count = Math.round(roll([[0.45, 1, 1], [0.25, 2, 2], [0.15, 3, 4], [0.1, 5, 7], [0.05, 9, 14]]));
   propLayout = Array.from({ length: count }, (_, i) => ({
@@ -274,18 +282,25 @@ function renderProps(force = false) {
   const key = `${state.equip.prop}|${propLayout.length}`;
   if (!force && key === propKey) return;
   propKey = key;
-  const others = ownedOf('prop').filter(x => x.src && x.id !== main?.id);
+  // 난장판은 종류도 섞는다: 장착한 것 + 모든 소품 (안 가진 것도 = 맛보기)
+  const others = ITEMS.filter(x => x.slot === 'prop' && x.src && x.id !== main?.id);
   $('homeProps').innerHTML = main?.src ? propLayout.map((p, i) => {
-    const src = i > 0 && others.length && p.other < 0.3 ? others[Math.floor(p.other / 0.3 * others.length)].src : main.src;
+    const src = i > 0 && others.length && p.other < 0.75 ? others[Math.floor(p.other / 0.75 * others.length)].src : main.src;
     return `<img src="${src}" alt="" style="left:${p.x.toFixed(1)}%;width:${p.w.toFixed(0)}%;bottom:${(p.lift * 75).toFixed(0)}%;transform:translateX(-50%) rotate(${p.rot.toFixed(0)}deg)${p.flip ? ' scaleX(-1)' : ''};z-index:${p.front ? 4 : 0}">`;
   }).join('') : '';
 }
 
-function newBubbles() {
-  const lines = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
-  $('bubble1').textContent = lines[0];
-  $('bubble2').textContent = lines[1];
+let bubbleLayout = [];
+/** 말풍선들을 bubbleLayout 자리에 (말은 친구 말버릇 먼저, 모자라면 아무 말) */
+function renderBubbles() {
+  const skin = itemById(state.equip.bubble);
+  const mine = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
+  const more = [...L(CHATTER)].sort(() => Math.random() - 0.5);
+  const lines = [...mine.slice(0, 2), ...more, ...mine.slice(2)];
+  $('bubbles').innerHTML = bubbleLayout.map((b, i) => `<span class="bubble ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${state.equip.bubble}"
+    style="left:${b.left};right:${b.right};bottom:${b.bottom};transform:rotate(${b.rot.toFixed(0)}deg) scale(${b.scale.toFixed(2)});transform-origin:${b.flip ? 'right' : 'left'} bottom;--bubble-img:${skin?.src ? `url(${skin.src})` : 'none'}">${esc(lines[i % lines.length])}</span>`).join('');
 }
+const newBubbles = () => renderBubbles();
 
 function renderHome() {
   const n = remainingToday();
@@ -471,12 +486,7 @@ function applySkin() {
   app.classList.toggle('photo', bg.css.includes('url(assets/skin/'));
   app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
   renderProps();
-  const bubble = itemById(state.equip.bubble);
-  for (const b of ['bubble1', 'bubble2']) {
-    $(b).dataset.skin = state.equip.bubble;
-    $(b).classList.toggle('img', !!bubble?.src);
-    $(b).style.setProperty('--bubble-img', bubble?.src ? `url(${bubble.src})` : 'none');
-  }
+  if ($('bubbles').firstElementChild?.dataset.skin !== state.equip.bubble) renderBubbles();
   const wear = itemById(state.equip.wear);
   $('heroWear').hidden = !wear?.src;
   if (wear?.src) $('heroWear').src = wear.src;

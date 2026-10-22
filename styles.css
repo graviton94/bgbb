@@ -51,11 +51,13 @@ img { -webkit-user-drag: none; }
 
 /* ---------------------------------------------------------- 위 · 아래 */
 .top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px 0;
+  flex: none; position: relative; z-index: 5;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 10px 20px 8px;
+  background: #F2F2F0; color: #111; border-bottom: 1px solid rgba(0,0,0,.08);   /* 위 헤더는 배경이 뭐든 늘 같은 바탕 */
 }
+.top-row { display: flex; justify-content: space-between; align-items: center; }
+.top .status { margin-top: 0; min-height: 28px; }
 .logo { font-family: var(--display); font-size: 22px; letter-spacing: -0.5px; }
 .top-right { display: flex; align-items: center; gap: 4px; font-size: 13px; }
 .icon-btn {
@@ -118,10 +120,9 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .chip.on { background: var(--ink); color: #fff; font-weight: 700; }
 
 /* ---------------------------------------------------------- 홈 */
-#screen-home .status { text-align: left; font-weight: 700; color: var(--ink); }
+.top .status { text-align: left; font-weight: 700; color: #111; }
 .status .dot { flex: none; align-self: flex-start; margin-top: 6px; }
 .status #statusText small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
-.app.dark .status #statusText small { color: rgba(255,255,255,.75); }
 .label-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: clamp(4px, 3dvh, 34px); }
 .label-row .label { margin-top: 0; }
 .mute {
@@ -182,8 +183,8 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
 }
 /* 말풍선은 캐릭터 머리 옆에 붙어 다닌다 (무대 높이가 바뀌어도) */
-#bubble1 { left: 44%; bottom: calc(min(100%, 250px) * 0.7); }
-#bubble2 { left: 50%; bottom: calc(min(100%, 250px) * 0.7 - 54px); }
+.bubbles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.bubbles .bubble { white-space: nowrap; max-width: none; }
 .bubble.accent { background: var(--lime); }
 .bubble.flip { border-radius: 18px 18px 4px 18px; }
 
@@ -473,9 +474,7 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 /* ---------------------------------------------------------- 꾸미기 (홈에 입히기) */
 .app { transition: background 0.2s; }
 .app.dark { --ink-on: #fff; }
-.app.dark .logo, .app.dark .top-right, .app.dark .icon-btn, .app.dark #screen-home .label, .app.dark #screen-home .big,
-.app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status { color: #fff; }
-.app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status, .app.dark .top-right { opacity: 0.85; }
+.app.dark #screen-home .label, .app.dark #screen-home .big, .app.dark #screen-home .line, .app.dark #screen-home .today-stats { color: #fff; }
 /* 아래 탭 줄은 배경이 뭐든 늘 같은 바탕 · 글자색 (메뉴가 보이게) */
 .nav { background: #F2F2F0; border-top: 1px solid rgba(0,0,0,.08); }
 .nav .tab { color: #6B6B66; }
@@ -525,6 +524,12 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .shop .pv .bubble.img { padding: 14px 20px 20px !important; }
 
 /* 홈 무대: 캐릭터가 커지거나 날아다녀도 글자 · 버튼은 그 위에 */
-#screen-home .status, #screen-home .label-row, #screen-home .big, #screen-home .line, #screen-home .today-stats, .home-bottom { position: relative; z-index: 2; }
+#screen-home .label-row, #screen-home .big, #screen-home .line, #screen-home .today-stats, .home-bottom { position: relative; z-index: 2; }
 .stage { z-index: 1; }
 .bubble { z-index: 3; }
+
+/* 큰 글자는 뭐가 뒤에 깔려도 읽히게: 두꺼운 테두리 */
+#screen-home .big { -webkit-text-stroke: 7px #F2F2F0; paint-order: stroke fill; text-shadow: 0 3px 0 rgba(0,0,0,.08); }
+.app.dark #screen-home .big { -webkit-text-stroke-color: #111; }
+#screen-home .label, #screen-home .today-stats { text-shadow: 0 0 3px #F2F2F0, 0 0 6px #F2F2F0; font-weight: 700; }
+.app.dark #screen-home .label, .app.dark #screen-home .today-stats { text-shadow: 0 0 3px #111, 0 0 6px #111; }
