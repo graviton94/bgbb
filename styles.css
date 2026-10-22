@@ -521,3 +521,8 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .wear-pv img { position: absolute; inset: 0; width: 100%; max-width: none; max-height: none; }
 .sfx-pv { font-family: var(--display); font-size: 30px; color: #FFD400; -webkit-text-stroke: 3px #111; paint-order: stroke fill; }
 .shop .pv .bubble.img { padding: 14px 20px 20px !important; }
+
+/* 홈 무대: 캐릭터가 커지거나 날아다녀도 글자 · 버튼은 그 위에 */
+#screen-home .status, #screen-home .label-row, #screen-home .big, #screen-home .line, #screen-home .today-stats, .home-bottom { position: relative; z-index: 2; }
+.stage { z-index: 1; }
+.bubble { z-index: 3; }

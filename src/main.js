@@ -225,33 +225,41 @@ function heroId() {
   return on.some(c => c.id === state.hero) ? state.hero : (on[0] || CHARACTERS[0]).id;
 }
 
-// 홈 무대: 앱 열 때마다 캐릭터 자리(왼 · 오른 · 가운데) · 크기 · 기울기, 말풍선 자리, 소품 쪽이 바뀐다
+// 홈 무대: 앱 열 때마다 캐릭터 자리 · 높이 · 크기 (30~300%) · 기울기 (360도까지), 말풍선 · 소품 자리가 바뀐다.
+// 평범한 값일수록 자주, 파격적일수록 드물게.
+const roll = table => { let x = Math.random(); for (const [p, a, b] of table) { if ((x -= p) < 0) return a + Math.random() * (b - a); } return table[0][1]; };
+const SIZES = [[0.55, 0.85, 1.1], [0.14, 0.55, 0.85], [0.06, 0.3, 0.55], [0.15, 1.1, 1.6], [0.07, 1.6, 2.2], [0.03, 2.2, 3]];   // [확률, 최소, 최대]
+const TILTS = [[0.6, -12, 12], [0.22, -40, 40], [0.1, 120, 240], [0.08, -180, 180]];   // 가끔 거꾸로 · 아무 각도
+const LIFTS = [[0.6, -0.05, 0.08], [0.25, 0.08, 0.6], [0.1, 0.6, 1], [0.05, -0.45, -0.05]];   // 바닥 기준 높이 (0 = 바닥, 1 = 천장, 음수 = 아래로 잘림)
 function shuffleStage() {
   const r = (a, b) => a + Math.random() * (b - a);
-  const side = pick(['l', 'l', 'r', 'c']), size = r(0.78, 1), hero = $('hero').style;
-  hero.maxHeight = `${Math.round(250 * size)}px`;
-  hero.maxWidth = `${Math.round(58 * size)}%`;
-  hero.setProperty('--rot', `${r(-9, 7).toFixed(1)}deg`);
-  hero.left = side === 'l' ? `${r(-4, 6).toFixed(1)}%` : side === 'c' ? '50%' : 'auto';
-  hero.right = side === 'r' ? `${r(-4, 6).toFixed(1)}%` : 'auto';
-  hero.setProperty('--tx', side === 'c' ? '-50%' : '0px');
-  // 말풍선: 캐릭터 머리 옆 (가운데면 머리 위 양쪽으로 갈라짐)
-  const head = `min(100%, ${Math.round(250 * size)}px)`, up = r(0.62, 0.85).toFixed(2);
-  const spots = side === 'l' ? [{ left: `${r(40, 50)}%` }, { left: `${r(46, 56)}%` }]
-    : side === 'r' ? [{ right: `${r(40, 50)}%` }, { right: `${r(46, 56)}%` }]
-      : [{ left: `${r(0, 8)}%` }, { right: `${r(0, 8)}%` }];
+  const size = roll(SIZES), tilt = roll(TILTS), lift = roll(LIFTS);
+  const cx = size > 1.6 ? r(30, 70) : r(18, 82);   // 캐릭터 가운데 x (%)
+  const H = `(min(100%, 250px) * ${size.toFixed(2)})`, hero = $('hero').style;
+  hero.height = `calc${H}`;
+  hero.maxHeight = 'none';
+  hero.maxWidth = 'none';
+  hero.left = `${cx.toFixed(1)}%`;
+  hero.right = 'auto';
+  hero.bottom = `calc((100% - ${H}) * ${lift.toFixed(2)} - 4px)`;
+  hero.setProperty('--tx', '-50%');
+  hero.setProperty('--rot', `${tilt.toFixed(0)}deg`);
+  // 말풍선: 캐릭터 머리 옆, 넓은 쪽으로 (화면 밖으로 나가면 안쪽으로 붙임)
+  const right = cx < 55;
   ['bubble1', 'bubble2'].forEach((id, i) => {
-    const b = $(id).style, s = spots[i];
-    b.left = s.left || 'auto';
-    b.right = s.right || 'auto';
-    b.bottom = side === 'c' ? `calc(${head} * ${(0.86 - i * 0.18).toFixed(2)})` : `calc(${head} * ${up} - ${i * 54}px)`;
-    $(id).classList.toggle('flip', side === 'r' || (side === 'c' && i === 0));
+    const b = $(id).style, k = (0.28 + i * 0.06).toFixed(2);
+    b.left = right ? `min(calc(${cx.toFixed(1)}% + ${H} * ${k}), 52%)` : 'auto';
+    b.right = right ? 'auto' : `min(calc(${(100 - cx).toFixed(1)}% + ${H} * ${k}), 52%)`;
+    b.bottom = `clamp(0px, calc((100% - ${H}) * ${Math.max(0, lift).toFixed(2)} + ${H} * ${(0.72 - i * 0.2).toFixed(2)}), calc(100% - 40px))`;
+    $(id).classList.toggle('flip', !right);
   });
-  // 소품은 빈 쪽 바닥
-  const prop = $('homeProp').style, propLeft = side === 'r' || (side === 'c' && Math.random() < 0.5);
-  prop.left = propLeft ? `${r(0, 5)}%` : 'auto';
-  prop.right = propLeft ? 'auto' : `${r(0, 5)}%`;
-  prop.width = `${Math.round(r(26, 36))}%`;
+  // 소품: 반대쪽 바닥, 크기도 가끔 엉뚱하게
+  const prop = $('homeProp').style;
+  prop.left = right ? 'auto' : `${r(0, 6)}%`;
+  prop.right = right ? `${r(0, 6)}%` : 'auto';
+  prop.width = `${Math.round(roll([[0.75, 24, 36], [0.15, 12, 24], [0.1, 36, 60]]))}%`;
+  prop.maxWidth = 'none';
+  prop.transform = `rotate(${roll([[0.8, -12, 12], [0.2, -60, 60]]).toFixed(0)}deg)`;
 }
 
 function newBubbles() {
