@@ -11,6 +11,7 @@ import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { composeMeme, newsMeme, titleMeme, renderMeme } from './memes.js';
+import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, DEFAULT_EQUIP } from './items.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -138,7 +139,7 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
     $('burstTitle').textContent = L(title.name);
     $('burstBar').style.width = '0%';
     requestAnimationFrame(() => { $('burstBar').style.width = `${(ownedCount() / TITLES.length) * 100}%`; });
-    $('burstMeta').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
+    $('burstMeta').textContent = `${t('home.dexCount', { n: ownedCount(), all: TITLES.length })} · ${t('burst.coins', { n: result.coins })}`;
     burstCard = shareData(ev, meme, result.title);
   } else if (kind === 'gacha') {
     $('burstChip').hidden = !meme.legend && !meme.real;
@@ -152,7 +153,7 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
     $('burstChip').hidden = true;
     $('burstWhen').textContent = kind === 'miss' ? info : t('burst.practice');
     $('burstTitle').textContent = kind === 'miss' ? caption : t('burst.practiceTitle');
-    $('burstMeta').textContent = '';
+    $('burstMeta').textContent = kind === 'miss' ? t('burst.coins', { n: result.coins }) : '';
     burstCard = shareData(ev, meme, null, kind === 'miss' ? caption : t('burst.practiceTitle'));
   }
   dlg.classList.remove('play');
@@ -256,7 +257,7 @@ function renderHome() {
   const mood = state.frozen ? 'whistle' : isActive() && inWindow() ? 'hold' : 'blank';
   if (!heroBusy && $('heroImg').dataset.mood !== `${c.id}:${mood}`) {
     $('heroImg').dataset.mood = `${c.id}:${mood}`;
-    $('heroImg').src = face(c.id, mood);
+    $('heroImg').src = face(c.id, mood, realLook());
   }
   $('hero').setAttribute('aria-label', t('home.heroLabel', { name: L(c.name) }));
   const latest = state.recent[0];
@@ -274,7 +275,7 @@ $('hero').addEventListener('click', () => {
   playFriend(id, styleOf(id), getDiy(), 0.7);
   // 누르면 잠깐 터지는 얼굴
   clearTimeout(heroBusy);
-  $('heroImg').src = face(id, 'burst');
+  $('heroImg').src = face(id, 'burst', realLook());
   heroBusy = setTimeout(() => { heroBusy = 0; $('heroImg').dataset.mood = ''; renderHome(); }, 900);
   $('hero').classList.remove('wiggle');
   void $('hero').offsetWidth;
@@ -401,13 +402,83 @@ $('mute').addEventListener('click', () => {
 });
 window.bgbbOnSound = () => renderStatus();
 
+// ---------------------------------------------------------- 꾸미기: 홈에 입히기 + 상점
+const realLook = () => state.equip.look === 'look_real';
+// '오늘의 배경: 랜덤' 이면 앱 열 때마다 가진 배경 중 하나
+const ownedOf = slot => ITEMS.filter(x => x.slot === slot && isOwned(x, state.titles, state.bought));
+let randomBg = null;
+function applySkin() {
+  let bg = itemById(state.equip.bg) || itemById(DEFAULT_EQUIP.bg);
+  if (bg.random) {
+    const pool = ownedOf('bg').filter(x => !x.random);
+    if (!randomBg || !pool.includes(randomBg)) randomBg = pool[Math.floor(Math.random() * pool.length)];
+    bg = randomBg;
+  }
+  const app = document.querySelector('.app');
+  app.style.background = bg.css;
+  app.classList.toggle('dark', !!bg.dark);
+  app.classList.toggle('vivid', !!bg.vivid);
+  app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
+  const prop = itemById(state.equip.prop);
+  $('homeProp').hidden = !prop?.src;
+  if (prop?.src) $('homeProp').src = prop.src;
+  for (const b of ['bubble1', 'bubble2']) $(b).dataset.skin = state.equip.bubble;
+}
+
+let shopSlot = 'bg';
+function itemPreview(x) {
+  if (x.slot === 'bg') return `<span class="sw" style="background:${x.css}${x.frame ? `;box-shadow:inset 0 0 0 4px ${x.frame}` : ''}"></span>`;
+  if (x.slot === 'prop') return x.src ? `<img src="${x.src}" alt="">` : '<span class="none">—</span>';
+  if (x.slot === 'bubble') return `<span class="bubble" data-skin="${x.id}">${t('shop.sample')}</span>`;
+  return `<img src="${face(heroId(), 'blank', x.id === 'look_real')}" alt="">`;
+}
+function renderShop() {
+  $('coins').textContent = t('shop.coins', { n: state.coins });
+  $('slots').innerHTML = SLOTS.map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
+  $('shopList').innerHTML = ITEMS.filter(x => x.slot === shopSlot).map(x => {
+    const owned = isOwned(x, state.titles, state.bought), on = state.equip[x.slot] === x.id;
+    const hint = x.title && (state.titles[x.title] ? L(titleById(x.title).name) : L(titleById(x.title).hint));
+    const how = on ? t('shop.equipped') : owned ? t('shop.equip')
+      : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : t('shop.buy', { n: x.price });
+    return `<li><button class="item ${owned ? '' : 'locked'} ${on ? 'on' : ''}" data-id="${x.id}" type="button">
+      <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${esc(how)}</small></button></li>`;
+  }).join('');
+}
+$('slots').addEventListener('click', e => {
+  const b = e.target.closest('.chip');
+  if (!b) return;
+  shopSlot = b.dataset.s;
+  play('ui_pop', 0.4);
+  renderShop();
+});
+$('shopList').addEventListener('click', e => {
+  const b = e.target.closest('.item');
+  if (!b) return;
+  const x = itemById(b.dataset.id);
+  if (!isOwned(x, state.titles, state.bought)) {
+    if (!x.price) { toast(t('shop.title_only', { hint: L(titleById(x.title).hint) })); return; }
+    if (state.coins < x.price) { toast(t('shop.poor')); return; }
+    if (!confirm(t('shop.confirm', { name: L(x.name), n: x.price }))) return;
+    state.coins -= x.price;
+    state.bought[x.id] = true;
+    play('ui_levelup', 0.5);
+    toast(t('shop.bought', { name: L(x.name) }));
+  } else play('ui_pop', 0.4);
+  state.equip[x.slot] = x.id;
+  if (x.random) randomBg = null;
+  $('heroImg').dataset.mood = '';   // 모습이 바뀌었으면 홈 캐릭터 다시
+  commit();
+});
+
 // ---------------------------------------------------------- 렌더
 function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
   renderStatus();
   renderHome();
+  applySkin();
   if (screen === 'dex') renderDex();
+  if (screen === 'shop') renderShop();
   if ($('settingsSheet').open) renderSettings();
   if ($('supportSheet').open) renderTips();
 }

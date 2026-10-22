@@ -1,6 +1,7 @@
 // 앱 상태 하나 + 저장 + 변경 알림. 화면은 subscribe 해서 다시 그린다.
 import { CHARACTERS, MODES } from './data.js';
 import { TITLES, pickTitle, contextOf } from './titles.js';
+import { COINS, TITLE_BONUS, DEFAULT_EQUIP } from './items.js';
 
 const KEY = 'bgbb.v2';
 const DIY_KEY = 'bgbb.v1.diy';   // 녹음은 커서 따로 둔다 (상태 저장 때마다 다시 쓰지 않게)
@@ -20,6 +21,9 @@ function initial() {
     recent: [],           // 최근 터진 기록 [{ t, char, mode, title }]
     cushion: 0,           // 방석 모드에 걸린 횟수
     gacha: { day: '', n: 0 },     // 오늘 '짤 뽑기' 쓴 횟수 (하루 3번)
+    coins: 0,             // 뿡코인 (꾸미기 상점)
+    bought: {},           // 산 꾸미기 아이템 id → true
+    equip: { ...DEFAULT_EQUIP },   // 장착 중 { bg, prop, bubble, look }
     tips: [],             // 응원한 상품 ID (Google Play 가 확인해 준 것만)
     plan: null,           // 웹 미리보기용 작전 일정 { day, times }
     sentConfig: ''        // 마지막으로 적용한 작전 설정
@@ -40,6 +44,7 @@ function load() {
       const b = base[k];
       base[k] = b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...saved[k] } : saved[k];
       // 작전 시간은 06~24시 고정 (유저가 못 바꾼다), 끄는 건 비상탈출로만
+      if (k === 'equip') base.equip = { ...DEFAULT_EQUIP, ...saved.equip };
       if (k === 'schedule') Object.assign(base.schedule, { on: true, start: 6, end: 0, rest: { ...initial().schedule.rest, ...saved.schedule?.rest } });
     }
     for (const c of CHARACTERS) {
@@ -122,7 +127,7 @@ export const ownedCount = () => TITLES.filter(x => state.titles[x.id]).length;
 
 /**
  * 터진 것 1회 기록 + 칭호. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로.
- * 돌려주는 것: { t, char, mode, title(id), isNew }
+ * 돌려주는 것: { t, char, mode, title(id), isNew, coins(이번에 번 뿡코인) }
  */
 export function recordOperation({ t, char, mode }) {
   const m = MODES[mode] ? mode : 'hold';
@@ -145,5 +150,7 @@ export function recordOperation({ t, char, mode }) {
   own.last = ev;
   state.recent.unshift({ ...ev, title: title.id });
   state.recent.length = Math.min(state.recent.length, RECENT);
-  return { ...ev, title: title.id, isNew };
+  const coins = COINS[m] + (isNew ? TITLE_BONUS[title.rarity] : 0);
+  state.coins += coins;
+  return { ...ev, title: title.id, isNew, coins };
 }

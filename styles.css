@@ -463,3 +463,46 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .rest-note { margin: 18px 0 16px; font-weight: 700; font-size: 16px; }
 .rest-actions { display: flex; gap: 8px; }
 .rest-actions .btn { flex: 1; }
+
+/* ---------------------------------------------------------- 꾸미기 (홈에 입히기) */
+.app { transition: background 0.2s; }
+.app.dark { --ink-on: #fff; }
+.app.dark .logo, .app.dark .top-right, .app.dark .icon-btn, .app.dark #screen-home .label, .app.dark #screen-home .big,
+.app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status { color: #fff; }
+.app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status, .app.dark .top-right { opacity: 0.85; }
+.app.dark .nav .tab { color: rgba(255,255,255,.6); }
+.app.dark .nav .tab.active { color: #fff; }
+.nav { background: transparent; }
+.home-prop { position: absolute; right: 2%; bottom: 0; width: 34%; max-width: 150px; max-height: 70%; object-fit: contain; object-position: bottom; pointer-events: none; }
+
+/* 말풍선 스킨 */
+.bubble[data-skin="bubble_kakao"] { background: #FEE500; color: #111; border-radius: 4px 16px 16px 16px; }
+.bubble.accent[data-skin="bubble_kakao"] { background: #fff; }
+.bubble[data-skin="bubble_impact"] { background: none; box-shadow: none; padding: 0; font-family: var(--display); font-weight: 400; font-size: 24px; color: #fff; -webkit-text-stroke: 4px #111; paint-order: stroke fill; }
+.bubble[data-skin="bubble_ppt"] { background: #fff; border: 3px solid #8A2BE2; border-radius: 14px; color: #E0262B; font-weight: 800; }
+.bubble.accent[data-skin="bubble_ppt"] { color: #1E7BD8; background: #fff; }
+.bubble[data-skin="bubble_receipt"] { background: #fff; border: 1.5px dashed #555; border-radius: 0; font-family: 'Courier New', monospace; font-weight: 700; }
+.bubble[data-skin="bubble_news"] { background: #fff; border-radius: 0; border-left: 8px solid #E8261C; font-weight: 900; }
+.bubble.accent[data-skin="bubble_news"] { background: #FFD400; border-left-color: #111; }
+
+/* 꾸미기 탭 */
+#screen-shop { padding: 0 0 16px; background: var(--card); color: #111; }
+.coins { font-family: var(--display); font-size: 24px; }
+.shop-how { margin: 8px 16px 0; }
+.shop { list-style: none; margin: 0; padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.item {
+  width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 8px;
+  border: 1.5px solid #E2E2DE; border-radius: 14px; background: #fff; color: #111; text-align: left; cursor: pointer;
+}
+.item.on { border: 2.5px solid #111; }
+.item.locked .pv::after { content: '🔒'; position: absolute; right: 6px; top: 4px; font-size: 16px; }
+.item b { font-size: 14px; }
+.item small { font-size: 12px; color: #6B6B66; line-height: 1.3; }
+.item.on small { color: #111; font-weight: 800; }
+.pv { position: relative; display: grid; place-items: center; aspect-ratio: 1.3; border-radius: 10px; background: #F2F2F0; overflow: hidden; }
+.pv .sw { position: absolute; inset: 0; }
+.pv img { max-width: 70%; max-height: 80%; object-fit: contain; }
+.pv .bubble { position: static; max-width: 80%; }
+.pv .none { font-size: 22px; color: #999; }
+.screen > * { flex-shrink: 0; }
+.app.vivid #screen-home .line, .app.vivid #screen-home .today-stats, .app.vivid #screen-home .status, .app.vivid #screen-home .label { color: #111; font-weight: 600; }

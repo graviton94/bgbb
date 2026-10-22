@@ -34,6 +34,7 @@
         <p class="line" id="homeLine"></p>
         <p class="today-stats" id="todayStats"></p>
         <div class="stage">
+          <img class="home-prop" id="homeProp" alt="" hidden>
           <button class="hero" id="hero" type="button"><img id="heroImg" alt=""></button>
           <span class="bubble" id="bubble1"></span>
           <span class="bubble accent" id="bubble2"></span>
@@ -51,6 +52,17 @@
         </div>
       </section>
 
+      <!-- 꾸미기: 배경 · 소품 · 말풍선 · 모습 (칭호로 해금하거나 뿡코인으로 사기) -->
+      <section class="screen" id="screen-shop">
+        <div class="dex-head">
+          <h2 data-i18n="shop.title"></h2>
+          <span class="coins" id="coins"></span>
+        </div>
+        <p class="muted small shop-how" data-i18n="shop.how"></p>
+        <div class="filters" id="slots"></div>
+        <ul class="shop" id="shopList"></ul>
+      </section>
+
       <!-- 칭호 도감 -->
       <section class="screen" id="screen-dex">
         <div class="dex-head">
@@ -66,6 +78,7 @@
     <nav class="nav">
       <button class="tab active" data-screen="home" type="button" data-i18n="tab.home"></button>
       <button class="tab" data-screen="dex" type="button" data-i18n="tab.dex"></button>
+      <button class="tab" data-screen="shop" type="button" data-i18n="tab.shop"></button>
       <button class="tab" id="tabSettings" type="button" data-i18n="tab.settings"></button>
     </nav>
   </div>
