@@ -253,13 +253,32 @@ function shuffleStage() {
     b.bottom = `clamp(0px, calc((100% - ${H}) * ${Math.max(0, lift).toFixed(2)} + ${H} * ${(0.72 - i * 0.2).toFixed(2)}), calc(100% - 40px))`;
     $(id).classList.toggle('flip', !right);
   });
-  // 소품: 반대쪽 바닥, 크기도 가끔 엉뚱하게
-  const prop = $('homeProp').style;
-  prop.left = right ? 'auto' : `${r(0, 6)}%`;
-  prop.right = right ? `${r(0, 6)}%` : 'auto';
-  prop.width = `${Math.round(roll([[0.75, 24, 36], [0.15, 12, 24], [0.1, 36, 60]]))}%`;
-  prop.maxWidth = 'none';
-  prop.transform = `rotate(${roll([[0.8, -12, 12], [0.2, -60, 60]]).toFixed(0)}deg)`;
+  // 소품 난장판: 몇 개 · 어디 · 얼마나 크게 · 몇 도로 다 랜덤 (자리만 뽑아 두고 그림은 renderProps 가)
+  const count = Math.round(roll([[0.45, 1, 1], [0.25, 2, 2], [0.15, 3, 4], [0.1, 5, 7], [0.05, 9, 14]]));
+  propLayout = Array.from({ length: count }, (_, i) => ({
+    x: i === 0 ? (right ? r(62, 92) : r(8, 38)) : r(-5, 100),   // 첫 개는 캐릭터 반대쪽, 나머지는 아무 데나
+    lift: i === 0 ? r(-0.02, 0.04) : roll([[0.55, -0.05, 0.08], [0.3, 0.08, 0.7], [0.15, 0.7, 1]]),
+    w: roll([[0.6, 18, 32], [0.2, 8, 18], [0.15, 32, 55], [0.05, 55, 95]]),
+    rot: roll([[0.65, -15, 15], [0.25, -70, 70], [0.1, -180, 180]]),
+    front: Math.random() < 0.25,   // 가끔 캐릭터 앞을 가림
+    flip: Math.random() < 0.3,
+    other: Math.random()            // 다른 가진 소품을 섞을지 (renderProps)
+  }));
+  renderProps(true);
+}
+
+let propLayout = [], propKey = '';
+/** 장착 소품 (+ 가끔 가진 다른 소품) 을 propLayout 자리에 깐다 */
+function renderProps(force = false) {
+  const main = itemById(state.equip.prop);
+  const key = `${state.equip.prop}|${propLayout.length}`;
+  if (!force && key === propKey) return;
+  propKey = key;
+  const others = ownedOf('prop').filter(x => x.src && x.id !== main?.id);
+  $('homeProps').innerHTML = main?.src ? propLayout.map((p, i) => {
+    const src = i > 0 && others.length && p.other < 0.3 ? others[Math.floor(p.other / 0.3 * others.length)].src : main.src;
+    return `<img src="${src}" alt="" style="left:${p.x.toFixed(1)}%;width:${p.w.toFixed(0)}%;bottom:${(p.lift * 75).toFixed(0)}%;transform:translateX(-50%) rotate(${p.rot.toFixed(0)}deg)${p.flip ? ' scaleX(-1)' : ''};z-index:${p.front ? 4 : 0}">`;
+  }).join('') : '';
 }
 
 function newBubbles() {
@@ -451,9 +470,7 @@ function applySkin() {
   app.classList.toggle('vivid', !!bg.vivid);
   app.classList.toggle('photo', bg.css.includes('url(assets/skin/'));
   app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
-  const prop = itemById(state.equip.prop);
-  $('homeProp').hidden = !prop?.src;
-  if (prop?.src) $('homeProp').src = prop.src;
+  renderProps();
   const bubble = itemById(state.equip.bubble);
   for (const b of ['bubble1', 'bubble2']) {
     $(b).dataset.skin = state.equip.bubble;
