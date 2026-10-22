@@ -46,3 +46,26 @@
 
 `assets/skin/` 에 옛 이름 파일이 같이 남아 있음 — 지워도 됨:
 `fx_bean` `fx_heart` `fx_petal` `fx_pixel` `fx_poop` `fx_rainbow` `fx_skull` `fx_star` · `bubble_kakao` `bubble_paper` · `frame_award` `frame_news` · `prop_luckybag` · `season/` 폴더의 중복본 (bg 폴더와 같은 것)
+
+---
+
+# 2차 검수 (2026-10-22, d2e8553 · 7e54bc8 · 0a185fb · d31e6dd · 013935f)
+
+## 합격 → 앱에 넣음 (13)
+- 착용: `wear_mask` `wear_heart` `wear_gasmask` `wear_party` `wear_crown` `wear_ribbon`
+- 소품: `prop_gasmask` `prop_extinguisher` `prop_spray` (아래쪽 흰 점 몇 개 남았지만 쓸 만함) `prop_bok`
+- 배경: `bg_subway` `bg_minihompy` `bg_error`
+  - 메모: `bg_minihompy` 창 제목의 "싸이월드", `bg_error` 의 "Windows" 글자는 실제 상표라 스토어 출시 전엔 지우거나 바꾸는 게 안전
+
+## 불량 → 다시 (11)
+| 파일 | 문제 |
+|---|---|
+| `wear_eyepatch` | 패치가 우표만큼 작고 끈이 막대기처럼 얼굴을 대각선으로 가로지름 |
+| `wear_headset` | 회색 사각 배경 통째로 남음 |
+| `wear_nerd` | 흰 사각 배경 통째로 남음 |
+| `wear_bandana` | 흰 사각 배경 통째로 남음 |
+| `wear_santa` (`wear/` 폴더 것) | 모자 아래 흰 사각 배경 남음 (`season/` 의 단색 벡터판도 임시 그림이라 안 씀) |
+| `prop_candle` `prop_fan` `prop_sweetpotato` `prop_beans` `prop_milk` | 전부 누끼 안 됨, 사각 배경 (흰색 · 회색 얼룩) 통째로 |
+| `prop_mic` | 마이크 머리 · 빨간 점 · 케이블이 서로 떨어져 둥둥 떠 있음 (한 덩어리 아님) |
+
+## 아직 안 옴 (22): 남은 목록 그대로

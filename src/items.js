@@ -52,8 +52,6 @@ const BG = [
   { id: 'bg_snow', name: { ko: '눈 오는 밤', en: 'Snowy night' }, price: 60, season: [12], css: photo('bg_snow') },
   { id: 'bg_hanbok', name: { ko: '한옥 마루', en: 'Hanok porch' }, price: 60, season: [1, 2], css: photo('bg_hanbok') },
   { id: 'bg_upsidedown', name: { ko: '뒤집힌 방', en: 'Upside-down room' }, price: 60, season: [4], css: photo('bg_upsidedown') },
-  { id: 'bg_random', name: { ko: '오늘의 배경: 랜덤', en: 'Random every day' }, price: 120, random: true,
-    css: 'conic-gradient(from 90deg, #FFE600, #FF7AB6, #7EC8FF, #D7FF3D, #FFE600)' }
 ];
 
 // prop: 캐릭터 반대쪽 아래에 서 있는 소품 (assets/deco)
@@ -157,12 +155,12 @@ const LOOK = [
 // 아직 안 내보내는 것: 그림이 아직 임시(자리표시)이거나 누끼 · 위치가 잘못돼서 다시 발주한 것 (docs/skins/REORDER.md).
 // 새 그림이 오면 tools/prepare_skins.py 로 변환하고 여기서 빼면 바로 상점 · 칭호 보상에 나온다.
 export const PENDING = new Set([
-  // 다시 발주 (불량)
-  'wear_heart', 'wear_eyepatch', 'wear_mask', 'wear_gasmask', 'prop_gasmask', 'prop_extinguisher', 'prop_spray',
-  // 아직 임시 그림 (제작 예정)
-  'wear_party', 'wear_crown', 'wear_headset', 'wear_ribbon', 'wear_nerd', 'wear_bandana', 'wear_santa',
-  'prop_candle', 'prop_fan', 'prop_mic', 'prop_sweetpotato', 'prop_beans', 'prop_milk', 'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_bok', 'prop_yeot',
-  'bg_subway', 'bg_elevator', 'bg_library', 'bg_toilet', 'bg_wedding', 'bg_chicken', 'bg_minihompy', 'bg_error', 'bg_snow', 'bg_hanbok', 'bg_upsidedown',
+  // 다시 발주 (2차 검수 불량)
+  'wear_eyepatch', 'wear_headset', 'wear_nerd', 'wear_bandana', 'wear_santa',
+  'prop_candle', 'prop_fan', 'prop_sweetpotato', 'prop_beans', 'prop_milk', 'prop_mic',
+  // 아직 안 옴
+  'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
+  'bg_elevator', 'bg_library', 'bg_toilet', 'bg_wedding', 'bg_chicken', 'bg_snow', 'bg_hanbok', 'bg_upsidedown',
   'fx_beans', 'fx_pixel', 'fx_petals',
   'frame_polaroid', 'frame_newspaper', 'frame_vhs', 'frame_gold', 'frame_wanted', 'frame_museum'
 ]);

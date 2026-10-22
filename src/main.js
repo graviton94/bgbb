@@ -246,7 +246,8 @@ function shuffleStage() {
   hero.setProperty('--rot', `${tilt.toFixed(0)}deg`);
   // 말풍선 난장판: 앞 2개는 캐릭터 머리 옆 (넓은 쪽), 나머지는 아무 데나 · 크기 · 각도 랜덤
   const right = cx < 55;
-  const talk = Math.round(roll([[0.3, 2, 2], [0.3, 3, 3], [0.2, 4, 5], [0.13, 6, 8], [0.07, 10, 14]]));
+  const talk = Math.round(roll([[0.4, 2, 2], [0.35, 3, 3], [0.25, 4, 4]]));   // 많아도 4개
+  sessionBg = pickOwned('bg');
   bubbleLayout = Array.from({ length: talk }, (_, i) => {
     const near = i < 2, k = (0.28 + i * 0.06).toFixed(2);
     const side = near ? right : Math.random() < 0.5;
@@ -282,8 +283,8 @@ function renderProps(force = false) {
   const key = `${state.equip.prop}|${propLayout.length}`;
   if (!force && key === propKey) return;
   propKey = key;
-  // 난장판은 종류도 섞는다: 장착한 것 + 모든 소품 (안 가진 것도 = 맛보기)
-  const others = ITEMS.filter(x => x.slot === 'prop' && x.src && x.id !== main?.id);
+  // 난장판은 종류도 섞는다: 장착한 것 + 가진 다른 소품들
+  const others = ownedOf('prop').filter(x => x.src && x.id !== main?.id);
   $('homeProps').innerHTML = main?.src ? propLayout.map((p, i) => {
     const src = i > 0 && others.length && p.other < 0.75 ? others[Math.floor(p.other / 0.75 * others.length)].src : main.src;
     return `<img src="${src}" alt="" style="left:${p.x.toFixed(1)}%;width:${p.w.toFixed(0)}%;bottom:${(p.lift * 75).toFixed(0)}%;transform:translateX(-50%) rotate(${p.rot.toFixed(0)}deg)${p.flip ? ' scaleX(-1)' : ''};z-index:${p.front ? 4 : 0}">`;
@@ -293,12 +294,11 @@ function renderProps(force = false) {
 let bubbleLayout = [];
 /** 말풍선들을 bubbleLayout 자리에 (말은 친구 말버릇 먼저, 모자라면 아무 말) */
 function renderBubbles() {
-  const skin = itemById(state.equip.bubble);
   const mine = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
   const more = [...L(CHATTER)].sort(() => Math.random() - 0.5);
   const lines = [...mine.slice(0, 2), ...more, ...mine.slice(2)];
-  $('bubbles').innerHTML = bubbleLayout.map((b, i) => `<span class="bubble ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${state.equip.bubble}"
-    style="left:${b.left};right:${b.right};bottom:${b.bottom};transform:rotate(${b.rot.toFixed(0)}deg) scale(${b.scale.toFixed(2)});transform-origin:${b.flip ? 'right' : 'left'} bottom;--bubble-img:${skin?.src ? `url(${skin.src})` : 'none'}">${esc(lines[i % lines.length])}</span>`).join('');
+  $('bubbles').innerHTML = bubbleLayout.map((b, i) => { const skin = pickOwned('bubble'); return `<span class="bubble ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${skin?.id}"
+    style="left:${b.left};right:${b.right};bottom:${b.bottom};transform:rotate(${b.rot.toFixed(0)}deg) scale(${b.scale.toFixed(2)});transform-origin:${b.flip ? 'right' : 'left'} bottom;--bubble-img:${skin?.src ? `url(${skin.src})` : 'none'}">${esc(lines[i % lines.length])}</span>`; }).join('');
 }
 const newBubbles = () => renderBubbles();
 
@@ -469,16 +469,18 @@ window.bgbbOnSound = () => renderStatus();
 
 // ---------------------------------------------------------- 꾸미기: 홈에 입히기 + 상점
 const realLook = () => state.equip.look === 'look_real';
-// '오늘의 배경: 랜덤' 이면 앱 열 때마다 가진 배경 중 하나
+// 홈은 '가진 것 중 랜덤'이 재미: 앱 열 때마다 배경 · 소품 · 말풍선을 가진 것 중에서 뽑는다 (장착한 건 자주 나오게)
 const ownedOf = slot => ITEMS.filter(x => x.slot === slot && isOwned(x, state.titles, state.bought));
-let randomBg = null;
+/** 가진 것 중 하나: 장착한 것 40%, 나머지 고르게 */
+function pickOwned(slot) {
+  const pool = ownedOf(slot), main = itemById(state.equip[slot]);
+  if (main && (Math.random() < 0.4 || pool.length < 2)) return main;
+  return pool[Math.floor(Math.random() * pool.length)] || main;
+}
+let sessionBg = null;   // 이번에 열었을 때 뽑힌 배경 (shuffleStage)
 function applySkin() {
-  let bg = itemById(state.equip.bg) || itemById(DEFAULT_EQUIP.bg);
-  if (bg.random) {
-    const pool = ownedOf('bg').filter(x => !x.random);
-    if (!randomBg || !pool.includes(randomBg)) randomBg = pool[Math.floor(Math.random() * pool.length)];
-    bg = randomBg;
-  }
+  const owned = ownedOf('bg');
+  const bg = (sessionBg && owned.includes(sessionBg) && sessionBg) || itemById(state.equip.bg) || itemById(DEFAULT_EQUIP.bg);
   const app = document.querySelector('.app');
   app.style.background = bg.css;
   app.classList.toggle('dark', !!bg.dark);
@@ -486,7 +488,6 @@ function applySkin() {
   app.classList.toggle('photo', bg.css.includes('url(assets/skin/'));
   app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
   renderProps();
-  if ($('bubbles').firstElementChild?.dataset.skin !== state.equip.bubble) renderBubbles();
   const wear = itemById(state.equip.wear);
   $('heroWear').hidden = !wear?.src;
   if (wear?.src) $('heroWear').src = wear.src;
@@ -539,7 +540,8 @@ $('shopList').addEventListener('click', e => {
     toast(t('shop.bought', { name: L(x.name) }));
   } else play('ui_pop', 0.4);
   state.equip[x.slot] = x.id;
-  if (x.random) randomBg = null;
+  if (x.slot === 'bg') sessionBg = x;   // 방금 고른 건 바로 보이게
+  if (x.slot === 'bubble') renderBubbles();
   $('heroImg').dataset.mood = '';   // 모습이 바뀌었으면 홈 캐릭터 다시
   commit();
 });
