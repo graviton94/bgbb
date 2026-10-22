@@ -49,7 +49,7 @@ const BG = [
   { id: 'bg_error', name: { ko: '엉덩이.exe 오류', en: 'butt.exe error' }, title: 'broke', price: 90, dark: true, css: photo('bg_error', true) },
   { id: 'bg_vapor', name: { ko: '베이퍼웨이브', en: 'Vaporwave' }, price: 150, dark: true, css: photo('bg_vapor', true) },
   { id: 'bg_space', name: { ko: '우주 (방구 추진)', en: 'Space (toot-powered)' }, title: 'jp_heritage', dark: true, css: photo('bg_space', true) },
-  { id: 'bg_snow', name: { ko: '눈 오는 밤', en: 'Snowy night' }, price: 60, season: [12], css: photo('bg_snow') },
+  { id: 'bg_snow', name: { ko: '눈 오는 밤', en: 'Snowy night' }, price: 60, season: [12], dark: true, css: photo('bg_snow', true) },
   { id: 'bg_hanbok', name: { ko: '한옥 마루', en: 'Hanok porch' }, price: 60, season: [1, 2], css: photo('bg_hanbok') },
   { id: 'bg_upsidedown', name: { ko: '뒤집힌 방', en: 'Upside-down room' }, price: 60, season: [4], css: photo('bg_upsidedown') },
 ];
@@ -161,7 +161,7 @@ export const PENDING = new Set([
   'prop_mic',
   // 아직 안 옴
   'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
-  'bg_elevator', 'bg_library', 'bg_toilet', 'bg_wedding', 'bg_chicken', 'bg_snow', 'bg_hanbok', 'bg_upsidedown',
+  'bg_library', 'bg_wedding', 'bg_chicken', 'bg_hanbok',
   'fx_beans', 'fx_pixel', 'fx_petals',
   'frame_polaroid', 'frame_newspaper', 'frame_vhs', 'frame_gold', 'frame_wanted', 'frame_museum'
 ]);

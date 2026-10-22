@@ -75,3 +75,7 @@
 - `prop_mic`: 원본 자체가 부품이 떨어져 있어 누끼로 못 살림 → 재발주 유지
 - `wear_gasmask` `wear_ribbon` `wear_mask`: 디자인 탈락 (뺌)
 - `wear_crown` `wear_party`: 머리 위로 올림 (변환할 때 80~85% 로 줄여 위치 보정, tools/prepare_skins.py ADJUST)
+
+## 배경 4종은 우리가 직접 만듦 (발주 취소)
+`bg_upsidedown` (회의실 사진 180도) · `bg_snow` (밤 + 가로등 + 눈) · `bg_elevator` (헤어라인 문 + 빨간 7F) · `bg_toilet` (칸막이 문 + 매직 낙서) — `tools/make_backgrounds.py`.
+남은 배경 발주: `bg_library` `bg_wedding` `bg_chicken` `bg_hanbok` (사진 느낌이라 코드로는 어려움)
