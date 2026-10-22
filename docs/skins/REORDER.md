@@ -12,7 +12,7 @@
 
 ---
 
-## A. 불량 → 다시 만들어 주세요 (8)
+## A. 불량 → 다시 만들어 주세요 (7)
 
 | 파일 | 문제 | 고칠 것 |
 |---|---|---|
@@ -23,7 +23,6 @@
 | `prop_gasmask.png` | 위와 같은 검은 공 | 위 방독면을 바닥에 놓인 소품 컷으로 |
 | `prop_extinguisher.png` | 오른쪽 · 뒤로 **흰/보라 얼룩 배경**이 남음 | 소화기만 깨끗하게 누끼 |
 | `prop_spray.png` | 오른쪽 아래 **바닥 그림자/얼룩** 잔여물 | 스프레이 캔만, 바닥 그림자 삭제 |
-| `bubble_katalk.png` | 말풍선이 아니라 **노란 타원 덩어리 + 공**. 글자 들어갈 평평한 칸이 없음 | 둥근 사각 말풍선 (가운데 넓고 평평, 꼬리는 왼쪽 아래 작게). 512×256 꽉 차게, 가장자리 64px 안쪽에 글자 칸 |
 
 ## B. 아직 임시 그림 (제작 예정이라 하신 것) — 앱에서 빼 둠 (42)
 
@@ -35,13 +34,13 @@
 - 뿡 효과 3: `fx_beans_1` `fx_pixel_1` `fx_petals_1`
 - 공유 프레임 6: `frame_polaroid` `frame_newspaper` `frame_vhs` `frame_gold` `frame_wanted` `frame_museum` — **가운데 1080×1080 칸은 완전히 투명**, 프레임은 그 바깥 (1080×1240 중 남는 160px + 테두리)
 
-## C. 합격 → 앱에 넣음 (21)
+## C. 합격 → 앱에 넣음 (22)
 
 - 배경: `bg_office` `bg_meeting` `bg_vapor` `bg_space`
 - 소품: `prop_whoopee` `prop_megaphone` `prop_trophy` `prop_medal` (megaphone · trophy 아래 떨어진 찌꺼기 줄은 변환할 때 자동으로 지움 — 다음부턴 없이 부탁)
 - 착용: `wear_3d` `wear_groucho`
 - 뿡 효과: `fx_hearts_1` `fx_sparkle_1` `fx_skull_1` `fx_rainbow_1` `fx_poop_1`
-- 말풍선: `bubble_shout` `bubble_thought` `bubble_torn`
+- 말풍선: `bubble_shout` `bubble_thought` `bubble_torn` `bubble_katalk` (일부러 구린 디자인, 글자 가시성 상관없음)
 
 ## 정리 (repo)
 

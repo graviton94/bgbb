@@ -158,7 +158,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   position: absolute; left: -2%; bottom: -4px;
   height: 100%; max-height: 250px; aspect-ratio: 1; max-width: 58%;
   padding: 0; border: 0; background: none; cursor: pointer;
-  transform: rotate(-6deg);
+  transform: translateX(var(--tx, 0)) rotate(var(--rot, -6deg));   /* 자리 · 크기 · 기울기는 앱 열 때마다 랜덤 (main.js shuffleStage) */
 }
 .hero img {
   width: 100%; height: 100%; object-fit: contain; object-position: bottom left; display: block;
@@ -166,10 +166,10 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 }
 .hero.wiggle { animation: wiggle 0.5s ease; }
 @keyframes wiggle {
-  0% { transform: rotate(-6deg) scale(1); }
-  30% { transform: rotate(4deg) scale(1.08, 0.92); }
-  60% { transform: rotate(-10deg) scale(0.96, 1.05); }
-  100% { transform: rotate(-6deg) scale(1); }
+  0% { transform: translateX(var(--tx, 0)) rotate(var(--rot, -6deg)) scale(1); }
+  30% { transform: translateX(var(--tx, 0)) rotate(4deg) scale(1.08, 0.92); }
+  60% { transform: translateX(var(--tx, 0)) rotate(-10deg) scale(0.96, 1.05); }
+  100% { transform: translateX(var(--tx, 0)) rotate(var(--rot, -6deg)) scale(1); }
 }
 .bubble {
   position: absolute;
@@ -185,6 +185,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #bubble1 { left: 44%; bottom: calc(min(100%, 250px) * 0.7); }
 #bubble2 { left: 50%; bottom: calc(min(100%, 250px) * 0.7 - 54px); }
 .bubble.accent { background: var(--lime); }
+.bubble.flip { border-radius: 18px 18px 4px 18px; }
 
 .home-bottom { flex: none; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .latest {
@@ -475,9 +476,10 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .app.dark .logo, .app.dark .top-right, .app.dark .icon-btn, .app.dark #screen-home .label, .app.dark #screen-home .big,
 .app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status { color: #fff; }
 .app.dark #screen-home .line, .app.dark #screen-home .today-stats, .app.dark #screen-home .status, .app.dark .top-right { opacity: 0.85; }
-.app.dark .nav .tab { color: rgba(255,255,255,.6); }
-.app.dark .nav .tab.active { color: #fff; }
-.nav { background: transparent; }
+/* 아래 탭 줄은 배경이 뭐든 늘 같은 바탕 · 글자색 (메뉴가 보이게) */
+.nav { background: #F2F2F0; border-top: 1px solid rgba(0,0,0,.08); }
+.nav .tab { color: #6B6B66; }
+.nav .tab.active { color: #111; }
 .hero { position: absolute; }
 .hero-wear { position: absolute; inset: 0; width: 100% !important; height: 100% !important; object-fit: contain; object-position: bottom left; filter: none !important; pointer-events: none; }
 .bubble.img { background: var(--bubble-img) center / 100% 100% no-repeat !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 16px 22px 22px !important; color: #111; }
@@ -519,5 +521,3 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .wear-pv img { position: absolute; inset: 0; width: 100%; max-width: none; max-height: none; }
 .sfx-pv { font-family: var(--display); font-size: 30px; color: #FFD400; -webkit-text-stroke: 3px #111; paint-order: stroke fill; }
 .shop .pv .bubble.img { padding: 14px 20px 20px !important; }
-.app.photo .nav { background: rgba(242,242,240,.94); }
-.app.photo.dark .nav { background: rgba(12,12,16,.88); }

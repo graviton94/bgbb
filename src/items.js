@@ -158,7 +158,7 @@ const LOOK = [
 // 새 그림이 오면 tools/prepare_skins.py 로 변환하고 여기서 빼면 바로 상점 · 칭호 보상에 나온다.
 export const PENDING = new Set([
   // 다시 발주 (불량)
-  'wear_heart', 'wear_eyepatch', 'wear_mask', 'wear_gasmask', 'prop_gasmask', 'prop_extinguisher', 'prop_spray', 'bubble_katalk',
+  'wear_heart', 'wear_eyepatch', 'wear_mask', 'wear_gasmask', 'prop_gasmask', 'prop_extinguisher', 'prop_spray',
   // 아직 임시 그림 (제작 예정)
   'wear_party', 'wear_crown', 'wear_headset', 'wear_ribbon', 'wear_nerd', 'wear_bandana', 'wear_santa',
   'prop_candle', 'prop_fan', 'prop_mic', 'prop_sweetpotato', 'prop_beans', 'prop_milk', 'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_bok', 'prop_yeot',

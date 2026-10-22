@@ -225,6 +225,35 @@ function heroId() {
   return on.some(c => c.id === state.hero) ? state.hero : (on[0] || CHARACTERS[0]).id;
 }
 
+// 홈 무대: 앱 열 때마다 캐릭터 자리(왼 · 오른 · 가운데) · 크기 · 기울기, 말풍선 자리, 소품 쪽이 바뀐다
+function shuffleStage() {
+  const r = (a, b) => a + Math.random() * (b - a);
+  const side = pick(['l', 'l', 'r', 'c']), size = r(0.78, 1), hero = $('hero').style;
+  hero.maxHeight = `${Math.round(250 * size)}px`;
+  hero.maxWidth = `${Math.round(58 * size)}%`;
+  hero.setProperty('--rot', `${r(-9, 7).toFixed(1)}deg`);
+  hero.left = side === 'l' ? `${r(-4, 6).toFixed(1)}%` : side === 'c' ? '50%' : 'auto';
+  hero.right = side === 'r' ? `${r(-4, 6).toFixed(1)}%` : 'auto';
+  hero.setProperty('--tx', side === 'c' ? '-50%' : '0px');
+  // 말풍선: 캐릭터 머리 옆 (가운데면 머리 위 양쪽으로 갈라짐)
+  const head = `min(100%, ${Math.round(250 * size)}px)`, up = r(0.62, 0.85).toFixed(2);
+  const spots = side === 'l' ? [{ left: `${r(40, 50)}%` }, { left: `${r(46, 56)}%` }]
+    : side === 'r' ? [{ right: `${r(40, 50)}%` }, { right: `${r(46, 56)}%` }]
+      : [{ left: `${r(0, 8)}%` }, { right: `${r(0, 8)}%` }];
+  ['bubble1', 'bubble2'].forEach((id, i) => {
+    const b = $(id).style, s = spots[i];
+    b.left = s.left || 'auto';
+    b.right = s.right || 'auto';
+    b.bottom = side === 'c' ? `calc(${head} * ${(0.86 - i * 0.18).toFixed(2)})` : `calc(${head} * ${up} - ${i * 54}px)`;
+    $(id).classList.toggle('flip', side === 'r' || (side === 'c' && i === 0));
+  });
+  // 소품은 빈 쪽 바닥
+  const prop = $('homeProp').style, propLeft = side === 'r' || (side === 'c' && Math.random() < 0.5);
+  prop.left = propLeft ? `${r(0, 5)}%` : 'auto';
+  prop.right = propLeft ? 'auto' : `${r(0, 5)}%`;
+  prop.width = `${Math.round(r(26, 36))}%`;
+}
+
 function newBubbles() {
   const lines = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
   $('bubble1').textContent = lines[0];
@@ -739,6 +768,7 @@ window.bgbbOnNativeResume = () => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
+  shuffleStage();
   drainNative();
   armWebTimer();
   render();   // 시간이 지나 날짜가 바뀌었을 수 있다
@@ -746,6 +776,7 @@ document.addEventListener('visibilitychange', () => {
 
 // ---------------------------------------------------------- 시작
 applyI18n();
+shuffleStage();
 if (LANG !== 'ko') document.querySelector('meta[name="description"]').content = 'Three friends hide in your pocket. A few times a day, whenever: toot. Every one earns a title.';
 subscribe(render);
 native?.setNotify?.(state.notify);
