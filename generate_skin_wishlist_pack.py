@@ -182,7 +182,7 @@ def generate_backgrounds():
     d.line([(0, 1420), (W, 1420)], fill=LINE_COL, width=12)
     # "정숙 (SILENCE)" sign at y: 890..1005
     draw_thick_box(d, [350, 885, 730, 1005], fill=(255, 248, 240, 255), width=12, radius=16)
-    d.text((540, 945), "🤫 정숙", fill=(205, 45, 45, 255), font=f_big, anchor="mm")
+    d.text((540, 945), "정숙 (침묵)", fill=(205, 45, 45, 255), font=f_big, anchor="mm")
     # Stack of thick books on left
     draw_thick_box(d, [130, 1280, 340, 1350], fill=(75, 135, 195, 255), width=10, radius=8)
     draw_thick_box(d, [120, 1350, 355, 1420], fill=(215, 85, 75, 255), width=10, radius=8)
@@ -854,7 +854,7 @@ def generate_frames():
 
     # 1) frame_polaroid: 폴라로이드
     img, d = make_border_frame((255, 253, 248, 255), top_h=54, bot_h=136, side_w=54)
-    d.text((W // 2, H - 68), "2026. 뿡의 기록 📸", fill=LINE_COL, font=f_big, anchor="mm")
+    d.text((W // 2, H - 68), "2026. 뿡의 기록", fill=LINE_COL, font=f_big, anchor="mm")
     frames["frame_polaroid"] = img
 
     # 2) frame_news: 옛날 신문 1면
