@@ -9,6 +9,7 @@
 import { face, charById } from './data.js';
 import { L } from './i18n.js';
 import { SHADES_BOX, SHADES_URL } from './pixels.js';
+import { ITEMS } from './items.js';
 
 const deco = name => `assets/deco/${name}.webp`;
 // 랜덤은 한 군데서: 칭호 짤은 칭호마다 같은 시드로 뽑아 언제 다시 그려도 똑같은 짤이 나온다
@@ -106,7 +107,10 @@ const textItem = (s, x, y, w, style, extra = {}) => ({ k: 'text', s, x, y, w, st
 const isNight = t => { const h = new Date(t).getHours(); return h >= 19 || h < 6; };
 // 소품: 하늘에 뜨는 것 (위쪽 자리) · 땅에 놓는 것 (아래쪽 자리)
 const SKY = { day: ['sun', 'cloud', 'balloon'], night: ['moon', 'stars', 'balloon'] };
-const GROUND = { day: ['sunflower', 'tree', 'carrot', 'box'], night: ['campfire', 'box'] };
+// 꾸미기 소품 (사진 · 3D)도 짤 바닥 소품으로 섞는다. 착용은 가끔 얼굴에 (짤에서 먼저 보여 주는 맛보기)
+const SKIN_PROPS = ITEMS.filter(x => x.slot === 'prop' && x.src?.startsWith('assets/skin/')).map(x => x.src);
+const SKIN_WEAR = ITEMS.filter(x => x.slot === 'wear' && x.src).map(x => x.src);
+const GROUND = { day: ['sunflower', 'tree', 'carrot', 'box', ...SKIN_PROPS], night: ['campfire', 'box', ...SKIN_PROPS] };
 const DAY_BG = ['#FFFFFF', '#FFF3B0', '#CFEFFF', '#DCE9F5', '#E8FFD9', '#FFE1EC', '#B49E89', '#F2F2F2'];
 const NIGHT_BG = ['#1F2747', '#2B2140', '#FFFFFF', '#B49E89'];
 const DARK_BG = ['#1F2747', '#2B2140'];
@@ -265,8 +269,9 @@ function assemble({ id, mode, t, title, rarity, practice, real }) {
   let decoCount = Math.floor(rnd(0, 2.6));
   if (mode === 'loud' && !practice) { items.push(fartFor(c, free)); spots.shift(); decoCount = Math.min(decoCount, 1); }
   if (mode === 'hold' && chance(0.55)) c.shades = true;
+  else if (SKIN_WEAR.length && chance(0.15)) c.wear = pick(SKIN_WEAR);
   // 소품 0~2개: 캐릭터 반대쪽 빈 구석에, 캐릭터 뒤에 깐다
-  for (const s of spots.slice(0, decoCount)) items.unshift({ k: 'img', src: deco(pick(s.pool)), x: s.x, y: s.y, w: s.w, r: rnd(-12, 12) });
+  for (const s of spots.slice(0, decoCount)) { const n = pick(s.pool); items.unshift({ k: 'img', src: n.includes('/') ? n : deco(n), x: s.x, y: s.y, w: s.w, r: rnd(-12, 12) }); }
   return { bg, items, fx: { x: (c.x + c.w / 2) / 100, y: (c.y + c.w * 0.6) / 100 } };
 }
 
@@ -649,7 +654,8 @@ export function renderMeme(el, spec) {
     if (it.k === 'char') {
       const shades = it.shades
         ? `<img class="m-shades" src="${SHADES_URL}" style="left:${SHADES_BOX.x * 100}%;top:${SHADES_BOX.y * 100}%;width:${SHADES_BOX.w * 100}%" alt="">` : '';
-      const char = `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}${it.alpha ? `opacity:${it.alpha};` : ''}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}</div>`;
+      const wear = it.wear ? `<img class="m-wear" src="${it.wear}" alt="">` : '';
+      const char = `<div class="m-el m-char ${it.sticker ? 'sticker' : ''}" style="${pos(it)}${turn(it)}${it.alpha ? `opacity:${it.alpha};` : ''}"><img src="${face(it.id, it.expr, it.real)}" alt="">${shades}${wear}</div>`;
       if (!it.clip) return char;
       // 상자 안에서의 자리로 옮겨 그 상자로 잘라낸다
       const c = it.clip, inner = { ...it, x: ((it.x - c.x) / c.w) * 100, y: ((it.y - c.y) / c.h) * 100, w: (it.w / c.w) * 100 };
@@ -754,7 +760,7 @@ const FONT = {
 /** spec 을 (x, y) 에서 한 변 S 픽셀 정사각형으로 그린다 (화면과 같은 짤) */
 export async function drawMeme(g, spec, x, y, S) {
   const px = v => (v / 100) * S;
-  const srcs = spec.items.flatMap(it => (it.k === 'char' ? [face(it.id, it.expr, it.real), ...(it.shades ? [SHADES_URL] : [])] : it.k === 'img' ? [it.src] : []));
+  const srcs = spec.items.flatMap(it => (it.k === 'char' ? [face(it.id, it.expr, it.real), ...(it.shades ? [SHADES_URL] : []), ...(it.wear ? [it.wear] : [])] : it.k === 'img' ? [it.src] : []));
   const loaded = new Map(await Promise.all(srcs.map(async s => [s, await loadImage(s)])));
   await document.fonts?.load?.('40px "Black Han Sans"');
   g.save();
@@ -827,6 +833,8 @@ export async function drawMeme(g, spec, x, y, S) {
         }
         g.drawImage(im, -w / 2, -h / 2, w, h);
         g.shadowColor = 'transparent';
+        const wear = it.wear && loaded.get(it.wear);
+        if (wear) g.drawImage(wear, -w / 2, -h / 2, w, h);   // 표정 그림과 같은 캔버스라 그대로 겹침
         const sh = it.shades && loaded.get(SHADES_URL);
         if (sh) {
           g.imageSmoothingEnabled = false;

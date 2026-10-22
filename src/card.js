@@ -14,12 +14,39 @@ function fitFont(g, text, family, size, maxWidth, weight = '') {
   return s;
 }
 
-/** data: { ev, meme (memes.js spec), chip (등급 이름, 없으면 칩 없음), chipColor, name (칭호 이름 또는 한 줄) } */
+const loadImage = src => new Promise(resolve => { const im = new Image(); im.onload = () => resolve(im); im.onerror = () => resolve(null); im.src = src; });
+
+/** 프레임 그림에서 투명하게 뚫린 칸 (짤이 들어갈 자리) 찾기 */
+function holeOf(im) {
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.drawImage(im, 0, 0, W, H);
+  const a = g.getImageData(0, 0, W, H).data, see = (x, y) => a[(y * W + x) * 4 + 3] < 20;
+  const cx = W >> 1, cy = Math.round(H * 0.45);
+  let l = cx, r = cx, t = cy, b = cy;
+  while (l > 0 && see(l - 1, cy)) l--;
+  while (r < W - 1 && see(r + 1, cy)) r++;
+  while (t > 0 && see(cx, t - 1)) t--;
+  while (b < H - 1 && see(cx, b + 1)) b++;
+  return { x: l, y: t, w: r - l + 1, h: b - t + 1 };
+}
+
+/** data: { ev, meme (memes.js spec), chip (등급 이름, 없으면 칩 없음), chipColor, name (칭호 이름 또는 한 줄), frame (꾸미기 공유 프레임 그림, 없으면 검은 띠) } */
 export async function drawCard(canvas, data) {
   await document.fonts?.load?.(`80px "Black Han Sans"`);
   canvas.width = W;
   canvas.height = H;
   const g = canvas.getContext('2d');
+  const frame = data.frame && await loadImage(data.frame);
+  if (frame) {   // 프레임: 뚫린 칸에 짤을 맞춰 넣고 그 위에 프레임을 덮는다
+    const hole = holeOf(frame), S = Math.min(hole.w, hole.h);
+    g.fillStyle = '#111';
+    g.fillRect(0, 0, W, H);
+    await drawMeme(g, data.meme, hole.x + (hole.w - S) / 2, hole.y + (hole.h - S) / 2, S);
+    g.drawImage(frame, 0, 0, W, H);
+    return;
+  }
   await drawMeme(g, data.meme, 0, 0, W);
 
   g.fillStyle = '#111';

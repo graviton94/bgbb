@@ -11,7 +11,7 @@ import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { composeMeme, newsMeme, titleMeme, renderMeme } from './memes.js';
-import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, DEFAULT_EQUIP } from './items.js';
+import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -71,7 +71,7 @@ function shareData(ev, meme, titleId = null, label = '') {
 
 async function shareCard(data) {
   const canvas = $('card');
-  await drawCard(canvas, data);
+  await drawCard(canvas, { ...data, frame: frameImage() });
   const name = `bgbb_${dayKey(data.ev.t)}_${Date.now() % 100000}.png`;
   if (native) {   // WebView 는 파일 공유를 못 하므로 네이티브가 갤러리 저장 + 공유창
     toast(t(native.saveAndShareImage(canvas.toDataURL('image/png').split(',')[1], name) ? 'card.saved' : 'card.cantSave'));
@@ -171,7 +171,7 @@ function runFx(meme) {
   requestAnimationFrame(() => {
     const r = $('meme').getBoundingClientRect(), W = innerWidth, H = innerHeight;
     const at = p => ({ x: (r.left + p.x * r.width) / W, y: (r.top + p.y * r.height) / H });
-    startFx($('fx'), fxKinds, { from: at(meme.fx), gun: at(meme.fx) });
+    startFx($('fx'), fxKinds, { from: at(meme.fx), gun: at(meme.fx), img: fxImage() });
   });
 }
 
@@ -412,28 +412,43 @@ function applySkin() {
   app.style.background = bg.css;
   app.classList.toggle('dark', !!bg.dark);
   app.classList.toggle('vivid', !!bg.vivid);
+  app.classList.toggle('photo', bg.css.includes('url(assets/skin/'));
   app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
   const prop = itemById(state.equip.prop);
   $('homeProp').hidden = !prop?.src;
   if (prop?.src) $('homeProp').src = prop.src;
-  for (const b of ['bubble1', 'bubble2']) $(b).dataset.skin = state.equip.bubble;
+  const bubble = itemById(state.equip.bubble);
+  for (const b of ['bubble1', 'bubble2']) {
+    $(b).dataset.skin = state.equip.bubble;
+    $(b).classList.toggle('img', !!bubble?.src);
+    $(b).style.setProperty('--bubble-img', bubble?.src ? `url(${bubble.src})` : 'none');
+  }
+  const wear = itemById(state.equip.wear);
+  $('heroWear').hidden = !wear?.src;
+  if (wear?.src) $('heroWear').src = wear.src;
 }
+/** 터질 때 날아갈 그림 (없으면 '뿡!' 글자) */
+const fxImage = () => itemById(state.equip.fx)?.src || null;
+/** 공유 프레임 그림 (없으면 기본 검은 띠) */
+const frameImage = () => itemById(state.equip.frame)?.src || null;
 
 let shopSlot = 'bg';
 function itemPreview(x) {
   if (x.slot === 'bg') return `<span class="sw" style="background:${x.css}${x.frame ? `;box-shadow:inset 0 0 0 4px ${x.frame}` : ''}"></span>`;
-  if (x.slot === 'prop') return x.src ? `<img src="${x.src}" alt="">` : '<span class="none">—</span>';
-  if (x.slot === 'bubble') return `<span class="bubble" data-skin="${x.id}">${t('shop.sample')}</span>`;
+  if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
+  if (x.slot === 'bubble') return `<span class="bubble ${x.src ? 'img' : ''}" data-skin="${x.id}" style="--bubble-img:${x.src ? `url(${x.src})` : 'none'}">${t('shop.sample')}</span>`;
+  if (x.slot === 'wear') return `<span class="wear-pv"><img src="${face(heroId(), 'blank', realLook())}" alt="">${x.src ? `<img src="${x.src}" alt="">` : ''}</span>`;
   return `<img src="${face(heroId(), 'blank', x.id === 'look_real')}" alt="">`;
 }
 function renderShop() {
   $('coins').textContent = t('shop.coins', { n: state.coins });
-  $('slots').innerHTML = SLOTS.map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
+  $('slots').innerHTML = SLOTS.filter(s => ITEMS.filter(x => x.slot === s).length > 1).map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
   $('shopList').innerHTML = ITEMS.filter(x => x.slot === shopSlot).map(x => {
     const owned = isOwned(x, state.titles, state.bought), on = state.equip[x.slot] === x.id;
     const hint = x.title && (state.titles[x.title] ? L(titleById(x.title).name) : L(titleById(x.title).hint));
+    const season = x.season ? t('shop.season', { m: x.season.join('·') }) : '';
     const how = on ? t('shop.equipped') : owned ? t('shop.equip')
-      : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : t('shop.buy', { n: x.price });
+      : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : `${season ? `${season} · ` : ''}${t('shop.buy', { n: x.price })}`;
     return `<li><button class="item ${owned ? '' : 'locked'} ${on ? 'on' : ''}" data-id="${x.id}" type="button">
       <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${esc(how)}</small></button></li>`;
   }).join('');
@@ -451,6 +466,7 @@ $('shopList').addEventListener('click', e => {
   const x = itemById(b.dataset.id);
   if (!isOwned(x, state.titles, state.bought)) {
     if (!x.price) { toast(t('shop.title_only', { hint: L(titleById(x.title).hint) })); return; }
+    if (!inSeason(x)) { toast(t('shop.offSeason', { m: x.season.join('·') })); return; }
     if (state.coins < x.price) { toast(t('shop.poor')); return; }
     if (!confirm(t('shop.confirm', { name: L(x.name), n: x.price }))) return;
     state.coins -= x.price;

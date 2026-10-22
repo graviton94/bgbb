@@ -21,7 +21,15 @@ export function stopFx(canvas) {
  * kinds: ['puff' | 'bubble' | 'rain'] 여러 개 가능. from = { x, y } (화면 비율 0~1) — 뿡 글자·거품이 나오는 곳,
  * gun = { x, y } — 지폐가 튀어나오는 총구.
  */
-export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 0.25, y: 0.5 } } = {}) {
+// 꾸미기 '뿡 효과' 그림 (장착하면 '뿡!' 글자 대신 날아감)
+const FX_IMAGES = new Map();
+function fxImage(src) {
+  if (!FX_IMAGES.has(src)) { const im = new Image(); im.src = src; FX_IMAGES.set(src, im); }
+  return FX_IMAGES.get(src);
+}
+
+/** img = 꾸미기 뿡 효과 그림 주소 (없으면 '뿡!' 글자) */
+export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 0.25, y: 0.5 }, img = null } = {}) {
   stopFx(canvas);
   const dpr = Math.min(2, devicePixelRatio || 1);
   const W = canvas.clientWidth, H = canvas.clientHeight;
@@ -45,7 +53,7 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
     parts.push({
       kind: 'toot', x: from.x * W + dir * rnd(60, 110), y: from.y * H + rnd(-30, 110), vx: dir * rnd(180, 320), vy: rnd(-60, 30),
       s: rnd(0.6, 1), grow: 0.15, life: rnd(1.1, 1.8), born: delay, tilt: dir * rnd(-0.3, -0.05),
-      word: WORDS[Math.floor(Math.random() * WORDS.length)]
+      word: img ? null : WORDS[Math.floor(Math.random() * WORDS.length)], pic: img ? fxImage(img) : null
     });
   };
   const bubble = (delay = 0) => parts.push({
@@ -84,6 +92,17 @@ export function startFx(canvas, kinds, { from = { x: 0.5, y: 0.45 }, gun = { x: 
       if (p.drag) { p.vx *= p.drag; if (p.vy > 120) p.vy = 120; }
       const scale = p.s + (p.grow || 0) * a;
       const fade = p.flap !== undefined ? 1 : Math.min(1, (p.life - a) / 0.6);
+      if (p.pic) {   // 꾸미기 뿡 효과 그림
+        if (!p.pic.width) continue;
+        const w = W * 0.24 * dpr * scale;
+        g.save();
+        g.globalAlpha = Math.max(0, fade);
+        g.translate(p.x * dpr, p.y * dpr);
+        g.rotate(p.tilt);
+        g.drawImage(p.pic, -w / 2, -w / 2, w, w);
+        g.restore();
+        continue;
+      }
       if (p.word) {   // 만화 효과음: 노랑 + 검정 테두리
         g.save();
         g.globalAlpha = Math.max(0, fade);
