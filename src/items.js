@@ -157,7 +157,8 @@ const LOOK = [
 export const PENDING = new Set([
   // 다시 발주 (2차 검수 불량)
   'wear_eyepatch', 'wear_headset', 'wear_nerd', 'wear_bandana', 'wear_santa',
-  'prop_candle', 'prop_fan', 'prop_sweetpotato', 'prop_beans', 'prop_milk', 'prop_mic',
+  'wear_gasmask', 'wear_ribbon', 'wear_mask',   // 디자인 탈락
+  'prop_mic',
   // 아직 안 옴
   'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
   'bg_elevator', 'bg_library', 'bg_toilet', 'bg_wedding', 'bg_chicken', 'bg_snow', 'bg_hanbok', 'bg_upsidedown',

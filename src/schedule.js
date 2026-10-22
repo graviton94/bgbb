@@ -2,7 +2,7 @@
 //  - 안드로이드 앱: window.BgbbNative 가 AlarmManager 로 앱이 꺼져 있어도 실행한다. 여기선 설정만 넘긴다.
 //  - 브라우저: 같은 규칙(plan.js)으로 탭이 열려 있는 동안만 setTimeout 으로 흉내 낸다.
 import { CHARACTERS, FREQUENCIES } from './data.js';
-import { state, commit, flush } from './store.js';
+import { state, commit, flush, dayKey } from './store.js';
 import { windowLength, windowStart, inWindow as inWin, inRest, advancePlan } from './plan.js';
 
 export const native = window.BgbbNative || null;
@@ -53,7 +53,8 @@ export function syncSchedule(onFire) {
   const cfg = configJson();
   if (cfg !== state.sentConfig) {
     state.sentConfig = cfg;
-    state.plan = null;
+    // 그날 횟수는 유지하고 남은 만큼만 다시 뿌림 (비상탈출 동안 못 터진 건 뒤로 미룸)
+    state.plan = state.plan ? { ...state.plan, times: [], reset: true } : null;
     if (native) native.configure(cfg);
     flush();
   }
@@ -70,7 +71,8 @@ export function armWebTimer(onFire = lastOnFire) {
   if (native || !isActive()) return;
   const now = Date.now();
   const before = JSON.stringify(state.plan);
-  state.plan = advancePlan(state.plan, now, state.schedule, dailyCount, Math.random, state.recent[0]?.t || 0);
+  const d = state.days[dayKey(now)];
+  state.plan = advancePlan(state.plan, now, state.schedule, dailyCount, Math.random, state.recent[0]?.t || 0, d ? d.loud + d.soft + d.hold : 0);
   if (JSON.stringify(state.plan) !== before) commit();
   const due = state.plan.times[0];
   if (!due) return;

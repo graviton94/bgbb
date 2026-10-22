@@ -35,8 +35,8 @@ test('하루 일정: 시간대 안, 서로 1시간 이상, 지난 시각은 빼�
       if (k) assert.ok(t - times[k - 1] >= GAP);
     });
   }
-  const later = planDay(day, at('2026-10-20T15:00'), s, 5, fixed);
-  assert.ok(later.length < 5 && later.every(t => t > at('2026-10-20T15:00')));
+  const later = planDay(day, at('2026-10-20T15:00'), s, 5, fixed);   // 지난 시간은 안 쓰고 남은 시간에 다 뿌림
+  assert.ok(later.length === 5 && later.every(t => t > at('2026-10-20T15:00')));
 });
 
 test('시간대가 짧으면 1시간 간격을 지킬 수 있는 만큼만', () => {
@@ -79,5 +79,18 @@ test('설정을 바꿔 새로 뽑아도 마지막으로 터진 뒤 1시간은 �
   for (let i = 0; i < 100; i++) {
     const p = advancePlan(null, at('2026-10-20T10:05'), s, () => 9, Math.random, last);
     assert.ok(p.times.every(t => t >= last + GAP));
+  }
+});
+
+test('비상탈출에서 돌아오면: 그날 횟수 그대로, 아직 안 터진 만큼 남은 시간에 다시', () => {
+  const s = { start: 6, end: 0 };
+  const plan = { day: at('2026-10-20T06:00'), times: [at('2026-10-20T09:00')], count: 7, reset: true };
+  const now = at('2026-10-20T15:00');
+  for (let i = 0; i < 50; i++) {
+    const p = advancePlan(plan, now, s, () => 3, Math.random, 0, 2);
+    assert.equal(p.day, plan.day);
+    assert.equal(p.count, 7);
+    assert.equal(p.times.length, 5);   // 7 - 이미 2번
+    assert.ok(p.times.every(t => t > now && t < at('2026-10-21T00:00')));
   }
 });

@@ -14,6 +14,22 @@ from PIL import Image
 SRC = sys.argv[1]
 
 
+# 착용 위치 보정: {id: (크기 배율, 물건 바닥을 몇 px 올릴지)} — 1024 캔버스 기준, 물건 바닥 가운데를 축으로
+ADJUST = {"wear_crown": (0.8, 70), "wear_party": (0.85, 62)}
+
+
+def adjust(im, scale, up):
+    box = im.getchannel("A").point(lambda v: 255 if v > 8 else 0).getbbox()
+    if not box:
+        return im
+    part = im.crop(box)
+    part = part.resize((max(1, round(part.width * scale)), max(1, round(part.height * scale))), Image.LANCZOS)
+    cx, bottom = (box[0] + box[2]) / 2, box[3] - up
+    out = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    out.alpha_composite(part, (round(cx - part.width / 2), max(0, round(bottom - part.height))))
+    return out
+
+
 def drop_strays(im):
     """소품 아래 · 위에 떨어져 있는 자잘한 찌꺼기 줄 (누끼 잔여물)을 지운다: 가장 큰 덩어리 행 구간만 남김"""
     a = im.getchannel("A")
@@ -58,6 +74,8 @@ for slot, names in WANT.items():
         im = Image.open(src).convert("RGBA" if slot != "bg" else "RGB")
         if slot == "prop":
             im = drop_strays(im)
+        if id_ in ADJUST:
+            im = adjust(im, *ADJUST[id_])
         im = im.resize(SIZE[slot], Image.LANCZOS)
         out = os.path.join(OUT, slot, f"{id_.removesuffix('_1')}.webp")
         im.save(out, "WEBP", quality=QUALITY.get(slot, 84), method=6)

@@ -57,23 +57,22 @@ export function openSegments(start, schedule) {
   return segs;
 }
 
-/** start 에서 시작하는 작전일의 시각들 중 notBefore 이후만. count 는 하루 횟수. */
+/** start 에서 시작하는 작전일에 count 번: notBefore 이후의 열린 시간에만 고르게 흩뿌린다 (지난 시간은 안 씀). */
 export function planDay(start, notBefore, schedule, count, random = Math.random) {
-  const segs = openSegments(start, schedule);
+  const segs = openSegments(start, schedule).map(([a, b]) => [Math.max(a, notBefore + 1), b]).filter(([a, b]) => b > a);
   const open = segs.reduce((n, [a, b]) => n + (b - a), 0);
   const n = Math.min(count, Math.floor(open / GAP) + 1);
   if (open <= 0 || n <= 0) return [];
   const slack = open - (n - 1) * GAP;
   const offsets = Array.from({ length: n }, () => random() * slack).sort((a, b) => a - b).map((u, i) => u + i * GAP);
   // 열린 시간 안의 위치 → 실제 시각
-  const times = offsets.map(o => {
+  return offsets.map(o => {
     for (const [a, b] of segs) {
       if (o < b - a) return Math.round(a + o);
       o -= b - a;
     }
     return segs[segs.length - 1][1] - 1;
   });
-  return times.filter(t => t > notBefore);
 }
 
 export function nextDay(t) {
@@ -84,18 +83,23 @@ export function nextDay(t) {
 
 /**
  * 남은 일정을 이어서 다음 계획을 만든다.
- * plan = { day, times } | null. 오늘 것을 다 쓰면 다음 날, 설정 직후(null)면 오늘 남은 시간부터.
- * last = 마지막으로 터진 시각: 설정을 바꿔 새로 뽑아도 그때부터 GAP 은 지킨다.
+ * plan = { day, times, count } | null. count = 그날 정한 하루 횟수.
+ * 설정을 바꾸거나 비상탈출에서 돌아오면 plan.reset: 그날 횟수는 그대로 두고, 아직 안 터진 만큼(count - fired)을 남은 시간에 다시 뿌린다
+ * (비상탈출 동안 못 터진 방구는 버리지 않고 뒤로 미룸).
+ * last = 마지막으로 터진 시각: 새로 뽑아도 그때부터 GAP 은 지킨다. fired = 오늘 이미 터진 횟수.
  */
-export function advancePlan(plan, now, schedule, pickCount, random = Math.random, last = 0) {
+export function advancePlan(plan, now, schedule, pickCount, random = Math.random, last = 0, fired = 0) {
   const today = windowStart(now, schedule);
-  const times = plan ? plan.times.filter(t => t > now) : [];
-  if (plan && times.length) return { day: plan.day, times };
+  const times = plan && !plan.reset ? plan.times.filter(t => t > now) : [];
+  if (times.length) return { ...plan, times };
   const notBefore = Math.max(now + 60e3, last + GAP);
-  let day = !plan || plan.day < today ? today : nextDay(plan.day);
+  // 오늘 다시 뿌리기: 설정 직후 (처음이거나 reset) 이고 아직 오늘이 남았으면
+  let day = !plan || plan.day < today || (plan.reset && plan.day === today) ? today : nextDay(plan.day);
   for (let i = 0; i < 3; i++, day = nextDay(day)) {
-    const next = planDay(day, notBefore, schedule, pickCount(), random);
-    if (next.length) return { day, times: next };
+    const count = day === plan?.day && plan.count ? plan.count : pickCount();
+    const left = day === today ? Math.max(0, count - fired) : count;
+    const next = planDay(day, notBefore, schedule, left, random);
+    if (next.length) return { day, times: next, count };
   }
-  return { day, times: [] };
+  return { day, times: [], count: 0 };
 }

@@ -33,6 +33,11 @@ final class PrankScheduler {
     private static final String KEY_PLAN_DAY = "planDay";
     private static final String KEY_EVENTS = "events";
     private static final String KEY_LAST = "lastFire";
+    // 그날 정한 하루 횟수 · 오늘 터진 횟수 · 설정이 바뀌어 남은 만큼 다시 뿌려야 하는지 (src/plan.js advancePlan 과 같은 규칙)
+    private static final String KEY_PLAN_COUNT = "planCount";
+    private static final String KEY_FIRED_DAY = "firedDay";
+    private static final String KEY_FIRED_N = "firedN";
+    private static final String KEY_RESET = "planReset";
     // 도발 알림: 비상탈출 중엔 "아직도 참고 있어?", 쫄 시간엔 아주 가끔 한 줄 (둘 다 소리·진동 없음)
     private static final String KEY_FROZEN_AT = "frozenAt";
     private static final String KEY_NAG = "nag";
@@ -55,7 +60,8 @@ final class PrankScheduler {
     /** JS 가 보낸 설정을 저장하고 일정을 새로 뽑는다. */
     static void configure(Context c, String json) {
         boolean wasFrozen = config(c).optBoolean("frozen");
-        SharedPreferences.Editor e = prefs(c).edit().putString(KEY_CONFIG, json).remove(KEY_PLAN).remove(KEY_PLAN_DAY).remove(KEY_NAG);
+        // 그날 횟수는 남겨 두고 일정만 다시 (비상탈출 동안 못 터진 방구는 남은 시간으로 미룸)
+        SharedPreferences.Editor e = prefs(c).edit().putString(KEY_CONFIG, json).remove(KEY_PLAN).putBoolean(KEY_RESET, true).remove(KEY_NAG);
         boolean frozen = false;
         try { frozen = new JSONObject(json).optBoolean("frozen"); } catch (JSONException ignored) { }
         if (frozen && !wasFrozen) e.putLong(KEY_FROZEN_AT, System.currentTimeMillis()).putInt(KEY_NAG_N, 0);
@@ -69,7 +75,7 @@ final class PrankScheduler {
         JSONObject cfg = config(c);
         if (!cfg.optBoolean("frozen")) return;
         try { cfg.put("frozen", false); } catch (JSONException ignored) { }
-        prefs(c).edit().putString(KEY_CONFIG, cfg.toString()).remove(KEY_PLAN).remove(KEY_PLAN_DAY)
+        prefs(c).edit().putString(KEY_CONFIG, cfg.toString()).remove(KEY_PLAN).putBoolean(KEY_RESET, true)
                 .remove(KEY_NAG).remove(KEY_FROZEN_AT).putBoolean(KEY_RESUMED, true).apply();
         reschedule(c);
     }
@@ -194,17 +200,23 @@ final class PrankScheduler {
         long planDay = p.getLong(KEY_PLAN_DAY, 0);
         long today = windowStart(cfg, now);
 
+        boolean reset = p.getBoolean(KEY_RESET, false);
+        int count = p.getInt(KEY_PLAN_COUNT, 0);
+        if (reset) plan.clear();
         while (!plan.isEmpty() && plan.get(0) <= now) plan.remove(0);
         if (plan.isEmpty()) {
-            // 설정 직후엔 오늘 남은 시간부터, 오늘 일정을 다 썼으면 내일부터. 마지막으로 터진 뒤 GAP 은 지킨다.
+            // 설정 직후 (처음 · reset) 엔 오늘 남은 시간에 아직 안 터진 만큼, 오늘 일정을 다 썼으면 내일부터. 마지막으로 터진 뒤 GAP 은 지킨다.
             long notBefore = Math.max(now + 60_000, p.getLong(KEY_LAST, 0) + GAP);
-            long day = planDay < today ? today : addDays(planDay, 1);
+            int fired = p.getLong(KEY_FIRED_DAY, 0) == today ? p.getInt(KEY_FIRED_N, 0) : 0;
+            long day = planDay < today || planDay == 0 || (reset && planDay == today) ? today : addDays(planDay, 1);
             for (int i = 0; plan.isEmpty() && i < 3; i++, day = addDays(day, 1)) {
-                plan = planDay(cfg, day, notBefore);
+                int n = day == planDay && count > 0 ? count : dailyCount(cfg);
+                plan = planDay(cfg, day, notBefore, day == today ? Math.max(0, n - fired) : n);
                 planDay = day;
+                count = n;
             }
         }
-        p.edit().putString(KEY_PLAN, join(plan)).putLong(KEY_PLAN_DAY, planDay).apply();
+        p.edit().putString(KEY_PLAN, join(plan)).putLong(KEY_PLAN_DAY, planDay).putInt(KEY_PLAN_COUNT, count).putBoolean(KEY_RESET, false).apply();
         return plan.isEmpty() ? -1 : plan.get(0);
     }
 
@@ -273,14 +285,22 @@ final class PrankScheduler {
         return segs;
     }
 
-    static List<Long> planDay(JSONObject cfg, long start, long notBefore) {
-        int count;
+    static int dailyCount(JSONObject cfg) {
         switch (cfg.optString("freq", "normal")) {
-            case "quiet": count = 3 + RANDOM.nextInt(2); break;   // 3~4
-            case "thrill": count = 8 + RANDOM.nextInt(3); break;  // 8~10
-            default: count = 5 + RANDOM.nextInt(3);               // 5~7
+            case "quiet": return 3 + RANDOM.nextInt(2);   // 3~4
+            case "thrill": return 8 + RANDOM.nextInt(3);  // 8~10
+            default: return 5 + RANDOM.nextInt(3);        // 5~7
         }
-        List<long[]> segs = openSegments(cfg, start);
+    }
+
+    static List<Long> planDay(JSONObject cfg, long start, long notBefore) {
+        return planDay(cfg, start, notBefore, dailyCount(cfg));
+    }
+
+    /** start 작전일에 count 번: notBefore 이후의 열린 시간에만 고르게 뿌린다 (지난 시간은 안 씀) */
+    static List<Long> planDay(JSONObject cfg, long start, long notBefore, int count) {
+        List<long[]> segs = new ArrayList<>();
+        for (long[] s : openSegments(cfg, start)) if (s[1] > Math.max(s[0], notBefore + 1)) segs.add(new long[]{Math.max(s[0], notBefore + 1), s[1]});
         long open = 0;
         for (long[] s : segs) open += s[1] - s[0];
         List<Long> out = new ArrayList<>();
@@ -297,7 +317,7 @@ final class PrankScheduler {
                 if (o < s[1] - s[0]) { t = s[0] + o; break; }
                 o -= s[1] - s[0];
             }
-            if (t > notBefore) out.add(t);
+            out.add(t);
         }
         return out;
     }
@@ -346,7 +366,9 @@ final class PrankScheduler {
 
     static synchronized void logEvent(Context c, long t, String charId, String mode) {
         SharedPreferences p = prefs(c);
-        p.edit().putLong(KEY_LAST, t).apply();
+        long day = windowStart(config(c), t);
+        int n = p.getLong(KEY_FIRED_DAY, 0) == day ? p.getInt(KEY_FIRED_N, 0) : 0;
+        p.edit().putLong(KEY_LAST, t).putLong(KEY_FIRED_DAY, day).putInt(KEY_FIRED_N, n + 1).apply();
         try {
             JSONArray arr = new JSONArray(p.getString(KEY_EVENTS, "[]"));
             arr.put(new JSONObject().put("t", t).put("char", charId).put("mode", mode));

@@ -69,3 +69,9 @@
 | `prop_mic` | 마이크 머리 · 빨간 점 · 케이블이 서로 떨어져 둥둥 떠 있음 (한 덩어리 아님) |
 
 ## 아직 안 옴 (22): 남은 목록 그대로
+
+## 2차 후속 (같은 날)
+- `prop_candle` `prop_fan` `prop_sweetpotato` `prop_beans` `prop_milk`: 우리 쪽에서 직접 누끼 다시 따서 합격 처리 (재발주 불필요)
+- `prop_mic`: 원본 자체가 부품이 떨어져 있어 누끼로 못 살림 → 재발주 유지
+- `wear_gasmask` `wear_ribbon` `wear_mask`: 디자인 탈락 (뺌)
+- `wear_crown` `wear_party`: 머리 위로 올림 (변환할 때 80~85% 로 줄여 위치 보정, tools/prepare_skins.py ADJUST)
