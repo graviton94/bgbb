@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, HOME_LINES, TIPS, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, TIPS, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -20,7 +20,6 @@ const two = n => String(n).padStart(2, '0');
 const nl2br = s => esc(s).replace(/\n/g, '<br>');
 let screen = 'home';
 let dexFilter = 'all';
-let homeLine = pick(L(HOME_LINES));
 
 // 오류는 '의견 · 오류 보내기' 메일에 붙일 수 있게 최근 몇 개만 기억한다 (어디로도 자동 전송하지 않음)
 const errors = [];
@@ -237,11 +236,11 @@ function renderHome() {
   let big, line;
   if (state.frozen) { big = t('home.frozenBig'); line = t('home.frozenLine'); }
   else if (!anyFriendOn()) { big = t('home.nobodyBig'); line = t('home.nobodyLine'); }
-  else if (state.schedule.rest.on && resting()) { big = t('home.restBig'); line = t('home.restLine', { window: restLabel() }); }
-  else if (!n) { big = t('home.done'); line = t('home.doneLine'); }
-  else if (!inWindow()) { big = t('home.waitBig', { n }); line = t('home.waitLine', { window: windowLabel() }); }
-  else { big = t('home.left', { n }); line = homeLine; }
-  if (!native && isActive()) line += `\n${t('home.web')}`;
+  // 큰 글자 밑 설명은 없앤다 (장전 시간 · 쫄 시간은 맨 위 줄에 늘 보임)
+  else if (state.schedule.rest.on && resting()) { big = t('home.restBig'); line = ''; }
+  else if (!n) { big = t('home.done'); line = ''; }
+  else if (!inWindow()) { big = t('home.waitBig', { n }); line = ''; }
+  else { big = t('home.left', { n }); line = ''; }
   $('bigLabel').textContent = t('home.today');
   $('big').innerHTML = nl2br(big);
   $('homeLine').innerHTML = nl2br(line);
@@ -376,26 +375,21 @@ function soundStatus() {
 }
 function renderStatus() {
   const s = soundStatus();
-  let dot = s.mode, text;
-  if (state.frozen) { dot = 'frozen'; text = t('status.frozen'); }
-  else if (!anyFriendOn()) { dot = ''; text = t('status.nobody'); }
-  else if (resting()) { dot = 'frozen'; text = t('status.rest', { to: restLabel().split('~')[1] }); }
-  else if (!inWindow()) { dot = ''; text = t('status.sleep'); }
-  else if (s.web) text = t(`status.web.${s.mode}`);
-  else if (s.dnd) text = t('status.dnd');
-  else text = t(`status.${s.mode}`, { vol: s.vol, max: s.max });
-  $('statusDot').className = `dot ${dot === 'loud' ? 'on' : dot}`;
-  $('statusText').textContent = text;
-  // 음소거 버튼: 미디어 볼륨 0 ↔ 아까 크기
-  $('mute').hidden = !native?.setMediaMuted;
-  if (!s.web) {
-    const muted = !s.vol;
-    $('mute').classList.toggle('off', muted);
-    $('mute').textContent = t(muted ? 'status.unmute' : 'status.mute');
-  }
+  // 왼쪽: 언제 장전되는지 (쫄 시간 포함). 오른쪽 버튼: 지금 폰 소리 상태 (누르면 음소거 ↔ 아까 크기)
+  const rest = state.schedule.rest;
+  const quiet = state.frozen || !anyFriendOn() || resting() || !inWindow();
+  $('statusDot').className = `dot ${state.frozen ? 'frozen' : quiet ? '' : s.mode === 'loud' ? 'on' : s.mode}`;
+  $('statusText').innerHTML = state.frozen ? esc(t('status.frozen'))
+    : !anyFriendOn() ? esc(t('status.nobody'))
+      : `${esc(t('status.window'))}${rest.on && rest.from !== rest.to ? `<small>${esc(t('status.except', { window: restLabel().replace('~', ' ~ ') }))}</small>` : ''}`;
+  $('mute').hidden = false;
+  $('mute').classList.toggle('off', !s.web && !s.dnd && !s.vol);
+  $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : t('status.muted');
 }
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
+  if (s.web) { openSettings(); return; }   // 브라우저는 폰 볼륨을 못 바꾼다: 미리보기 상태 고르는 설정으로
+  if (s.dnd) { toast(t('status.dndToast')); return; }
   native?.setMediaMuted?.(!!s.vol);
   haptic(12);
   renderStatus();
@@ -729,7 +723,6 @@ window.bgbbOnNativeResume = () => {
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
-  homeLine = pick(L(HOME_LINES));
   drainNative();
   armWebTimer();
   render();   // 시간이 지나 날짜가 바뀌었을 수 있다
