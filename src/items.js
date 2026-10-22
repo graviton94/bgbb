@@ -45,7 +45,7 @@ const BG = [
   { id: 'bg_toilet', name: { ko: '화장실 칸', en: 'Toilet stall' }, price: 60, css: photo('bg_toilet') },
   { id: 'bg_wedding', name: { ko: '결혼식장', en: 'Wedding hall' }, title: 'jp_the', css: photo('bg_wedding') },
   { id: 'bg_chicken', name: { ko: '새벽 치킨', en: '2AM chicken' }, title: 'overeat', price: 80, dark: true, css: photo('bg_chicken', true) },
-  { id: 'bg_minihompy', name: { ko: '2000년대 미니홈피', en: '2000s homepage' }, price: 100, css: photo('bg_minihompy') },
+  { id: 'bg_minihompy', name: { ko: '방구월드 미니홈피', en: 'Fartworld homepage' }, price: 100, css: photo('bg_minihompy') },
   { id: 'bg_error', name: { ko: '엉덩이.exe 오류', en: 'butt.exe error' }, title: 'broke', price: 90, dark: true, css: photo('bg_error', true) },
   { id: 'bg_vapor', name: { ko: '베이퍼웨이브', en: 'Vaporwave' }, price: 150, dark: true, css: photo('bg_vapor', true) },
   { id: 'bg_space', name: { ko: '우주 (방구 추진)', en: 'Space (toot-powered)' }, title: 'jp_heritage', dark: true, css: photo('bg_space', true) },

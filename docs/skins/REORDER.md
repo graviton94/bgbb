@@ -56,6 +56,7 @@
 - 소품: `prop_gasmask` `prop_extinguisher` `prop_spray` (아래쪽 흰 점 몇 개 남았지만 쓸 만함) `prop_bok`
 - 배경: `bg_subway` `bg_minihompy` `bg_error`
   - 메모: `bg_minihompy` 창 제목의 "싸이월드", `bg_error` 의 "Windows" 글자는 실제 상표라 스토어 출시 전엔 지우거나 바꾸는 게 안전
+  - → 처리함: 방구월드 / Microfart Internet Exploder / bbungworld.com, Fartdow (`tools/rebrand_backgrounds.py`)
 
 ## 불량 → 다시 (11)
 | 파일 | 문제 |
