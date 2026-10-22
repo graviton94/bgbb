@@ -10,6 +10,7 @@ import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
+import { celebrateTitle, celebrateItem } from './cele.js';
 import { composeMeme, newsMeme, titleMeme, renderMeme } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
@@ -188,9 +189,44 @@ function celebrate(events) {
   const top = headliner(results);
   state.hero = top.char;
   commit();
-  showBurst(top, { result: top, more: results.length - 1 });
   const title = titleById(top.title);
-  if (top.isNew) play(title.rarity === 'legend' || title.rarity === 'jackpot' ? 'ui_treasure' : 'ui_levelup', 0.6);
+  if (!top.isNew) { showBurst(top, { result: top, more: results.length - 1 }); return; }
+  // 새 칭호: 획득 팝업 → 짤 → (같이 열린 꾸미기가 있으면) 상자깡
+  const unlocked = ITEMS.filter(x => x.title === top.title && !state.bought[x.id]);
+  const d = new Date(top.t);
+  play(title.rarity === 'legend' || title.rarity === 'jackpot' ? 'ui_treasure' : 'ui_levelup', 0.6);
+  haptic(title.rarity === 'jackpot' ? [60, 40, 60, 40, 200] : [30, 50, 80]);
+  celebrateTitle({
+    tier: title.rarity, title: L(title.name), char: top.char, expr: BURST_FACE[top.mode] || 'burst',
+    when: `${two(d.getHours())}:${two(d.getMinutes())}`, mode: L(MODES[top.mode].name),
+    coins: top.coins, dex: ownedCount(), all: TITLES.length, unlocked: unlocked.map(x => L(x.name))
+  }, () => {
+    showBurst(top, { result: top, more: results.length - 1 });
+    if (unlocked.length) afterBurst = () => showItem(unlocked[0], unlocked.length > 1
+      ? t('cele.more', { slot: L(SLOT_NAMES[unlocked[0].slot]), n: unlocked.length - 1 }) : L(SLOT_NAMES[unlocked[0].slot]),
+    t('cele.from', { name: L(title.name) }));
+  });
+}
+
+// 짤 화면 닫힌 다음 할 일 (칭호로 열린 아이템 상자깡)
+let afterBurst = null;
+$('burst').addEventListener('close', () => { const f = afterBurst; afterBurst = null; f && setTimeout(f, 150); });
+
+/** 아이템 상자깡. ㅇㅋ/바로 장착 = 장착 */
+function showItem(x, slotLabel, from) {
+  play('ui_treasure', 0.5);
+  celebrateItem({ name: L(x.name), slot: slotLabel, preview: itemPreview(x), from, equipped: state.equip[x.slot] === x.id }, equip => {
+    if (!equip || state.equip[x.slot] === x.id) return;
+    equipItem(x);
+    toast(t('shop.bought', { name: L(x.name) }));
+  });
+}
+function equipItem(x) {
+  state.equip[x.slot] = x.id;
+  if (x.slot === 'bg') sessionBg = x;   // 방금 고른 건 바로 보이게
+  if (x.slot === 'bubble') renderBubbles();
+  $('heroImg').dataset.mood = '';   // 모습이 바뀌었으면 홈 캐릭터 다시
+  commit();
 }
 
 /** 브라우저 미리보기용 작전 1회 (앱에서는 네이티브가 진짜 폰 상태로 한다) */
@@ -536,14 +572,12 @@ $('shopList').addEventListener('click', e => {
     if (!confirm(t('shop.confirm', { name: L(x.name), n: x.price }))) return;
     state.coins -= x.price;
     state.bought[x.id] = true;
-    play('ui_levelup', 0.5);
-    toast(t('shop.bought', { name: L(x.name) }));
-  } else play('ui_pop', 0.4);
-  state.equip[x.slot] = x.id;
-  if (x.slot === 'bg') sessionBg = x;   // 방금 고른 건 바로 보이게
-  if (x.slot === 'bubble') renderBubbles();
-  $('heroImg').dataset.mood = '';   // 모습이 바뀌었으면 홈 캐릭터 다시
-  commit();
+    commit();
+    showItem(x, L(SLOT_NAMES[x.slot]), t('cele.paid', { n: x.price }));
+    return;
+  }
+  play('ui_pop', 0.4);
+  equipItem(x);
 });
 
 // ---------------------------------------------------------- 렌더
