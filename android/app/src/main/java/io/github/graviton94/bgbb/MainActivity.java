@@ -126,10 +126,30 @@ public class MainActivity extends Activity {
         web.loadUrl("https://" + HOST + "/index.html");
     }
 
+    // 볼륨 키 · 벨소리 모드 · 방해금지가 바뀌면 홈 상태 줄을 바로 고친다 (앱이 보이는 동안만)
+    private final android.content.BroadcastReceiver soundChanged = new android.content.BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, Intent intent) {
+            web.evaluateJavascript("window.bgbbOnSound && window.bgbbOnSound()", null);
+        }
+    };
+
     @Override
     protected void onResume() {
         super.onResume();
+        android.content.IntentFilter f = new android.content.IntentFilter();
+        f.addAction("android.media.VOLUME_CHANGED_ACTION");
+        f.addAction(android.media.AudioManager.RINGER_MODE_CHANGED_ACTION);
+        f.addAction(android.app.NotificationManager.ACTION_INTERRUPTION_FILTER_CHANGED);
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(soundChanged, f, android.content.Context.RECEIVER_NOT_EXPORTED);
+        else registerReceiver(soundChanged, f);
         web.evaluateJavascript(RESUME_JS, null);
+    }
+
+    @Override
+    protected void onPause() {
+        unregisterReceiver(soundChanged);
+        super.onPause();
     }
 
     @Override
@@ -224,16 +244,27 @@ public class MainActivity extends Activity {
             PrankScheduler.configure(getApplicationContext(), json);
         }
 
-        /** 방구 소리: 알림 볼륨 · 벨소리 모드를 따른다 (style: main | soft | loud | diy) */
+        /** 방구 소리: 미디어 볼륨을 따른다 (style: main | soft | loud | diy) */
         @JavascriptInterface
         public void playToot(String charId, String style) {
             PrankPlayer.playToot(getApplicationContext(), charId, style);
         }
 
-        /** 지금 폰 상태: loud (소리) | soft (진동) | hold (무음 · 방해금지 · 알림 볼륨 0) */
+        /** 지금 폰 상태: loud (소리) | soft (진동) | hold (방해금지 · 미디어 0 + 무음) */
         @JavascriptInterface
         public String deviceMode() {
             return PrankPlayer.deviceMode(getApplicationContext());
+        }
+
+        /** 홈 상태 줄: {"mode","vol","max","dnd"} */
+        @JavascriptInterface
+        public String soundStatus() {
+            return PrankPlayer.status(getApplicationContext());
+        }
+
+        @JavascriptInterface
+        public void setMediaMuted(boolean muted) {
+            PrankPlayer.setMuted(getApplicationContext(), muted);
         }
 
         /** 알림의 "다시 시작!" 으로 비상탈출이 풀렸는지 (한 번 읽으면 지워짐) */

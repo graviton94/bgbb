@@ -219,10 +219,10 @@ final class PrankScheduler {
         return n;
     }
 
-    /** Doze 로 조금 늦게 울릴 수 있으니 시간대 끝에서 30분까지는 봐준다. */
+    /** 06~24시 안인지. 절전 모드로 알람이 늦게 와서 24시를 넘겼으면 그 방은 버린다 (자정 넘어 터지지 않게). */
     static boolean inWindow(JSONObject cfg, long now) {
         long start = windowStart(cfg, now);
-        return now >= start && now <= start + windowLength(cfg) + HOUR / 2;
+        return now >= start && now < start + windowLength(cfg);
     }
 
     // 쉬는 시간 (쫄?): rest = { on, from, to } — 하루 중 분 (0~1439), 자정 넘김 포함. src/plan.js 와 같다.

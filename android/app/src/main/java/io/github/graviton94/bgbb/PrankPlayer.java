@@ -20,10 +20,12 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * 작전 1회: 참여 중인 친구 하나를 골라, 그 순간의 진짜 폰 상태대로 반응한다.
- *   소리 모드        → 소리 재생   = 대담 (loud)
- *   진동 모드        → 진동만      = 소심 (soft)
- *   무음 / 방해금지   → 아무것도 X  = 꾹참 (hold)
+ * 작전 1회: 참여 중인 친구 하나를 골라, 그 순간의 진짜 폰 상태대로 반응한다 (미디어 볼륨 기준).
+ *   방해금지                    → 아무것도 X  = 참음 (hold)
+ *   미디어 볼륨 > 0              → 소리 (미디어 볼륨 크기, 이어폰이 꽂혀 있으면 이어폰으로) = 냄 (loud)
+ *   미디어 볼륨 0 + 무음 모드     → 아무것도 X  = 참음 (hold)
+ *   미디어 볼륨 0 (그 밖)         → 진동만      = 진동 (soft)
+ * 06~24시 밖 · 쫄 시간 · 비상탈출이면 여기까지 오지도 않는다 (PrankReceiver).
  */
 final class PrankPlayer {
 
@@ -71,14 +73,44 @@ final class PrankPlayer {
             return "hold";
         }
         AudioManager am = c.getSystemService(AudioManager.class);
-        int ringer = am != null ? am.getRingerMode() : AudioManager.RINGER_MODE_NORMAL;
-        // 소리는 알림 볼륨을 따르니까, 벨소리 모드여도 알림 볼륨이 0 이면 참음 (기준을 하나로)
-        if (ringer == AudioManager.RINGER_MODE_NORMAL) return am != null && am.getStreamVolume(AudioManager.STREAM_NOTIFICATION) == 0 ? "hold" : "loud";
-        if (ringer == AudioManager.RINGER_MODE_VIBRATE) return "soft";
-        return "hold";
+        if (am == null) return "hold";
+        if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) return "loud";
+        return am.getRingerMode() == AudioManager.RINGER_MODE_SILENT ? "hold" : "soft";
     }
 
-    /** 앱 안에서 내는 방구 소리 (연습 · 캐릭터 누르기 · 함정)도 알람과 똑같이 알림 볼륨으로. 무음 · 진동이면 시스템이 막는다. */
+    /** 홈 상태 줄용: {"mode": loud|soft|hold, "vol": 지금 미디어 볼륨, "max": 최대, "dnd": 방해금지} */
+    static String status(Context c) {
+        AudioManager am = c.getSystemService(AudioManager.class);
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        boolean dnd = nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL;
+        try {
+            return new JSONObject().put("mode", deviceMode(c)).put("dnd", dnd)
+                    .put("vol", am != null ? am.getStreamVolume(AudioManager.STREAM_MUSIC) : 0)
+                    .put("max", am != null ? am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) : 15).toString();
+        } catch (org.json.JSONException e) {
+            return "{}";
+        }
+    }
+
+    /** 홈의 음소거 버튼: 미디어 볼륨을 0 으로 / 아까 크기로 되돌림 (없으면 최대의 절반) */
+    static void setMuted(Context c, boolean muted) {
+        AudioManager am = c.getSystemService(AudioManager.class);
+        if (am == null) return;
+        android.content.SharedPreferences p = c.getSharedPreferences("bgbb", Context.MODE_PRIVATE);
+        int max = am.getStreamMaxVolume(AudioManager.STREAM_MUSIC), now = am.getStreamVolume(AudioManager.STREAM_MUSIC);
+        try {
+            if (muted) {
+                if (now > 0) p.edit().putInt("lastMediaVol", now).apply();
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+            } else {
+                am.setStreamVolume(AudioManager.STREAM_MUSIC, Math.max(1, p.getInt("lastMediaVol", max / 2)), 0);
+            }
+        } catch (SecurityException ignored) {
+            // 방해금지 등으로 시스템이 막으면 그대로 둔다
+        }
+    }
+
+    /** 앱 안에서 직접 누른 방구 소리 (짤 뽑기 · 연습 · 캐릭터 · 함정): 미디어 볼륨 그대로 (쫄 시간 · 비상탈출과 상관없음) */
     static void playToot(Context c, String charId, String sound) {
         new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
     }
@@ -94,9 +126,9 @@ final class PrankPlayer {
             done.run();
         };
         try {
-            // 알림 소리로 취급: 알림 볼륨을 따르고 방해금지 모드에서는 시스템이 막는다.
+            // 미디어 소리: 미디어 볼륨을 따르고, 이어폰 · 블루투스가 연결돼 있으면 그쪽으로 (나만 들음)
             mp.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build());
             File diy = new File(c.getFilesDir(), DIY_FILE);

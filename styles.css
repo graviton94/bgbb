@@ -118,6 +118,13 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .chip.on { background: var(--ink); color: #fff; font-weight: 700; }
 
 /* ---------------------------------------------------------- 홈 */
+.status-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: clamp(4px, 2dvh, 18px); }
+.status-row .status { margin-top: 0; }
+.mute {
+  flex: none; min-height: 34px; padding: 0 12px; border: 1.5px solid var(--ink); border-radius: 999px;
+  background: var(--card); font-size: 13px; font-weight: 800; cursor: pointer;
+}
+.mute.off { background: var(--ink); color: #fff; }
 .status {
   align-self: flex-start;
   display: inline-flex; align-items: center; gap: 8px;
@@ -128,6 +135,8 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #BDBDB8; }
 .dot.on { background: #12B76A; }
 .dot.frozen { background: #2E90FA; }
+.dot.soft { background: #F79009; }
+.dot.hold { background: #9A9A95; }
 
 .label { margin-top: clamp(4px, 3dvh, 34px); font-size: 15px; color: var(--muted); }
 .big {

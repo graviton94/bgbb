@@ -367,14 +367,45 @@ $('tsShare').addEventListener('click', () => {
   shareCard(shareData(own.ev || own.last, memeForTitle(sheetTitle), sheetTitle));   // 칭호 짤은 늘 같은 짤
 });
 
+// ---------------------------------------------------------- 홈 상태 줄: 지금 터지면 어떻게 되는지
+// 우선순위: 비상탈출 · 쫄 시간 · 자는 시간 (무조건 조용) > 방해금지 (참음) > 미디어 볼륨 > 0 (소리) > 무음 모드 (참음) > 진동
+function soundStatus() {
+  if (!native?.soundStatus) return { mode: state.previewMode, web: true };
+  try { return JSON.parse(native.soundStatus()); } catch (e) { return { mode: 'hold' }; }
+}
+function renderStatus() {
+  const s = soundStatus();
+  let dot = s.mode, text;
+  if (state.frozen) { dot = 'frozen'; text = t('status.frozen'); }
+  else if (!anyFriendOn()) { dot = ''; text = t('status.nobody'); }
+  else if (resting()) { dot = 'frozen'; text = t('status.rest', { to: restLabel().split('~')[1] }); }
+  else if (!inWindow()) { dot = ''; text = t('status.sleep'); }
+  else if (s.web) text = t(`status.web.${s.mode}`);
+  else if (s.dnd) text = t('status.dnd');
+  else text = t(`status.${s.mode}`, { vol: s.vol, max: s.max });
+  $('statusDot').className = `dot ${dot === 'loud' ? 'on' : dot}`;
+  $('statusText').textContent = text;
+  // 음소거 버튼: 미디어 볼륨 0 ↔ 아까 크기
+  $('mute').hidden = !native?.setMediaMuted;
+  if (!s.web) {
+    const muted = !s.vol;
+    $('mute').classList.toggle('off', muted);
+    $('mute').textContent = t(muted ? 'status.unmute' : 'status.mute');
+  }
+}
+$('mute').addEventListener('click', () => {
+  const s = soundStatus();
+  native?.setMediaMuted?.(!!s.vol);
+  haptic(12);
+  renderStatus();
+});
+window.bgbbOnSound = () => renderStatus();
+
 // ---------------------------------------------------------- 렌더
 function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
-  $('statusDot').className = 'dot' + (state.frozen ? ' frozen' : isActive() ? ' on' : '');
-  $('statusText').textContent = state.frozen ? t('status.frozen')
-      : !anyFriendOn() ? t('status.nobody')
-        : t(inWindow() ? 'status.active' : 'status.waiting', { window: windowLabel() });
+  renderStatus();
   renderHome();
   if (screen === 'dex') renderDex();
   if ($('settingsSheet').open) renderSettings();
