@@ -12,25 +12,30 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'docs/store');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.webp': 'image/webp', '.wav': 'audio/wav', '.woff2': 'font/woff2', '.png': 'image/png' };
 
+// 캡션도 앱처럼 일부러 틀린 칭찬을 섞는다 (데단해 · 채고야 · GRAET …)
 const CAPTIONS = {
   ko: [
-    ['home', '평소엔 조용함.<br>언제 터질지는 아무도 모름'],
-    ['burst', '터지면 그 순간이<br>속보가 됨'],
-    ['card', '칭호 받으면<br>스토리에 바로 퍼뜨리기'],
-    ['dex', '회의실 테러범부터<br>새벽의 암살자까지 45개'],
-    ['hold', '무음이면 참음.<br>소리 모드면… 진짜 남']
+    ['home', '언제 뿡할지<br>아무도 모름. 채고야'],
+    ['legend', '칭호 따면<br>구린 PPT로 축하해줌'],
+    ['burst', '터진 순간이<br>짤이 됨. 데단해'],
+    ['jackpot', '0.5% 잭팟 뚫으면<br>돈폭탄 GRAET'],
+    ['shop', '배경 · 소품 · 착용<br>가진 것 중 랜덤 난장판'],
+    ['rest', '회의 시간엔 쫄?<br>소리 · 진동 일체 없음'],
+    ['dex', '칭호 45개 다 모으면<br>당신을 천제입니까?']
   ],
   en: [
-    ['home', 'Quiet most of the time.<br>Nobody knows when'],
-    ['burst', 'When it goes off,<br>it’s breaking news'],
-    ['card', 'Earn a title,<br>post the news card'],
-    ['dex', '45 titles.<br>Collect them all'],
-    ['hold', 'Silent? Held in.<br>Sound mode? It’s real']
+    ['home', 'Nobody knows<br>when. AWASOME'],
+    ['legend', 'Earn a title,<br>get a cringe PPT'],
+    ['burst', 'Every toot<br>becomes a meme'],
+    ['jackpot', 'Hit the 0.5% jackpot.<br>Money bomb. GRAET'],
+    ['shop', 'Your stuff,<br>randomly shuffled'],
+    ['rest', 'Meeting? Chicken hours.<br>No sound, no buzz'],
+    ['dex', 'Collect all 45.<br>Are you genious?']
   ]
 };
 const FEATURE = {
-  ko: { title: '방구뿡', sub: '주머니 속 셋이 아무 때나 뿡' },
-  en: { title: 'Pocket Toot', sub: 'Three pocket pals. Toots, whenever.' }
+  ko: { title: '방구뿡', sub: '★★★ 아무 때나 뿡 ★★★ 데단해 ★★★ 채고야 ★★★ 정말굉장한걸? ★★★', sticker: 'GRAET' },
+  en: { title: 'Pocket Toot', sub: '★★★ TOOTS WHENEVER ★★★ AWASOME ★★★ EXCELENT ★★★ GRAET ★★★', sticker: 'WONDREFUL' }
 };
 
 // 보기 좋은 예시 기록 (지난 7일, 칭호 몇 개)
@@ -53,7 +58,11 @@ function demoState() {
   return {
     onboarded: true, hero: 'hamster', days, titles,
     recent: [{ ...ev('hamster', 'loud'), title: 'broke' }],
-    tips: [], sentConfig: 'demo'
+    tips: [], sentConfig: 'demo', coins: 186,
+    bought: Object.fromEntries(['bg_office', 'bg_minihompy', 'bg_vapor', 'bg_error', 'prop_whoopee', 'prop_megaphone', 'prop_spray', 'prop_sweetpotato',
+      'prop_milk', 'bubble_katalk', 'bubble_shout', 'bubble_torn', 'wear_3d', 'fx_sparkle'].map(id => [id, true])),
+    schedule: { on: true, start: 6, end: 0, rest: { on: true, from: 14 * 60, to: 15 * 60 } },
+    equip: { bg: 'bg_minihompy', prop: 'prop_megaphone', bubble: 'bubble_shout' }
   };
 }
 
@@ -79,7 +88,8 @@ async function captureScreens(lang) {
     // 앱 안에서 보이는 모습으로 찍는다. 터지는 화면용 기록은 window.__events 로 넣는다.
     window.__events = [];
     window.BgbbNative = {
-      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.0.0',
+      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.1.0',
+      soundStatus: () => JSON.stringify({ mode: 'loud', vol: 9, max: 15 }), deviceMode: () => 'loud', setMediaMuted() {}, setDim() {}, setKeepAwake() {}, takeResumed: () => false,
       setNotify() {}, notificationsAllowed: () => true, requestNotifications: () => true,
       loadTips() {}, buyTip() {}, fireNow() {}, saveCustomSound: () => true, openUrl() {}, sendFeedback() {}, resetAll() {},
       saveAndShareImage: () => true
@@ -99,31 +109,53 @@ async function captureScreens(lang) {
     await page.waitForTimeout(1800);   // 애니메이션 끝까지
   };
 
+  const closeAll = () => page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const ko = lang === 'ko';
   await shot('home');
-  // 평일 회의 시간에 소리 모드 → 회의실 테러범 (레전드). 오늘이 주말이면 다른 칭호가 나올 수 있다.
-  await fire('hamster', 'loud', 14);
+  // 획득 팝업은 직접 띄운다 (등급을 고를 수 있게). 애니메이션이 다 끝난 뒤 찍는다
+  const cele = async (name, info) => {
+    await closeAll();
+    await page.evaluate(async info => (await import('/src/cele.js')).celebrateTitle(info, () => {}), info);
+    await page.waitForTimeout(3200);
+    await shot(name);
+  };
+  const info0 = { when: '14:07', mode: ko ? '냄' : 'Out loud', dex: 12, all: 45, unlocked: [] };
+  await cele('legend', { ...info0, tier: 'legend', char: 'cat', title: ko ? '회의실 테러범' : 'Meeting Room Menace', coins: 40 });
+  await cele('jackpot', { ...info0, tier: 'jackpot', char: 'hamster', title: ko ? '돈 뿌리는 엉덩이' : 'Make It Rain', coins: 100 });
+  await closeAll();
+  // 짤 화면: 짤 뽑기에서 레전드 짤이 나올 때까지 (하루 3번). 첫 랜덤을 낮게 줘서 레전드 쪽으로 민다
+  for (let i = 0; i < 3; i++) {
+    await closeAll();
+    await page.evaluate(() => {
+      const real = Math.random;
+      let n = 0;
+      Math.random = () => (n++ < 40 ? real() * 0.05 : real());
+      setTimeout(() => { Math.random = real; }, 300);
+    });
+    await page.click('#practice');
+    await page.waitForTimeout(1800);
+    if (await page.evaluate(() => document.getElementById('burstChip').textContent.match(/레전드|Legend/))) break;
+  }
   await shot('burst');
-  await page.evaluate(() => document.getElementById('burst').close());
-  await fire('cat', 'hold', 10);
-  await shot('hold');
-  await page.evaluate(() => document.getElementById('burst').close());
+  await closeAll();
+  await page.waitForTimeout(500);   // 짤을 닫으면 칭호로 열린 아이템 상자깡이 뜰 수 있다
+  await closeAll();
+  await page.click('.tab[data-screen="shop"]');
+  await page.waitForTimeout(400);
+  await shot('shop');
+  await page.click('.tab[data-screen="home"]');
+  await page.waitForTimeout(300);
+  await page.click('#tabSettings');   // 쫄? 버튼은 설정 안에 있다
+  await page.waitForTimeout(400);
+  await page.click('#restOpen');
+  await page.waitForTimeout(600);
+  await page.evaluate(() => document.getElementById('settingsSheet').close());
+  await page.waitForTimeout(200);
+  await shot('rest');
+  await closeAll();
   await page.click('.tab[data-screen="dex"]');
   await page.waitForTimeout(400);
   await shot('dex');
-  // 자랑 이미지는 앱이 그리는 그림 그대로 (회의실 테러범 칭호 짤 + 아래 띠)
-  const card = await page.evaluate(async () => {
-    const { drawCard } = await import('/src/card.js');
-    const { titleMeme } = await import('/src/memes.js');
-    const canvas = document.getElementById('card');
-    const d = new Date();
-    d.setHours(14, 7, 0, 0);
-    const ko = document.documentElement.lang === 'ko';
-    const name = ko ? '회의실 테러범' : 'Meeting Room Menace';
-    const meme = titleMeme('meeting_loud', { id: 'hamster', mode: 'loud', t: d.getTime(), title: name, rarity: 'legend' });
-    await drawCard(canvas, { meme, ev: { t: d.getTime(), char: 'hamster', mode: 'loud' }, chip: ko ? '레전드' : 'Legend', chipColor: '#D7FF3D', name });
-    return canvas.toDataURL('image/png').split(',')[1];
-  });
-  shots.card = Buffer.from(card, 'base64');
   await page.close();
   return shots;
 }
@@ -136,29 +168,40 @@ async function compose(lang, shots) {
   const font = `@font-face{font-family:BHS;src:url(data:font/woff2;base64,${bhs}) format('woff2')}`;
   for (const [i, [name, caption]] of CAPTIONS[lang].entries()) {
     const img = `data:image/png;base64,${shots[name].toString('base64')}`;
-    const isCard = name === 'card';
     await page.setContent(`<style>${font}
       body{margin:0;width:1080px;height:1920px;background:${i % 2 ? '#111' : '#D7FF3D'};font-family:BHS;display:flex;flex-direction:column;align-items:center;overflow:hidden}
       h1{font-weight:normal;font-size:78px;line-height:1.2;text-align:center;color:${i % 2 ? '#D7FF3D' : '#111'};margin:0 40px;height:330px;display:flex;align-items:center;justify-content:center;letter-spacing:-1px}
       img{width:810px;border:8px solid #111;border-radius:48px;box-shadow:0 0 0 6px #fff}
-    </style><h1>${caption}</h1><img src="${img}" style="${isCard ? 'width:860px;border-radius:24px' : ''}">`);
+    </style><h1>${caption}</h1><img src="${img}">`);
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: path.join(OUT, lang, `screen-${i + 1}-${name}.png`) });
   }
   // 대표 그림 1024×500
   await page.setViewportSize({ width: 1024, height: 500 });
   const f = FEATURE[lang];
-  const pic = n => `${base}/assets/faces/${n}.webp`;
+  const real = n => `${base}/assets/faces_real/${n}.webp`;
+  const deco = n => `${base}/assets/deco/${n}.webp`;
+  const shades = `${base}/assets/faces/sunglasses.png`;
+  // 구린 PPT 감성: 무지개 배경 · 금색 워드아트 + 반사 · 파란 전광판 · 흰 테두리 실사 스티커 · 지폐
   await page.setContent(`<style>${font}
-    body{margin:0;width:1024px;height:500px;background:#D7FF3D;font-family:BHS;position:relative;overflow:hidden}
-    h1{position:absolute;left:60px;top:60px;margin:0;font-weight:normal;font-size:120px;color:#fff;-webkit-text-stroke:8px #111;paint-order:stroke fill}
-    p{position:absolute;left:0;top:300px;margin:0;font-family:system-ui,sans-serif;font-weight:900;font-size:36px;color:#111;background:#fff;padding:14px 30px 14px 150px}
-    p::before{content:'${lang === 'ko' ? '속보' : 'NEWS'}';position:absolute;left:0;top:0;bottom:0;width:120px;background:#E8261C;color:#fff;display:flex;align-items:center;justify-content:center}
-    img{position:absolute;bottom:40px;filter:drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff)}
-  </style><h1>${f.title}</h1><p>${f.sub}</p>
-    <img src="${pic('tit_whistle')}" style="left:600px;height:210px;bottom:250px">
-    <img src="${pic('hamster_thumbs_up')}" style="left:660px;height:320px;bottom:-10px">
-    <img src="${pic('cat_shameless')}" style="left:820px;height:250px;bottom:190px">`);
+    body{margin:0;width:1024px;height:500px;background:linear-gradient(120deg,#22C8FF,#2EFF6A,#FFE600,#FF7A2E,#FF00C8);font-family:BHS;position:relative;overflow:hidden}
+    .t{position:absolute;left:44px;top:40px;font-size:${lang === 'ko' ? 150 : 92}px;line-height:1;background:linear-gradient(180deg,#FFF6B0,#E3B320 55%,#7A5600);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #4A3600;white-space:nowrap}
+    .t.m{top:${lang === 'ko' ? 262 : 196}px;transform:scaleY(-1);opacity:.2;height:60px;overflow:hidden}
+    .bar{position:absolute;left:0;right:0;top:300px;height:64px;background:#0000AA;border-block:4px ridge #C0C0C0;color:#FFFF00;font-family:system-ui,sans-serif;font-weight:900;font-size:30px;line-height:58px;white-space:nowrap;overflow:hidden}
+    .s{position:absolute;filter:drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(8px 10px 0 rgba(0,0,0,.35))}
+    .w{position:absolute}.w img{display:block;width:100%}.w .g{position:absolute;left:24%;top:37%;width:52%;image-rendering:pixelated}
+    .k{position:absolute;font-size:64px;color:#FF2EA6;-webkit-text-stroke:3px #111;paint-order:stroke fill;transform:rotate(-12deg)}
+    .new{position:absolute;left:60px;top:400px;padding:6px 18px;background:#f00;color:#fff;font-family:system-ui,sans-serif;font-weight:900;font-size:34px;border:4px outset #F99}
+  </style>
+    <img src="${deco('stars')}" style="position:absolute;left:560px;top:20px;width:90px">
+    <span class="t">${f.title}</span><span class="t m" aria-hidden="true">${f.title}</span>
+    <div class="bar">${f.sub}${f.sub}</div>
+    <img src="${deco('money_bill')}" style="position:absolute;left:640px;top:220px;width:130px;transform:rotate(-24deg)">
+    <img src="${deco('money_bill')}" style="position:absolute;left:470px;top:380px;width:110px;transform:rotate(18deg)">
+    <div class="w s" style="left:650px;top:40px;width:250px;transform:rotate(-8deg)"><img src="${real('cat_shameless')}"><img class="g" src="${shades}"></div>
+    <div class="w s" style="left:790px;top:170px;width:260px;transform:rotate(7deg)"><img src="${real('hamster_thumbs_up')}"><img class="g" src="${shades}"></div>
+    <span class="new">NEW!!</span>
+    <span class="k" style="left:${lang === 'ko' ? 250 : 300}px;top:390px">${f.sticker}</span>`);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(300);
   await page.screenshot({ path: path.join(OUT, lang, 'feature.png') });

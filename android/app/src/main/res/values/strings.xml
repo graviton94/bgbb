@@ -3,7 +3,13 @@
     <string name="app_name">Pocket Toot</string>
     <string name="channel_news">Toot news</string>
     <string name="channel_news_desc">One silent line after each surprise toot</string>
-    <string name="news_sub">Tap to see your title</string>
+    <string-array name="news_sub">
+        <item>Tap to see your title</item>
+        <item>Tap to see your title</item>
+        <item>New title. AWASOME</item>
+        <item>GRAET title inside</item>
+        <item>Title time. EXCELENT</item>
+    </string-array>
     <string name="nick_hamster">Hammy</string>
     <string name="nick_tit">Birdie</string>
     <string name="nick_cat">Kitty</string>
@@ -11,10 +17,13 @@
         <item>BREAKING: %1$s finally lets one go</item>
         <item>That was %1$s. Not me.</item>
         <item>%1$s: yep, that was loud. Check your title.</item>
+        <item>BREAKING: %1$s drops a GRAET one in the meeting</item>
+        <item>%1$s: that was AWASOME. Not me.</item>
     </string-array>
     <string-array name="news_soft">
         <item>%1$s: just a little buzz. Nobody knows.</item>
         <item>Bzzt… %1$s’s shy little one</item>
+        <item>%1$s: tiny buzz. EXCELENT stealth</item>
     </string-array>
     <string name="action_resume">Back in!</string>
     <string name="resumed">Back in! No idea when.</string>
@@ -25,6 +34,7 @@
         <item>Bailed out for %2$d hours… you okay down there?</item>
         <item>%1$s: scared, huh?</item>
         <item>Holding it is riskier. Hit Back in!</item>
+        <item>Bailed out %2$d hours. U R the best at holding</item>
     </string-array>
     <!-- Very rarely, during chicken hours -->
     <string-array name="nag_rest">
@@ -32,9 +42,11 @@
         <item>See you after chicken hours.</item>
         <item>%1$s: quietly reloading</item>
         <item>Not now, right?</item>
+        <item>%1$s: quiet hours. WONDREFUL peace</item>
     </string-array>
     <string-array name="news_hold">
         <item>%1$s: silent mode, so I held it. Not next time.</item>
         <item>EXCLUSIVE: %1$s blocked by silent mode, holds it in</item>
+        <item>%1$s: held it in. Are you genious?</item>
     </string-array>
 </resources>

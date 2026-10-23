@@ -1,47 +1,72 @@
-"""앱 아이콘 만들기: 햄찌 + 민트색 방구 구름.
+"""앱 아이콘 만들기: 라임 햇살 + 선글라스 낀 뻔뻔 햄찌 + '뿡!' 도장.
 
     python3 tools/make_icons.py
 
-android 적응형 아이콘(전경·단색), 옛 방식 아이콘, Play 스토어 512px, 사이트용 128px 을 만든다.
+android 적응형 아이콘(배경·전경·단색), 옛 방식 아이콘, Play 스토어 512px, 사이트용 128px 을 만든다.
 """
+import math
 import os
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 RES = os.path.join(ROOT, "android/app/src/main/res")
-BG = (255, 244, 194, 255)
-INK = (40, 37, 35, 255)
+LIME = (215, 255, 61, 255)
+RAY = (190, 240, 20, 255)
+INK = (17, 17, 17, 255)
+YELLOW = (255, 212, 0, 255)
+# 얼굴 그림(1024) 위 선글라스 자리 — src/pixels.js 의 SHADES_BOX 와 같은 값
+SHADES_BOX = (246 / 1024, 380 / 1024, 533 / 1024)
+# woff2 는 PIL 이 바로 못 읽을 수 있어서 ttf 로 풀어 둔 것을 쓴다 (없으면 woff2 시도)
+FONT = next(p for p in (os.path.join(ROOT, "assets/fonts/blackhansans.ttf"), os.path.join(ROOT, "assets/fonts/blackhansans.woff2")) if os.path.exists(p))
 
 
-def puff(size, scale):
-    """크레용 방구 구름: 동그라미 몇 개를 합친 모양 + 그 둘레에만 외곽선."""
-    mask = Image.new("L", (size, size), 0)
-    d = ImageDraw.Draw(mask)
-    circles = [(0.15, 0.70, 0.085), (0.25, 0.62, 0.07), (0.25, 0.79, 0.07), (0.07, 0.80, 0.055), (0.32, 0.71, 0.05), (0.2, 0.72, 0.07)]
-    for cx, cy, r in circles:
-        R = r * size * scale
-        d.ellipse([cx * size - R, cy * size - R, cx * size + R, cy * size + R], fill=255)
-    line = max(3, int(size * 0.016)) | 1
-    ring = mask.filter(ImageFilter.MaxFilter(line * 2 + 1))
-    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    layer.paste(Image.new("RGBA", (size, size), INK), (0, 0), ring)
-    layer.paste(Image.new("RGBA", (size, size), (191, 232, 207, 255)), (0, 0), mask)
-    return layer
+def background(size):
+    """라임 바탕 + 가운데서 퍼지는 햇살 16줄"""
+    im = Image.new("RGBA", (size, size), LIME)
+    d = ImageDraw.Draw(im)
+    c, R, n = size * 0.46, size * 1.2, 16
+    for i in range(n):
+        a0, a1 = (i / n) * 2 * math.pi, ((i + 0.5) / n) * 2 * math.pi
+        d.polygon([(c, c), (c + R * math.cos(a0), c + R * math.sin(a0)), (c + R * math.cos(a1), c + R * math.sin(a1))], fill=RAY)
+    return im
 
 
 def hamster(box):
-    im = Image.open(os.path.join(ROOT, "assets/faces/hamster_blank.webp")).convert("RGBA")
-    s = box / max(im.size)
-    return im.resize((round(im.width * s), round(im.height * s)), Image.LANCZOS)
+    face = Image.open(os.path.join(ROOT, "assets/faces/hamster_shameless.webp")).convert("RGBA")
+    shades = Image.open(os.path.join(ROOT, "assets/faces/sunglasses.png")).convert("RGBA")
+    W = face.width
+    sw = round(SHADES_BOX[2] * W)
+    shades = shades.resize((sw, round(shades.height * sw / shades.width)), Image.NEAREST)
+    face.alpha_composite(shades, (round(SHADES_BOX[0] * W), round(SHADES_BOX[1] * W)))
+    s = box / max(face.size)
+    return face.resize((round(face.width * s), round(face.height * s)), Image.LANCZOS)
 
 
-def compose(size, ham_box, background):
-    canvas = Image.new("RGBA", (size, size), BG if background else (0, 0, 0, 0))
-    canvas.alpha_composite(puff(size, 1.0))
-    h = hamster(int(size * ham_box))
-    canvas.alpha_composite(h, (int(size * 0.62 - h.width / 2), int(size * 0.5 - h.height / 2)))
-    return canvas
+def stamp(size, text="뿡!"):
+    """노랑 글자 + 굵은 검정 테두리, 살짝 기울임"""
+    f = ImageFont.truetype(FONT, int(size * 0.62))
+    pad = int(size * 0.2)
+    layer = Image.new("RGBA", (size * 2, size), (0, 0, 0, 0))
+    ImageDraw.Draw(layer).text((pad, size * 0.08), text, font=f, fill=YELLOW, stroke_width=max(2, int(size * 0.07)), stroke_fill=INK)
+    layer = layer.crop(layer.getbbox())
+    return layer.rotate(14, resample=Image.BICUBIC, expand=True)
+
+
+def foreground(size, ham=0.86):
+    """투명 바탕 위 햄찌 + 뿡! (size 칸 안에 꽉)"""
+    fg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    h = hamster(int(size * ham))
+    fg.alpha_composite(h, (int(size * 0.46 - h.width / 2), int(size * 0.56 - h.height / 2)))
+    s = stamp(int(size * 0.34))
+    fg.alpha_composite(s, (size - s.width - int(size * 0.0), int(size * 0.02)))
+    return fg
+
+
+def full(size):
+    im = background(size)
+    im.alpha_composite(foreground(int(size * 0.9)), (int(size * 0.05), int(size * 0.06)))
+    return im
 
 
 def rounded(img, radius):
@@ -53,16 +78,17 @@ def rounded(img, radius):
 
 
 if __name__ == "__main__":
-    # 적응형 아이콘 전경: 108dp(432px) 캔버스, 안쪽 66% 안전 영역에 들어가게
+    # 적응형 아이콘: 108dp(432px) 캔버스. 전경은 안쪽 안전 영역(가운데 ~72%)에 들어가게
+    background(432).save(os.path.join(RES, "drawable-nodpi/ic_launcher_background.png"))
     fg = Image.new("RGBA", (432, 432), (0, 0, 0, 0))
-    fg.alpha_composite(compose(288, 0.72, False), (72, 72))
+    fg.alpha_composite(foreground(300), (66, 66))
     fg.save(os.path.join(RES, "drawable-nodpi/ic_launcher_foreground.png"))
     # 테마 아이콘용 단색 실루엣
     a = fg.getchannel("A").point(lambda v: 255 if v > 40 else 0)
     mono = Image.new("RGBA", fg.size, (255, 255, 255, 0))
     mono.putalpha(a)
     mono.save(os.path.join(RES, "drawable-nodpi/ic_launcher_monochrome.png"))
-    rounded(compose(192, 0.68, True), 40).save(os.path.join(RES, "mipmap-xxxhdpi/ic_launcher.png"))
-    compose(512, 0.68, True).convert("RGB").save(os.path.join(ROOT, "docs/store/icon-512.png"))
-    rounded(compose(128, 0.68, True), 28).save(os.path.join(ROOT, "docs/store/icon-128.png"))
+    rounded(full(192), 40).save(os.path.join(RES, "mipmap-xxxhdpi/ic_launcher.png"))
+    full(512).convert("RGB").save(os.path.join(ROOT, "docs/store/icon-512.png"))
+    rounded(full(128), 28).save(os.path.join(ROOT, "docs/store/icon-128.png"))
     print("아이콘을 만들었어요")

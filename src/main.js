@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, TIPS, CHATTER, BURST_FACE, charById, face, vibeFor, pickStyle } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, TIPS, CHATTER, BURST_FACE, GOOFS, shortGoofs, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -35,6 +35,7 @@ const haptic = ms => { if (native) navigator.vibrate?.(ms); };
 const toasts = [];
 let toastBusy = false;
 function toast(text, ms = 2400) {
+  if (Math.random() < 0.25) text += ` ${pick(shortGoofs(L(GOOFS)))}`;   // 가끔 틀린 칭찬 한 마디 (데단해 · GRAET …)
   toasts.push([text, ms]);
   if (toasts.length > 3) toasts.splice(0, toasts.length - 3);
   if (!toastBusy) nextToast();

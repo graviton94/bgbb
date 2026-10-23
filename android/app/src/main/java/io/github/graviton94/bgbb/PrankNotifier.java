@@ -125,7 +125,7 @@ final class PrankNotifier {
                 .setContentTitle(nick)
                 .setContentText(text)
                 .setStyle(new Notification.BigTextStyle().bigText(text))
-                .setSubText(c.getString(R.string.news_sub))
+                .setSubText(line(c, R.array.news_sub))
                 .setContentIntent(open)
                 .setAutoCancel(true)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
