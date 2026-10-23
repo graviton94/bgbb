@@ -57,7 +57,8 @@ QUALITY = {"bg": 78, "frame": 85}
 WANT = {
     "bg": "office meeting subway elevator library toilet wedding chicken minihompy error vapor space snow hanbok upsidedown",
     "prop": "whoopee megaphone extinguisher spray trophy medal gasmask candle fan mic sweetpotato beans milk warning cctv chair pumpkin bok yeot",
-    "wear": "heart 3d groucho eyepatch mask gasmask party crown headset ribbon nerd bandana santa",
+    # 안대 · 마스크 · 방독면 · 리본 · 필승 은 tools/draw_wear.py 로 직접 그림, 뿔테 · 산타는 손으로 고친 파일이라 여기서 다시 만들지 않는다 (헤드셋은 뺌)
+    "wear": "heart 3d groucho party crown",
     "fx": "hearts_1 sparkle_1 skull_1 rainbow_1 poop_1 beans_1 pixel_1 petals_1",
     "bubble": "katalk shout thought torn",
     "frame": "polaroid newspaper vhs gold wanted museum",

@@ -79,7 +79,9 @@ def text_layer(img, text, font_path, size, center, color, angle=0):
 # ---------------------------------------------------------------- 착용
 def eyepatch():
     """해적 안대: 왼눈을 덮는 검정 패치 + 이마를 사선으로 넘어가는 끈 (오른눈은 안 가림)"""
-    strap = ImageChops.lighter(line_mask([(330, 360), (520, 250), (900, 150)], 26), line_mask([(300, 470), (110, 560)], 26))
+    # 끈은 머리 테두리 바로 안쪽에서 끝난다 (머리 뒤로 넘어가는 느낌). 이마 높이 머리 폭 x 187~835, 눈 높이 x 144~878
+    curve = [(450 + 340 * t, 372 - 150 * t + 60 * t * (1 - t)) for t in [i / 12 for i in range(13)]]
+    strap = ImageChops.lighter(line_mask(curve, 22), line_mask([(272, 446), (168, 458)], 22))
     patch = shape(lambda d, s: d.ellipse([(372 - 105) * s, (430 - 88) * s, (372 + 105) * s, (430 + 92) * s], fill=255))
     img = crayon([(strap, (40, 36, 34)), (patch, (24, 22, 22))])
     # 해골 무늬 (흰색 작은 것)
@@ -106,8 +108,13 @@ def bandana():
 
 def mask():
     """덴탈 마스크: 코 아래 ~ 턱 (y 470~650), 주름 3줄, 귀걸이 끈은 바깥으로, B급 'KF-뿡'"""
-    loops = ImageChops.lighter(shape(lambda d, s: d.arc([150 * s, 400 * s, 360 * s, 640 * s], 90, 270, fill=255, width=14 * s)),
-                               shape(lambda d, s: d.arc([664 * s, 400 * s, 874 * s, 640 * s], 270, 90, fill=255, width=14 * s)))
+    # 귀걸이 끈: 마스크 위 · 아래 모서리에서 양옆 머리 테두리 (귀 자리) 한 점으로 모이는 V
+    loops = canvas()
+    for side in (1, -1):
+        cx = 512 + side * 212
+        ear = (512 + side * 350, 440)
+        loops = ImageChops.lighter(loops, line_mask([(cx, 488), ear], 10))
+        loops = ImageChops.lighter(loops, line_mask([(cx, 632), ear], 10))
     body = shape(lambda d, s: d.rounded_rectangle([300 * s, 468 * s, 724 * s, 652 * s], 60 * s, fill=255))
     img = crayon([(loops, (235, 240, 245)), (body, (170, 214, 236))])
     d = ImageDraw.Draw(img)
@@ -270,6 +277,8 @@ DRAW = {"wear_eyepatch": eyepatch, "wear_bandana": bandana, "wear_mask": mask, "
         "fx_beans_1": bean, "fx_pixel_1": voxel, "fx_petals_1": petal}
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        DRAW = {k: v for k, v in DRAW.items() if k in sys.argv[2:]}
     out = sys.argv[1] if len(sys.argv) > 1 else "."
     os.makedirs(out, exist_ok=True)
     for name, fn in DRAW.items():

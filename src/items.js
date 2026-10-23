@@ -101,7 +101,6 @@ const WEAR = [
   { id: 'wear_gasmask', name: { ko: '방독면', en: 'Gas mask' }, title: 'trinity' },
   { id: 'wear_party', name: { ko: '파티 고깔', en: 'Party hat' }, title: 'streak3', price: 50 },
   { id: 'wear_crown', name: { ko: '종이 왕관', en: 'Paper crown' }, title: 'jp_lotto' },
-  { id: 'wear_headset', name: { ko: '회의용 헤드셋', en: 'Headset' }, title: 'meeting_soft', price: 70 },
   { id: 'wear_ribbon', name: { ko: '빨간 땡땡이 리본', en: 'Polka-dot bow' }, title: 'first_bell', price: 50 },
   { id: 'wear_nerd', name: { ko: '뿔테 + 반창고', en: 'Taped nerd glasses' }, title: 'monday', price: 60 },
   { id: 'wear_bandana', name: { ko: '필승 두건', en: '"Must win" bandana' }, title: 'streak7', price: 70 },
@@ -150,7 +149,7 @@ const BUBBLE = [
 // look: 홈 캐릭터 모습
 const LOOK = [
   { id: 'look_art', name: { ko: '원화', en: 'Drawn' }, free: true },
-  { id: 'look_real', name: { ko: '실사', en: 'Real photo' }, title: 'hold5', price: 200 }
+  { id: 'look_real', name: { ko: '실사', en: 'Real photo' }, free: true }
 ];
 
 // 아직 안 내보내는 것: 그림이 아직 임시(자리표시)이거나 누끼 · 위치가 잘못돼서 다시 발주한 것 (docs/skins/REORDER.md).
