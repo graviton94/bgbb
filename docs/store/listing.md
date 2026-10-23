@@ -25,7 +25,7 @@
 · 아니면 부르르 진동만 (친구마다 진동 모양이 다름)
 
 ■ 터질 때마다 칭호 하나
-시간 · 요일 · 폰 상태 · 오늘 몇 번째인지로 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐"… 노멀 · 레어 · 레전드 40개 + 0.5% 잭팟 5개. 이미 가진 칭호면 꽝.
+시간 · 요일 · 폰 상태 · 오늘 몇 번째인지로 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐"… 노멀 · 레어 · 레전드 40개 + 0.5% 잭팟 5개 + 1년에 그날만 나오는 시즌 칭호 11개 (설날 · 수능 · 크리스마스…). 이미 가진 칭호면 꽝.
 
 ■ 축하가 구림 (일부러)
 새 칭호를 따면 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄. 당신을 천제입니까?
@@ -69,7 +69,7 @@ At that moment, if your phone…
 · otherwise, just a buzz (each pal buzzes differently)
 
 ■ A title every time
-Time, day, phone state and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew"… 40 titles across Normal, Rare and Legend, plus five 0.5% jackpots. Already have it? Better luck next time.
+Time, day, phone state and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew"… 40 titles across Normal, Rare and Legend, five 0.5% jackpots and 11 once-a-year seasonal titles (Christmas, Halloween, Lunar New Year…). Already have it? Better luck next time.
 
 ■ Deliberately cringe celebrations
 New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jackpots get a money gun. AWASOME.

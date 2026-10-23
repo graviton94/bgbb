@@ -21,7 +21,7 @@ const CAPTIONS = {
     ['jackpot', '0.5% 잭팟 뚫으면<br>돈폭탄 GRAET'],
     ['shop', '배경 · 소품 · 착용<br>가진 것 중 랜덤 난장판'],
     ['rest', '회의 시간엔 쫄?<br>소리 · 진동 일체 없음'],
-    ['dex', '칭호 45개 다 모으면<br>당신을 천제입니까?']
+    ['dex', '칭호 56개 다 모으면<br>당신을 천제입니까?']
   ],
   en: [
     ['home', 'Nobody knows<br>when. AWASOME'],
@@ -30,7 +30,7 @@ const CAPTIONS = {
     ['jackpot', 'Hit the 0.5% jackpot.<br>Money bomb. GRAET'],
     ['shop', 'Your stuff,<br>randomly shuffled'],
     ['rest', 'Meeting? Chicken hours.<br>No sound, no buzz'],
-    ['dex', 'Collect all 45.<br>Are you genious?']
+    ['dex', 'Collect all 56.<br>Are you genious?']
   ]
 };
 const FEATURE = {
@@ -119,7 +119,7 @@ async function captureScreens(lang) {
     await page.waitForTimeout(3200);
     await shot(name);
   };
-  const info0 = { when: '14:07', mode: ko ? '냄' : 'Out loud', dex: 12, all: 45, unlocked: [] };
+  const info0 = { when: '14:07', mode: ko ? '냄' : 'Out loud', dex: 12, all: 56, unlocked: [] };
   await cele('legend', { ...info0, tier: 'legend', char: 'cat', title: ko ? '회의실 테러범' : 'Meeting Room Menace', coins: 40 });
   await cele('jackpot', { ...info0, tier: 'jackpot', char: 'hamster', title: ko ? '돈 뿌리는 엉덩이' : 'Make It Rain', coins: 100 });
   await closeAll();

@@ -582,6 +582,9 @@ UNIQUE.news = ({ id, mode, t, real, headline }) => {
 
 // ---------------------------------------------------------------- 칭호 짤: 칭호마다 정해진 짤 하나 (처음 받은 순간의 시각 · 모드 · 친구로, 시드 고정)
 const TITLE_MEMES = {
+  // 시즌
+  ss_newyear: 'forecast', ss_seollal: 'receipt', ss_valentine: 'chat', ss_aprilfool: 'news', ss_children: 'thumb', ss_chuseok: 'receipt',
+  ss_halloween: 'cctv', ss_pepero: 'stock', ss_suneung: 'report', ss_christmas: 'ppt', ss_yearend: 'award',
   jp_heritage: 'award', jp_lotto: 'money', jp_heir: 'money', jp_the: 'thumb', jp_rain: 'money',
   meeting_loud: 'cctv', last_call: 'nowplaying', hold5: 'award', trinity: 'report', streak30: 'award', total100: 'stock', first_bell: 'forecast',
   meeting_soft: 'chat', meeting_hold: 'report', night_quiet: 'cctv', monday: 'forecast', friday: 'nowplaying', weekend_nap: 'box',

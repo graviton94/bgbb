@@ -1,8 +1,9 @@
-// 칭호 45개 (잭팟 5 + 상황 칭호 40). 터질 때마다 그 순간의 상황(시간·요일·폰 상태·누가·오늘 몇 번째…)에 맞는 후보 중
+// 칭호 56개 (잭팟 5 + 상황 칭호 40 + 시즌 칭호 11). 터질 때마다 그 순간의 상황(시간·요일·폰 상태·누가·오늘 몇 번째…)에 맞는 후보 중
 // 하나를 고른다. 순수 함수만 두어 tests/titles.test.mjs 에서 검사한다.
 //
 // c = { mode: 'loud'|'soft'|'hold', char, hour, wd(0=일요일), nth(오늘 몇 번째), today{loud,soft,hold},
-//       prev(오늘 바로 전 결과 또는 null), charsToday(오늘 나온 친구 수), streak, total }
+//       prev(오늘 바로 전 결과 또는 null), charsToday(오늘 나온 친구 수), streak, total,
+//       month(1~12), day(1~31), ymd('2026-11-19') }
 
 export const RARITY = {
   jackpot: { name: { ko: '잭팟', en: 'Jackpot' }, weight: 0, color: '#FFD400' },
@@ -15,6 +16,17 @@ export const RARITY = {
 const weekday = c => c.wd >= 1 && c.wd <= 5;
 const meeting = c => weekday(c) && (c.hour === 10 || c.hour === 14 || c.hour === 15);
 const T = (id, rarity, ko, en, hint, how, test) => ({ id, rarity, name: { ko, en }, hint, how, test });
+const on = (m, d) => c => c.month === m && c.day === d;
+
+// 음력 · 시험 날짜는 해마다 다르다: 해마다 확인해서 더한다 (없는 해는 그 칭호가 안 나옴)
+export const LUNAR = {
+  seollal: ['2027-02-06', '2027-02-07', '2027-02-08', '2028-01-25', '2028-01-26', '2028-01-27'],
+  chuseok: ['2026-09-24', '2026-09-25', '2026-09-26', '2027-09-14', '2027-09-15', '2027-09-16', '2028-10-02', '2028-10-03', '2028-10-04'],
+  // 수능: 보통 11월 셋째 목요일 (교육부 발표로 고치기)
+  suneung: ['2026-11-19', '2027-11-18', '2028-11-16']
+};
+/** 시즌 칭호: 1년에 그날만. 그날 첫 방에 아직 없으면 무조건 준다 (기념 칭호처럼), 가진 뒤엔 꽝 */
+const S = (id, ko, en, when, test) => ({ ...T(id, 'legend', ko, en, { ko: when.ko, en: when.en }, { ko: `${when.ko} 하루만`, en: `Only on ${when.en}` }, test), season: when });
 
 export const TITLES = [
   // ---- 잭팟: 상황과 상관없이 0.5% 확률 (JACKPOT)
@@ -193,7 +205,20 @@ export const TITLES = [
   T('tit_soft', 'normal', '날갯짓으로 위장', 'Disguised as a Flutter',
     { ko: '오목이가 살짝', en: 'Birdie, softly' },
     { ko: '오목이 차례에 진동', en: 'Birdie on vibrate' },
-    c => c.char === 'tit' && c.mode === 'soft')
+    c => c.char === 'tit' && c.mode === 'soft'),
+
+  // ---- 시즌 (레전드 등급, 1년에 그날만)
+  S('ss_newyear', '새해 첫 뿡', 'First Toot of the Year', { ko: '1월 1일', en: 'Jan 1' }, on(1, 1)),
+  S('ss_seollal', '떡국 먹고 한 살 더 뿡', 'One Year Older, One Toot Louder', { ko: '설날 연휴', en: 'Lunar New Year' }, c => LUNAR.seollal.includes(c.ymd)),
+  S('ss_valentine', '초콜릿 녹이는 뿡', 'Chocolate-Melting Toot', { ko: '2월 14일', en: 'Feb 14' }, on(2, 14)),
+  S('ss_aprilfool', '만우절 아님 진짜임', 'Not an April Fool', { ko: '4월 1일', en: 'Apr 1' }, on(4, 1)),
+  S('ss_children', '어린이날 특별 공연', "Children's Day Special", { ko: '5월 5일', en: 'May 5' }, on(5, 5)),
+  S('ss_chuseok', '송편 과다 섭취', 'Too Many Rice Cakes', { ko: '추석 연휴', en: 'Chuseok' }, c => LUNAR.chuseok.includes(c.ymd)),
+  S('ss_halloween', '트릭 오어 뿡', 'Trick or Toot', { ko: '10월 31일', en: 'Oct 31' }, on(10, 31)),
+  S('ss_pepero', '빼빼로 대신 뿡', 'Toot Instead of Pepero', { ko: '11월 11일', en: 'Nov 11' }, on(11, 11)),
+  S('ss_suneung', '수능 대박 기원 뿡', 'Exam-Day Lucky Toot', { ko: '수능 날', en: 'Korean SAT day' }, c => LUNAR.suneung.includes(c.ymd)),
+  S('ss_christmas', '산타도 놀란 뿡', 'Even Santa Flinched', { ko: '크리스마스 (24~25일)', en: 'Christmas (24–25)' }, c => c.month === 12 && (c.day === 24 || c.day === 25)),
+  S('ss_yearend', '올해 마지막 뿡', 'Last Toot of the Year', { ko: '12월 31일', en: 'Dec 31' }, on(12, 31))
 ];
 
 export const titleById = id => TITLES.find(x => x.id === id);
@@ -203,7 +228,7 @@ const BASIC = { loud: 'loud_basic', soft: 'soft_basic', hold: 'hold_basic' };
 
 /**
  * 상황 c 에 맞는 칭호 하나. owned = { id: … } (가진 칭호).
- * 0.5% 는 상황과 상관없이 잭팟 5개 중 하나. 기념 칭호(연속 · 누적)는 조건을 넘긴 첫 방에 무조건 주고, 그 뒤엔 다시 안 나온다.
+ * 0.5% 는 상황과 상관없이 잭팟 5개 중 하나. 기념 칭호(연속 · 누적) · 시즌 칭호(그날)는 조건을 넘긴 첫 방에 무조건 주고, 그 뒤엔 다시 안 나온다.
  * 나머지는 맞는 후보 중 노멀 12 : 레어 3 : 레전드 1 로 뽑는다. 아직 없는 칭호를 먼저 보지 않는다:
  * 이미 가진 칭호가 나오면 꽝 (화면에 칭호를 안 알림) → 모을수록 새 칭호 나오기가 어려워진다.
  */
@@ -214,9 +239,9 @@ export function pickTitle(c, owned = {}, random = Math.random) {
     const jp = TITLES.filter(x => x.rarity === 'jackpot');
     return jp[Math.floor(random() * jp.length) % jp.length];
   }
-  const milestone = TITLES.find(x => MILESTONES.includes(x.id) && !owned[x.id] && x.test(c));
+  const milestone = TITLES.find(x => (MILESTONES.includes(x.id) || x.season) && !owned[x.id] && x.test(c));
   if (milestone) return milestone;
-  const cands = TITLES.filter(x => !MILESTONES.includes(x.id) && x.test(c));
+  const cands = TITLES.filter(x => !MILESTONES.includes(x.id) && !x.season && x.test(c));
   if (!cands.length) return titleById(BASIC[c.mode] || 'hold_basic');
   const pool = cands;
   const total = pool.reduce((n, x) => n + RARITY[x.rarity].weight, 0);
@@ -231,5 +256,7 @@ export function pickTitle(c, owned = {}, random = Math.random) {
 /** 이벤트 시각과 그날까지의 기록으로 상황을 만든다 (오늘 기록 today 는 이번 것을 포함). */
 export function contextOf({ t, char, mode }, { today, prev, charsToday, streak, total, nth }) {
   const d = new Date(t);
-  return { mode, char, hour: d.getHours(), wd: d.getDay(), nth, today, prev, charsToday, streak, total };
+  const month = d.getMonth() + 1, day = d.getDate();
+  const ymd = `${d.getFullYear()}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  return { mode, char, hour: d.getHours(), wd: d.getDay(), nth, today, prev, charsToday, streak, total, month, day, ymd };
 }

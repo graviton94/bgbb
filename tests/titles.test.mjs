@@ -5,10 +5,11 @@ import { TITLES, RARITY, JACKPOT, pickTitle, contextOf, titleById } from '../src
 const base = { mode: 'loud', char: 'hamster', hour: 16, wd: 3, nth: 2, today: { loud: 1, soft: 0, hold: 0 }, prev: null, charsToday: 1, streak: 1, total: 2 };
 const seq = (...xs) => { let i = 0; return () => xs[i++ % xs.length]; };
 
-test('칭호는 45개 (잭팟 5), id 는 겹치지 않고 글은 두 언어 다 있다', () => {
-  assert.equal(TITLES.length, 45);
+test('칭호는 56개 (잭팟 5 · 시즌 11), id 는 겹치지 않고 글은 두 언어 다 있다', () => {
+  assert.equal(TITLES.length, 56);
+  assert.equal(TITLES.filter(x => x.season).length, 11);
   assert.equal(TITLES.filter(x => x.rarity === 'jackpot').length, 5);
-  assert.equal(new Set(TITLES.map(x => x.id)).size, 45);
+  assert.equal(new Set(TITLES.map(x => x.id)).size, 56);
   for (const x of TITLES) {
     assert.ok(RARITY[x.rarity], x.id);
     for (const k of ['name', 'hint', 'how']) assert.ok(x[k].ko && x[k].en, `${x.id}.${k}`);
@@ -26,6 +27,11 @@ test('모든 칭호는 어떤 상황에서든 나올 수 있다', () => {
     { ...base, charsToday: 3 }, { ...base, prev: 'loud' }, { ...base, prev: 'hold' },
     { ...base, mode: 'hold', today: { loud: 0, soft: 0, hold: 5 } }, { ...base, mode: 'soft', today: { loud: 0, soft: 3, hold: 0 } },
     { ...base, today: { loud: 5, soft: 1, hold: 1 } });
+  // 시즌 칭호: 그날 날짜를 넣은 상황
+  for (const ymd of ['2027-01-01', '2027-02-07', '2027-02-14', '2027-04-01', '2027-05-05', '2027-09-15', '2027-10-31', '2027-11-11', '2027-11-18', '2027-12-25', '2027-12-31']) {
+    const [, m, d] = ymd.split('-').map(Number);
+    contexts.push({ ...base, month: m, day: d, ymd });
+  }
   for (const x of TITLES.filter(x => x.rarity !== 'jackpot')) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
 });
 
@@ -72,4 +78,13 @@ test('0.5% 는 잭팟: 5개 중 아무거나 (가진 것도)', () => {
   const owned = Object.fromEntries(jp.map(x => [x.id, { n: 1 }]));
   assert.equal(pickTitle(base, owned, seq(0, 0)).id, jp[0].id);
   assert.notEqual(pickTitle(base, {}, seq(JACKPOT, 0)).rarity, 'jackpot');
+});
+
+test('시즌 칭호는 그날 첫 방에 아직 없으면 무조건, 가진 뒤엔 다시 안 나오고, 다른 날엔 안 나온다', () => {
+  const xmas = contextOf({ t: new Date(2027, 11, 25, 14, 7).getTime(), char: 'cat', mode: 'hold' }, { today: { loud: 0, soft: 0, hold: 1 }, prev: null, charsToday: 1, streak: 1, total: 9, nth: 1 });
+  assert.equal(xmas.ymd, '2027-12-25');
+  assert.equal(pickTitle(xmas, {}, seq(0.5, 0.5)).id, 'ss_christmas');
+  for (let i = 0; i < 50; i++) assert.notEqual(pickTitle(xmas, { ss_christmas: { n: 1 } }).id, 'ss_christmas');
+  const plain = { ...xmas, month: 12, day: 26, ymd: '2027-12-26' };
+  for (let i = 0; i < 50; i++) assert.ok(!titleById(pickTitle(plain, {}).id).season);
 });

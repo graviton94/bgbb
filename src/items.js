@@ -50,9 +50,9 @@ const BG = [
   { id: 'bg_error', name: { ko: '엉덩이.exe 오류', en: 'butt.exe error' }, title: 'broke', price: 90, dark: true, css: photo('bg_error', true) },
   { id: 'bg_vapor', name: { ko: '베이퍼웨이브', en: 'Vaporwave' }, price: 150, dark: true, css: photo('bg_vapor', true) },
   { id: 'bg_space', name: { ko: '우주 (방구 추진)', en: 'Space (toot-powered)' }, title: 'jp_heritage', dark: true, css: photo('bg_space', true) },
-  { id: 'bg_snow', name: { ko: '눈 오는 밤', en: 'Snowy night' }, price: 60, season: [12], dark: true, css: photo('bg_snow', true) },
-  { id: 'bg_hanbok', name: { ko: '한옥 마루', en: 'Hanok porch' }, price: 60, season: [1, 2], css: photo('bg_hanbok') },
-  { id: 'bg_upsidedown', name: { ko: '뒤집힌 방', en: 'Upside-down room' }, price: 60, season: [4], css: photo('bg_upsidedown') },
+  { id: 'bg_snow', name: { ko: '눈 오는 밤', en: 'Snowy night' }, title: 'ss_christmas', price: 60, season: [12], dark: true, css: photo('bg_snow', true) },
+  { id: 'bg_hanbok', name: { ko: '한옥 마루', en: 'Hanok porch' }, title: 'ss_seollal', price: 60, season: [1, 2], css: photo('bg_hanbok') },
+  { id: 'bg_upsidedown', name: { ko: '뒤집힌 방', en: 'Upside-down room' }, title: 'ss_aprilfool', price: 60, season: [4], css: photo('bg_upsidedown') },
 ];
 
 // prop: 캐릭터 반대쪽 아래에 서 있는 소품 (assets/deco)
@@ -85,9 +85,9 @@ const PROP = [
   { id: 'prop_warning', name: { ko: '가스 주의', en: 'Gas warning' }, title: 'meeting_loud', price: 60, src: skin('prop', 'prop_warning') },
   { id: 'prop_cctv', name: { ko: 'CCTV', en: 'CCTV camera' }, title: 'night_quiet', price: 60, src: skin('prop', 'prop_cctv') },
   { id: 'prop_chair', name: { ko: '회의 의자', en: 'Office chair' }, title: 'meeting_soft', price: 45, src: skin('prop', 'prop_chair') },
-  { id: 'prop_pumpkin', name: { ko: '잭오랜턴', en: 'Jack-o-lantern' }, price: 40, season: [10], src: skin('prop', 'prop_pumpkin') },
-  { id: 'prop_bok', name: { ko: '복주머니', en: 'Lucky pouch' }, price: 40, season: [1, 2], src: skin('prop', 'prop_bok') },
-  { id: 'prop_yeot', name: { ko: '수능 엿', en: 'Exam-luck taffy' }, price: 40, season: [11], src: skin('prop', 'prop_yeot') }
+  { id: 'prop_pumpkin', name: { ko: '잭오랜턴', en: 'Jack-o-lantern' }, title: 'ss_halloween', price: 40, season: [10], src: skin('prop', 'prop_pumpkin') },
+  { id: 'prop_bok', name: { ko: '복주머니', en: 'Lucky pouch' }, title: 'ss_newyear', price: 40, season: [1, 2], src: skin('prop', 'prop_bok') },
+  { id: 'prop_yeot', name: { ko: '수능 엿', en: 'Exam-luck taffy' }, title: 'ss_suneung', price: 40, season: [11], src: skin('prop', 'prop_yeot') }
 ];
 
 // wear: 얼굴에 쓰는 것. 표정 그림과 같은 캔버스 · 같은 눈 좌표라 (0,0) 에 겹치면 딱 맞음 (원화 · 실사 모두)
@@ -104,7 +104,7 @@ const WEAR = [
   { id: 'wear_ribbon', name: { ko: '빨간 땡땡이 리본', en: 'Polka-dot bow' }, title: 'first_bell', price: 50 },
   { id: 'wear_nerd', name: { ko: '뿔테 + 반창고', en: 'Taped nerd glasses' }, title: 'monday', price: 60 },
   { id: 'wear_bandana', name: { ko: '필승 두건', en: '"Must win" bandana' }, title: 'streak7', price: 70 },
-  { id: 'wear_santa', name: { ko: '산타 모자', en: 'Santa hat' }, price: 50, season: [12] }
+  { id: 'wear_santa', name: { ko: '산타 모자', en: 'Santa hat' }, title: 'ss_christmas', price: 50, season: [12] }
 ].map(x => (x.id === 'wear_none' ? x : { ...x, src: skin('wear', x.id) }));
 
 // fx: 터질 때 날아가는 것 (기본 = 노란 '뿡!' 글자)
