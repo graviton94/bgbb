@@ -1,4 +1,10 @@
 /* 방구뿡 v2: 평소엔 무표정(회색·검정), 터질 때만 형광 한 방 + 릴스 자막 + 속보 띠 */
+/* 일부러 구린 꾸밈 글씨: 궁서 · 양재와당 느낌 (src/memes.js DECOR_FONTS) */
+@font-face { font-family: 'Song Myung'; src: url('assets/fonts/songmyung.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Kirang Haerang'; src: url('assets/fonts/kiranghaerang.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Black And White Picture'; src: url('assets/fonts/blackandwhitepicture.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'Gugi'; src: url('assets/fonts/gugi.woff2') format('woff2'); font-display: swap; }
+@font-face { font-family: 'East Sea Dokdo'; src: url('assets/fonts/eastseadokdo.woff2') format('woff2'); font-display: swap; }
 @font-face {
   font-family: 'Black Han Sans';
   src: url('assets/fonts/blackhansans.woff2') format('woff2');
@@ -681,3 +687,10 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 @keyframes c-boxdrop { to { transform: translateY(60vw) rotate(25deg); opacity: 0; } }
 @keyframes c-stamp { from { transform: rotate(14deg) scale(2.6); opacity: 0; } to { transform: rotate(14deg); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .cele-stage * { animation-duration: .01s !important; animation-iteration-count: 1 !important; } }
+
+/* 꾸밈 글씨 (말풍선 · 스티커 · 짤 글자에 가끔) */
+.f-gungseo { font-family: 'Song Myung', serif !important; font-weight: 400 !important; }
+.f-wadang { font-family: 'Kirang Haerang', var(--display) !important; font-weight: 400 !important; }
+.f-poster { font-family: 'Black And White Picture', var(--display) !important; font-weight: 400 !important; }
+.f-gugi { font-family: 'Gugi', var(--display) !important; font-weight: 400 !important; }
+.f-brush { font-family: 'East Sea Dokdo', var(--display) !important; font-weight: 400 !important; font-size: 1.25em; }

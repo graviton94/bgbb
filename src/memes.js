@@ -301,7 +301,7 @@ export const LEGEND = {
     items: [charItem(id, pick(['blank', 'eng', 'shameless']), -10, 0, 64, { real: true, floor: 100 }),
       art(title && chance(0.5) ? title : pick(L(WL.thumbTop)), 10, 6, 84, 8.2, { fill: '#FFE600', stroke: '#E0262B', sw: 1.4, r: -5, align: 'center' }),
       art(pick(L(WL.thumbBig)), 40, 20, 60, 27, { fill: '#2238FF', stroke: '#FF1E1E', sw: 2, shadow: [1.2, 1.2, '#FFFFFF'], align: 'center' }),
-      art(pick(L(WL.thumbSub)), 30, 58, 70, 11, { font: 'body', weight: 900, fill: '#FFFFFF', shadow: [0.8, 0.8, '#333333'], align: 'center' }),
+      art(pick(L(WL.thumbSub)), 30, 58, 70, 11, { font: pick(['body', 'wadang', 'gugi', 'poster']), weight: 900, fill: '#FFFFFF', shadow: [0.8, 0.8, '#333333'], align: 'center' }),
       art(pick(L(WL.thumbFoot)), 50, 90, 48, 3.6, { font: 'body', weight: 500, fill: '#D10000', align: 'center' })],
     fx: { x: 0.25, y: 0.7 }
   }),
@@ -309,9 +309,9 @@ export const LEGEND = {
   ppt: ({ id }) => ({
     ...grad(180, ['#3A3A3A', '#9A9A9A', '#2E2E2E']),
     items: [{ k: 'img', src: deco('stars'), x: 2, y: 3, w: 13 }, { k: 'img', src: deco('stars'), x: 85, y: 3, w: 13, flip: true },
-      art(pick(L(WL.pptTitle)), 4, 4, 92, 12.5, { fill: GOLD, stroke: '#4A3600', sw: 0.5, reflect: true, align: 'center', lh: 1.05 }),
+      art(pick(L(WL.pptTitle)), 4, 4, 92, 12.5, { font: pick(['display', 'display', 'gungseo', 'wadang']), fill: GOLD, stroke: '#4A3600', sw: 0.5, reflect: true, align: 'center', lh: 1.05 }),
       { k: 'rect', x: 3, y: 50, w: 64, h: 40, color: '#FFFFFF', line: '#8A2BE2', lw: 0.7, rad: 5 },
-      art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: 'body', weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
+      art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: pick(['body', 'gungseo', 'gungseo', 'wadang']), weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
       charItem(id, 'thumbs_up', 56, 0, 48, { real: true, floor: 100, sticker: true })],
     fx: { x: 0.8, y: 0.75 }
   })
@@ -452,13 +452,13 @@ const ORIGINAL_LEGEND = {
     return {
       bg: '#FFFBEA',
       items: [{ k: 'rect', x: 3, y: 3, w: 94, h: 94, color: 'transparent', line: '#C9A227', lw: 1.2 }, { k: 'rect', x: 5.5, y: 5.5, w: 89, h: 89, color: 'transparent', line: '#C9A227', lw: 0.35 },
-        art(`${T('제', 'No.')} ${d.getFullYear()}-${String(Math.floor(rnd(1, 999))).padStart(3, '0')}${T('호', '')}`, 9, 9, 50, 2.8, { font: 'serif', weight: 400, fill: '#333333' }),
-        art(T('상    장', 'CERTIFICATE'), 0, 13, 100, 12, { font: 'serif', weight: 900, fill: '#111111', align: 'center' }),
-        art(T('괄약근 부문', 'Clench Division'), 10, 30, 40, 3.8, { font: 'serif', weight: 700, fill: '#111111' }),
-        art(`${T('성명', 'Name')}  ${nickOf(id)}`, 50, 30, 40, 3.8, { font: 'serif', weight: 700, fill: '#111111', align: 'right' }),
-        art(`${T(`위 사람은 ${ymd(t)} ${hm(t)}경`, `On ${ymd(t)} at ${hm(t)}, the above`)}\n${body}\n${T('이 상장을 수여합니다.', 'is hereby awarded.')}`, 10, 36, 80, 4.2, { font: 'serif', weight: 400, fill: '#111111', lh: 1.62 }),
-        art(T(`${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`, ymd(t)), 0, 77, 100, 3.6, { font: 'serif', weight: 400, fill: '#111111', align: 'center' }),
-        art(T('방구뿡 위원회 위원장', 'Chair, Toot Committee'), 34, 85, 44, 4, { font: 'serif', weight: 700, fill: '#111111', align: 'right' }),
+        art(`${T('제', 'No.')} ${d.getFullYear()}-${String(Math.floor(rnd(1, 999))).padStart(3, '0')}${T('호', '')}`, 9, 9, 50, 2.8, { font: 'gungseo', weight: 400, fill: '#333333' }),
+        art(T('상    장', 'CERTIFICATE'), 0, 13, 100, 12, { font: 'gungseo', weight: 900, fill: '#111111', align: 'center' }),
+        art(T('괄약근 부문', 'Clench Division'), 10, 30, 40, 3.8, { font: 'gungseo', weight: 700, fill: '#111111' }),
+        art(`${T('성명', 'Name')}  ${nickOf(id)}`, 50, 30, 40, 3.8, { font: 'gungseo', weight: 700, fill: '#111111', align: 'right' }),
+        art(`${T(`위 사람은 ${ymd(t)} ${hm(t)}경`, `On ${ymd(t)} at ${hm(t)}, the above`)}\n${body}\n${T('이 상장을 수여합니다.', 'is hereby awarded.')}`, 10, 36, 80, 4.2, { font: 'gungseo', weight: 400, fill: '#111111', lh: 1.62 }),
+        art(T(`${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`, ymd(t)), 0, 77, 100, 3.6, { font: 'gungseo', weight: 400, fill: '#111111', align: 'center' }),
+        art(T('방구뿡 위원회 위원장', 'Chair, Toot Committee'), 34, 85, 44, 4, { font: 'gungseo', weight: 700, fill: '#111111', align: 'right' }),
         { k: 'rect', x: 79, y: 81.5, w: 11, h: 11, color: 'transparent', line: '#D62B1F', lw: 0.8, rad: 5.5 },
         art(T('뿡', 'TOOT'), 79, 84, 11, 5.6, { fill: '#D62B1F', align: 'center', r: -12 }),
         charItem(id, 'thumbs_up', 7, 74, 20, { real, floor: 94, sticker: true })],
@@ -625,12 +625,16 @@ export function composeMeme(ctx) {
 /** 속보 짤 (칭호 꽝 · 연습). headline = 속보 문구 */
 export const newsMeme = ctx => withSeed(null, () => { const real = chance(0.3); return { name: 'news', real, ...UNIQUE.news({ ...ctx, real }) }; });
 
+/** 일부러 구린 꾸밈 글씨 (궁서 · 양재와당 느낌). 말풍선 · 스티커 · 짤 글자에 가끔 쓴다 (styles.css .f-*) */
+export const DECOR_FONTS = ['gungseo', 'wadang', 'poster', 'gugi', 'brush'];
+
 // ---------------------------------------------------------------- 화면에 그리기 (DOM, 글자는 cqw)
 const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;
 const turn = it => (it.flip || it.r ? `transform:${it.flip ? 'scaleX(-1) ' : ''}${it.r ? `rotate(${it.flip ? -it.r : it.r}deg)` : ''};` : '');
 const CLASS = { sfx: 'm-sfx', impact: 'm-impact', display: 'm-display', thin: 'm-thin', small: 'm-small', bubble: 'm-bubble' };
 
-const FAMILY = { display: 'var(--display)', body: 'var(--body)', serif: "'Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif", mono: "'Courier New', ui-monospace, monospace" };
+const DECOR_FAMILY = { gungseo: "'Song Myung', serif", wadang: "'Kirang Haerang', sans-serif", poster: "'Black And White Picture', sans-serif", gugi: "'Gugi', sans-serif", brush: "'East Sea Dokdo', sans-serif" };
+const FAMILY = { display: 'var(--display)', body: 'var(--body)', serif: "'Batang', 'Nanum Myeongjo', 'Noto Serif KR', serif", mono: "'Courier New', ui-monospace, monospace", ...DECOR_FAMILY };
 const cssFill = f => (Array.isArray(f) ? `background:linear-gradient(180deg, ${f.join(', ')});-webkit-background-clip:text;background-clip:text;color:transparent;` : f ? `color:${f};` : '');
 function artHtml(it) {
   const lines = it.s.split('\n');
@@ -702,7 +706,7 @@ function silhouette(im) {
   return silhouettes.get(im);
 }
 
-const CANVAS_FAMILY = { display: '"Black Han Sans", sans-serif', body: 'system-ui, sans-serif', serif: '"Batang", "Nanum Myeongjo", "Noto Serif KR", serif', mono: '"Courier New", ui-monospace, monospace' };
+const CANVAS_FAMILY = { display: '"Black Han Sans", sans-serif', body: 'system-ui, sans-serif', serif: '"Batang", "Nanum Myeongjo", "Noto Serif KR", serif', mono: '"Courier New", ui-monospace, monospace', ...DECOR_FAMILY };
 /** 워드아트 글자를 (0, 0) 기준 글자 칸 안에 그린다 (돌리기 · 반사는 바깥에서) */
 function drawArt(g, it, px, w) {
   const size = px(it.size), lh = size * (it.lh || 1.1);
@@ -763,6 +767,9 @@ export async function drawMeme(g, spec, x, y, S) {
   const srcs = spec.items.flatMap(it => (it.k === 'char' ? [face(it.id, it.expr, it.real), ...(it.shades ? [SHADES_URL] : []), ...(it.wear ? [it.wear] : [])] : it.k === 'img' ? [it.src] : []));
   const loaded = new Map(await Promise.all(srcs.map(async s => [s, await loadImage(s)])));
   await document.fonts?.load?.('40px "Black Han Sans"');
+  // 꾸밈 글씨는 쓸 때만 받아 둔다 (안 받으면 캔버스엔 기본 글꼴로 그려짐)
+  const decor = [...new Set(spec.items.map(it => it.font).filter(f => DECOR_FAMILY[f]))];
+  await Promise.all(decor.map(f => document.fonts?.load?.(`40px ${DECOR_FAMILY[f]}`)));
   g.save();
   g.beginPath();
   g.rect(x, y, S, S);

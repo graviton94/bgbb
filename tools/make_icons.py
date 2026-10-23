@@ -1,4 +1,4 @@
-"""앱 아이콘 만들기: 라임 햇살 + 선글라스 낀 뻔뻔 햄찌 + '뿡!' 도장.
+"""앱 아이콘 만들기: 라임 햇살 + 정중앙에 아주 큰 '뿡' (노랑 + 검정 테두리 + 빨간 그림자).
 
     python3 tools/make_icons.py
 
@@ -15,8 +15,6 @@ LIME = (215, 255, 61, 255)
 RAY = (190, 240, 20, 255)
 INK = (17, 17, 17, 255)
 YELLOW = (255, 212, 0, 255)
-# 얼굴 그림(1024) 위 선글라스 자리 — src/pixels.js 의 SHADES_BOX 와 같은 값
-SHADES_BOX = (246 / 1024, 380 / 1024, 533 / 1024)
 # woff2 는 PIL 이 바로 못 읽을 수 있어서 ttf 로 풀어 둔 것을 쓴다 (없으면 woff2 시도)
 FONT = next(p for p in (os.path.join(ROOT, "assets/fonts/blackhansans.ttf"), os.path.join(ROOT, "assets/fonts/blackhansans.woff2")) if os.path.exists(p))
 
@@ -32,40 +30,35 @@ def background(size):
     return im
 
 
-def hamster(box):
-    face = Image.open(os.path.join(ROOT, "assets/faces/hamster_shameless.webp")).convert("RGBA")
-    shades = Image.open(os.path.join(ROOT, "assets/faces/sunglasses.png")).convert("RGBA")
-    W = face.width
-    sw = round(SHADES_BOX[2] * W)
-    shades = shades.resize((sw, round(shades.height * sw / shades.width)), Image.NEAREST)
-    face.alpha_composite(shades, (round(SHADES_BOX[0] * W), round(SHADES_BOX[1] * W)))
-    s = box / max(face.size)
-    return face.resize((round(face.width * s), round(face.height * s)), Image.LANCZOS)
+def big_toot(size, text="뿡"):
+    """size 칸 정중앙에 꽉 차는 '뿡': 빨간 그림자를 오른쪽 아래로 밀고, 그 위에 노랑 + 굵은 검정 테두리"""
+    f = ImageFont.truetype(FONT, size)
+    sw = max(2, int(size * 0.028))
+    probe = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    l, t, r, b = probe.textbbox((0, 0), text, font=f, stroke_width=sw)
+    w, h = r - l, b - t
+    off = int(size * 0.07)
+    layer = Image.new("RGBA", (w + off, h + off), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    d.text((-l + off, -t + off), text, font=f, fill=(224, 38, 43, 255), stroke_width=sw, stroke_fill=INK)
+    d.text((-l, -t), text, font=f, fill=YELLOW, stroke_width=sw, stroke_fill=INK)
+    return layer.rotate(-6, resample=Image.BICUBIC, expand=True)
 
 
-def stamp(size, text="뿡!"):
-    """노랑 글자 + 굵은 검정 테두리, 살짝 기울임"""
-    f = ImageFont.truetype(FONT, int(size * 0.62))
-    pad = int(size * 0.2)
-    layer = Image.new("RGBA", (size * 2, size), (0, 0, 0, 0))
-    ImageDraw.Draw(layer).text((pad, size * 0.08), text, font=f, fill=YELLOW, stroke_width=max(2, int(size * 0.07)), stroke_fill=INK)
-    layer = layer.crop(layer.getbbox())
-    return layer.rotate(14, resample=Image.BICUBIC, expand=True)
-
-
-def foreground(size, ham=0.86):
-    """투명 바탕 위 햄찌 + 뿡! (size 칸 안에 꽉)"""
+def foreground(size, fill=0.92):
+    """투명 바탕 정중앙에 '뿡' (size 칸의 fill 만큼)"""
     fg = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    h = hamster(int(size * ham))
-    fg.alpha_composite(h, (int(size * 0.46 - h.width / 2), int(size * 0.56 - h.height / 2)))
-    s = stamp(int(size * 0.34))
-    fg.alpha_composite(s, (size - s.width - int(size * 0.0), int(size * 0.02)))
+    toot = big_toot(size)
+    k = size * fill / max(toot.size)
+    toot = toot.resize((round(toot.width * k), round(toot.height * k)), Image.LANCZOS)
+    fg.alpha_composite(toot, ((size - toot.width) // 2, (size - toot.height) // 2))
     return fg
 
 
 def full(size):
     im = background(size)
-    im.alpha_composite(foreground(int(size * 0.9)), (int(size * 0.05), int(size * 0.06)))
+    fg = foreground(int(size * 0.84))
+    im.alpha_composite(fg, ((size - fg.width) // 2, (size - fg.height) // 2))
     return im
 
 
@@ -81,7 +74,7 @@ if __name__ == "__main__":
     # 적응형 아이콘: 108dp(432px) 캔버스. 전경은 안쪽 안전 영역(가운데 ~72%)에 들어가게
     background(432).save(os.path.join(RES, "drawable-nodpi/ic_launcher_background.png"))
     fg = Image.new("RGBA", (432, 432), (0, 0, 0, 0))
-    fg.alpha_composite(foreground(300), (66, 66))
+    fg.alpha_composite(foreground(296), (68, 68))
     fg.save(os.path.join(RES, "drawable-nodpi/ic_launcher_foreground.png"))
     # 테마 아이콘용 단색 실루엣
     a = fg.getchannel("A").point(lambda v: 255 if v > 40 else 0)

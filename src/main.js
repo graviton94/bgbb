@@ -11,7 +11,7 @@ import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { celebrateTitle, celebrateItem } from './cele.js';
-import { composeMeme, newsMeme, titleMeme, renderMeme } from './memes.js';
+import { composeMeme, newsMeme, titleMeme, renderMeme, DECOR_FONTS } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
 const $ = id => document.getElementById(id);
@@ -334,7 +334,7 @@ function renderBubbles() {
   const mine = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
   const more = [...L(CHATTER)].sort(() => Math.random() - 0.5);
   const lines = [...mine.slice(0, 2), ...more, ...mine.slice(2)];
-  $('bubbles').innerHTML = bubbleLayout.map((b, i) => { const skin = pickOwned('bubble'); return `<span class="bubble ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${skin?.id}"
+  $('bubbles').innerHTML = bubbleLayout.map((b, i) => { const skin = pickOwned('bubble'), font = Math.random() < 0.35 ? `f-${pick(DECOR_FONTS)}` : ''; return `<span class="bubble ${font} ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${skin?.id}"
     style="left:${b.left};right:${b.right};bottom:${b.bottom};transform:rotate(${b.rot.toFixed(0)}deg) scale(${b.scale.toFixed(2)});transform-origin:${b.flip ? 'right' : 'left'} bottom;--bubble-img:${skin?.src ? `url(${skin.src})` : 'none'}">${esc(lines[i % lines.length])}</span>`; }).join('');
 }
 const newBubbles = () => renderBubbles();
