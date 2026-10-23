@@ -80,3 +80,9 @@
 ## 배경 4종은 우리가 직접 만듦 (발주 취소)
 `bg_upsidedown` (회의실 사진 180도) · `bg_snow` (밤 + 가로등 + 눈) · `bg_elevator` (헤어라인 문 + 빨간 7F) · `bg_toilet` (칸막이 문 + 매직 낙서) — `tools/make_backgrounds.py`.
 남은 배경 발주: `bg_library` `bg_wedding` `bg_chicken` `bg_hanbok` (사진 느낌이라 코드로는 어려움)
+
+## 배경 13종 직접 그림 (2026-10-23, 발주 취소)
+무료 사진 사이트는 이 작업 환경에서 막혀 있어서 HTML/CSS + 이모지 + 앱 그림 · 글씨로 장면을 그렸다 (`tools/draw_backgrounds.mjs`).
+- 원래 단색 · 그라데이션뿐이던 9종: `bg_kakao` (단톡방 채팅) · `bg_rainbow` (충격실화 썸네일) · `bg_ppt` (제목을 입력하십시오) · `bg_cctv` (REC · MOTION DETECTED) · `bg_news` (속보 · 자막 띠) · `bg_award` (상장 · 도장) · `bg_stock` (뿡전자 하한가) · `bg_night` (야식은 0칼로리) · `bg_money` (지폐 · 동전 비)
+- 안 왔던 4종: `bg_library` (정숙 · 방구 금지) · `bg_wedding` (祝 결혼 · 신랑 방구 ♥ 신부 참음) · `bg_chicken` (02:13 · 치킨은 살 안 쪄요) · `bg_hanbok` (福 · 새해 복 많이 뀌세요)
+- 진짜 사진으로 바꾸고 싶으면 같은 이름 PNG 를 주면 덮어쓴다.

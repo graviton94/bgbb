@@ -22,22 +22,22 @@ export const SLOT_NAMES = {
 // bg: css = 홈 전체 배경 (CSS background 값), dark = 글자를 흰색으로, vivid = 알록달록해서 흐린 글자도 진하게, frame = 상장 테두리 색
 const BG = [
   { id: 'bg_plain', name: { ko: '무표정 회색', en: 'Poker-face grey' }, free: true, css: '#F2F2F0' },
-  { id: 'bg_kakao', name: { ko: '단톡방', en: 'Group chat' }, title: 'soft3', price: 40, css: '#B2C7D9' },
+  { id: 'bg_kakao', name: { ko: '단톡방', en: 'Group chat' }, title: 'soft3', price: 40, css: photo('bg_kakao') },
   { id: 'bg_rainbow', name: { ko: '무지개 썸네일', en: 'Rainbow thumbnail' }, title: 'ensemble', price: 90, vivid: true,
-    css: 'linear-gradient(115deg, #FF00C8, #FF2E2E, #FFE600, #2EFF6A, #22C8FF, #8A2BFF)' },
-  { id: 'bg_ppt', name: { ko: '회색 PPT', en: 'Grey slide deck' }, price: 60, dark: true, css: sky('#3A3A3A', '#9A9A9A') },
+    css: photo('bg_rainbow') },
+  { id: 'bg_ppt', name: { ko: '회색 PPT', en: 'Grey slide deck' }, price: 60, dark: true, css: photo('bg_ppt', true) },
   { id: 'bg_cctv', name: { ko: 'CCTV', en: 'CCTV' }, title: 'meeting_loud', dark: true,
-    css: 'repeating-linear-gradient(180deg, rgba(0,0,0,.28) 0 2px, transparent 2px 8px), linear-gradient(180deg, #0E2A16, #071009)' },
+    css: photo('bg_cctv', true) },
   { id: 'bg_news', name: { ko: '뉴스 스튜디오', en: 'News studio' }, title: 'first_today', price: 50, dark: true,
-    css: 'repeating-linear-gradient(90deg, rgba(255,255,255,.06) 0 2px, transparent 2px 60px), linear-gradient(160deg, #0B2A6F, #1F5FD1)' },
-  { id: 'bg_award', name: { ko: '상장 테두리', en: 'Certificate' }, title: 'streak7', css: '#FFFBEA', frame: '#C9A227' },
+    css: photo('bg_news', true) },
+  { id: 'bg_award', name: { ko: '상장 테두리', en: 'Certificate' }, title: 'streak7', css: photo('bg_award') },
   { id: 'bg_stock', name: { ko: '주식 창', en: 'Stock chart' }, title: 'loud5', price: 70, dark: true,
-    css: 'repeating-linear-gradient(180deg, transparent 0 59px, #262B34 59px 60px), #0F1115' },
+    css: photo('bg_stock', true) },
   { id: 'bg_night', name: { ko: '야식 타임', en: 'Midnight snack' }, title: 'night_quiet', price: 60, dark: true,
-    css: `url(assets/deco/stars.webp) right 12% top 22% / 34% no-repeat, ${sky('#1F2747', '#2B2140')}` },
+    css: photo('bg_night', true) },
   { id: 'bg_money', name: { ko: '돈 비', en: 'Money rain' }, title: 'jp_rain',
-    css: 'url(assets/deco/money_rain.webp) center 30% / 90% no-repeat, #E8FFD9' },
-  // 사진 · 3D 배경 (assets/skin/bg)
+    css: photo('bg_money') },
+  // 사진 · 3D · 직접 그린 배경 (assets/skin/bg, tools/draw_backgrounds.mjs · make_backgrounds.py)
   { id: 'bg_office', name: { ko: '사무실 책상', en: 'Office desk' }, title: 'monday', price: 70, css: photo('bg_office') },
   { id: 'bg_meeting', name: { ko: '회의실', en: 'Meeting room' }, title: 'meeting_hold', price: 90, css: photo('bg_meeting') },
   { id: 'bg_subway', name: { ko: '지하철', en: 'Subway' }, title: 'evening', price: 70, css: photo('bg_subway') },
@@ -162,7 +162,6 @@ export const PENDING = new Set([
   'prop_mic',
   // 아직 안 옴
   'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
-  'bg_library', 'bg_wedding', 'bg_chicken', 'bg_hanbok',
   'fx_beans', 'fx_pixel', 'fx_petals',
   'frame_polaroid', 'frame_newspaper', 'frame_vhs', 'frame_gold', 'frame_wanted', 'frame_museum'
 ]);
