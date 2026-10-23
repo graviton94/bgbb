@@ -37,6 +37,18 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
 
+      # 어떤 비밀 값이 들어 있는지 길이만 찍는다 (값은 안 찍음)
+      - name: Signing secrets (lengths only)
+        env:
+          S1: ${{ secrets.BGBB_KEYSTORE_BASE64 }}
+          S2: ${{ secrets.BGBB_KEYSTORE_PASSWORD }}
+          S3: ${{ secrets.BGBB_KEY_ALIAS }}
+          S4: ${{ secrets.BGBB_KEY_PASSWORD }}
+          S5: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          S6: ${{ secrets.SIDELOAD_PASSPHRASE }}
+        run: |
+          echo "BGBB_KEYSTORE_BASE64=${#S1} BGBB_KEYSTORE_PASSWORD=${#S2} BGBB_KEY_ALIAS=${#S3} BGBB_KEY_PASSWORD=${#S4} ANDROID_UPLOAD_PASSPHRASE=${#S5} SIDELOAD_PASSPHRASE=${#S6}"
+
       # 서명 키가 등록돼 있으면 서명된 AAB, 없으면 서명 안 된 AAB (빌드 확인용)
       - name: Release bundle
         working-directory: android

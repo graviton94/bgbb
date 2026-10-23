@@ -97,12 +97,12 @@ const WEAR = [
   { id: 'wear_3d', name: { ko: '3D 안경', en: '3D glasses' }, price: 60 },
   { id: 'wear_groucho', name: { ko: '코주부 안경', en: 'Groucho glasses' }, title: 'cat_hold', price: 80 },
   { id: 'wear_eyepatch', name: { ko: '해적 안대', en: 'Eyepatch' }, title: 'last_call', price: 70 },
-  { id: 'wear_mask', name: { ko: '마스크', en: 'Face mask' }, title: 'hold_basic', price: 40 },
+  { id: 'wear_mask', name: { ko: 'KF-뿡 마스크', en: 'KF-Toot mask' }, title: 'hold_basic', price: 40 },
   { id: 'wear_gasmask', name: { ko: '방독면', en: 'Gas mask' }, title: 'trinity' },
   { id: 'wear_party', name: { ko: '파티 고깔', en: 'Party hat' }, title: 'streak3', price: 50 },
   { id: 'wear_crown', name: { ko: '종이 왕관', en: 'Paper crown' }, title: 'jp_lotto' },
   { id: 'wear_headset', name: { ko: '회의용 헤드셋', en: 'Headset' }, title: 'meeting_soft', price: 70 },
-  { id: 'wear_ribbon', name: { ko: '머리띠 리본', en: 'Big ribbon' }, title: 'first_bell', price: 50 },
+  { id: 'wear_ribbon', name: { ko: '빨간 땡땡이 리본', en: 'Polka-dot bow' }, title: 'first_bell', price: 50 },
   { id: 'wear_nerd', name: { ko: '뿔테 + 반창고', en: 'Taped nerd glasses' }, title: 'monday', price: 60 },
   { id: 'wear_bandana', name: { ko: '필승 두건', en: '"Must win" bandana' }, title: 'streak7', price: 70 },
   { id: 'wear_santa', name: { ko: '산타 모자', en: 'Santa hat' }, price: 50, season: [12] }
@@ -156,10 +156,6 @@ const LOOK = [
 // 아직 안 내보내는 것: 그림이 아직 임시(자리표시)이거나 누끼 · 위치가 잘못돼서 다시 발주한 것 (docs/skins/REORDER.md).
 // 새 그림이 오면 tools/prepare_skins.py 로 변환하고 여기서 빼면 바로 상점 · 칭호 보상에 나온다.
 export const PENDING = new Set([
-  // 다시 발주 (2차 검수 불량)
-  'wear_eyepatch', 'wear_headset', 'wear_nerd', 'wear_bandana', 'wear_santa',
-  'wear_gasmask', 'wear_ribbon', 'wear_mask',   // 디자인 탈락
-  'prop_mic',
   // 아직 안 옴
   'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
   'fx_beans', 'fx_pixel', 'fx_petals',
