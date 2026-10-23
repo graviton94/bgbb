@@ -1,9 +1,9 @@
 // 획득 팝업 (터지는 화면 앞에 2~3초): 노멀·레어 = 빵빠레 + 지폐 펑 · 레전드 = B급 PPT · 잭팟 = 돈폭탄 · 아이템 = 상자깡.
 // 그림은 전부 이미 있는 에셋 (assets/deco · assets/skin · 실사 얼굴). 없는 에셋은 그냥 빠진다.
-import { face } from './data.js';
+import { face, GOOFS, shortGoofs } from './data.js';
 import { SHADES_URL, SHADES_BOX } from './pixels.js';
 import { itemById } from './items.js';
-import { t } from './i18n.js';
+import { t, L } from './i18n.js';
 
 const deco = name => `assets/deco/${name}.webp`;
 const src = id => itemById(id)?.src || null;   // PENDING 이면 null
@@ -11,6 +11,12 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;',
 const rnd = (a, b) => a + Math.random() * (b - a);
 const many = (n, fn) => Array.from({ length: n }, (_, i) => fn(i)).join('');
 const img = (s, cls, style = '') => (s ? `<img class="${cls}" src="${s}" style="${style}" alt="">` : '');
+
+const pick = list => list[Math.floor(Math.random() * list.length)];
+const goof = () => pick(L(GOOFS));
+const shortGoof = () => pick(shortGoofs(L(GOOFS)));
+/** 틀린 칭찬 스티커 (줄바꿈 그대로) */
+const goofTag = (cls, s = goof()) => `<span class="c-goof ${cls}">${esc(s)}</span>`;
 
 const COLORS = ['#D7FF3D', '#FFD400', '#FF6FB5', '#7EC8FF', '#FFFFFF', '#FF2E2E'];
 const confetti = n => many(n, i => `<i class="c-conf" style="left:${rnd(0, 100).toFixed(1)}%;background:${COLORS[i % COLORS.length]};animation-delay:${rnd(0.15, 1.2).toFixed(2)}s;animation-duration:${rnd(2, 3.4).toFixed(2)}s;--r:${Math.round(rnd(-900, 900))}deg;${i % 3 ? '' : 'border-radius:50%;width:3vw;height:3vw;'}"></i>`);
@@ -40,6 +46,7 @@ function titleStage({ tier, title, char, expr, when, mode, coins, dex, all, unlo
     <div class="c-flash"></div>${rain(12, deco('money_bill'))}
     <span class="c-jackpot">JACKPOT</span>
     <span class="c-odds">${esc(t('cele.odds'))}</span>
+    ${goofTag('jp')}
     ${who(char, 'thumbs_up', { real: true, glasses: true, cls: 'c-jp-who' })}
     ${img(deco('money_gun'), 'c-gun')}
     ${many(9, i => img(deco('money_bill'), 'c-shot', `--dx:${Math.round(rnd(40, 70))}vw;--dy:${Math.round(rnd(-95, -40))}vw;--r:${Math.round(rnd(180, 600))}deg;animation-delay:${(0.5 + i * 0.13).toFixed(2)}s`))}
@@ -51,13 +58,14 @@ function titleStage({ tier, title, char, expr, when, mode, coins, dex, all, unlo
     </div>`;
   if (tier === 'legend') return `
     ${img(deco('stars'), 'c-star l')}${img(deco('stars'), 'c-star r')}
-    <div class="c-wordart"><span>${esc(t('cele.legend'))}</span><span class="c-mirror" aria-hidden="true">${esc(t('cele.legend'))}</span></div>
+    ${(w => `<div class="c-wordart" style="--fs:${Math.min(16, 92 / [...w].length).toFixed(1)}vw"><span>${esc(w)}</span><span class="c-mirror" aria-hidden="true">${esc(w)}</span></div>`)(Math.random() < 0.5 ? t('cele.legend') : `${shortGoof()}!!`)}
     <div class="c-marquee"><div>${many(2, () => `<span>${esc(t('cele.marquee', { name: title }))}&nbsp;</span>`)}</div></div>
     <div class="c-ppt-box">${rainbowLines(t('cele.pptBody', { mode, name: title }))}</div>
     ${img(src('fx_rainbow'), 'c-ppt-rainbow')}
     ${who(char, 'shameless', { real: true, glasses: true, cls: 'c-ppt-who' })}
     ${img(src('prop_trophy'), 'c-ppt-trophy')}
     <span class="c-new">NEW!!</span>
+    ${goofTag('ppt')}
     ${twinkle(6, src('fx_sparkle'))}
     <div class="c-ppt-coins">${coinPill(coins)}</div>
     <span class="c-beg">${esc(t('cele.beg'))}</span>
@@ -68,8 +76,8 @@ function titleStage({ tier, title, char, expr, when, mode, coins, dex, all, unlo
     <div class="c-rays"></div>${confetti(36)}
     <div class="c-chip-wrap"><span class="c-chip">${esc(t(rare ? 'cele.rare' : 'cele.normal'))}</span></div>
     ${img(src('prop_megaphone'), 'c-mega')}
-    <span class="c-bam">${esc(t('cele.bam'))}</span>
-    <span class="c-toot">${esc(t('cele.toot'))}</span>
+    <span class="c-bam">${esc(Math.random() < 0.4 ? t('cele.bam') : shortGoof())}</span>
+    <span class="c-toot">${esc(Math.random() < 0.4 ? t('cele.toot') : shortGoof())}</span>
     ${who(char, expr, { wear: src(rare ? 'wear_crown' : 'wear_party'), glasses: rare, cls: 'c-a-who' })}
     ${img(src(rare ? 'prop_trophy' : 'prop_medal'), 'c-award')}
     ${burst(10, deco('money_bill'), 'c-bill', { delay: 0.75 })}
@@ -89,6 +97,7 @@ function itemStage({ name, slot, preview, from }) {
     <div class="c-rays gold late"></div>
     <img class="c-box" src="${deco('box')}" alt="">
     <div class="c-item"><div class="c-card">${preview}</div><span class="c-stamp">NEW!</span></div>
+    ${goofTag('onbox')}
     ${burst(12, src('fx_sparkle'), 'c-spark', { delay: 1.5, size: 9, dist: 42 })}
     ${twinkle(4, src('fx_sparkle'))}
     <div class="c-info c-item-info">

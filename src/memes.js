@@ -6,7 +6,7 @@
 //  - 유니크 짤에는 단톡 캡처 · 뿡 예보 · 영수증 · 음악 앱 재생 화면도
 //  - 유니크 짤 (엥? · 스티커+안경 · 참은 나 vs 뀐 나 · 들어갈 때 vs 나올 때 · 범인은 이 안에 · 현자 타임 · 상자 · 잭팟 돈)은 미리 만든 틀
 // 결과는 spec (칸 대비 % 좌표 목록) 이라 화면(DOM)과 자랑 카드(canvas)가 같은 짤을 그린다.
-import { face, charById } from './data.js';
+import { face, charById, GOOFS, shortGoofs } from './data.js';
 import { L } from './i18n.js';
 import { SHADES_BOX, SHADES_URL } from './pixels.js';
 import { ITEMS } from './items.js';
@@ -51,7 +51,7 @@ const W = {
     hold: { ko: ['참았음', '꾹', '아무 일 없었음', '괄약근 승리'], en: ['HELD IT', 'NOPE', 'NOTHING HAPPENED', 'CLENCH WIN'] }
   },
   generic: { ko: ['방금 그거', '나 아님', '증거 없음', '평화로움', '오늘도'], en: ['THAT WAS', 'NOT ME', 'NO EVIDENCE', 'PEACEFUL', 'ANOTHER DAY'] },
-  label: { ko: ['해냈다', '실화냐', '멋지다', '터졌다', '잘했다'], en: ['Did it', 'For real?', 'Nice', 'It blew', 'Good job'] },
+  label: { ko: ['해냈다', '실화냐', '멋지다', '터졌다', '잘했다', ...shortGoofs(GOOFS.ko)], en: ['Did it', 'For real?', 'Nice', 'It blew', 'Good job', ...shortGoofs(GOOFS.en)] },
   labelRare: { legend: { ko: '레전드', en: 'Legend' }, jackpot: { ko: '잭팟', en: 'Jackpot' } },
   // 말풍선: 일부러 이상한 데서 줄을 바꾼다 (awkward)
   say: {
@@ -285,9 +285,9 @@ const hm = t => { const d = new Date(t); return `${String(d.getHours()).padStart
 const WL = {
   thumbTop: { ko: ['가지고있는 칭호명', '오늘의 방구'], en: ['YOUR TITLE HERE', "TODAY'S TOOT"] },
   thumbBig: { ko: ['제목', '뿡', '방구'], en: ['TITLE', 'TOOT'] },
-  thumbSub: { ko: ['소제목*^^*', '실화냐*^^*', '방구 맞음*^^*'], en: ['Subtitle*^^*', 'For real*^^*'] },
+  thumbSub: { ko: ['소제목*^^*', '실화냐*^^*', '방구 맞음*^^*', '데단해*^^*', '채고야*^^*', 'GRAET*^^*'], en: ['Subtitle*^^*', 'For real*^^*', 'AWASOME*^^*', 'GRAET*^^*'] },
   thumbFoot: { ko: ['구독과 좋아요해줄거지?', '자랑하기 눌러줄거지?'], en: ['Like and subscribe ok?', 'You will share this right?'] },
-  pptTitle: { ko: ['성공하는 방\n구란?', '좋은 방구\n란?'], en: ['What Makes\na Great Toot?'] },
+  pptTitle: { ko: ['성공하는 방\n구란?', '좋은 방구\n란?', '정말굉\n장한걸?', '당신을\n천제입니까?'], en: ['What Makes\na Great Toot?', 'Are you\ngenious?', 'CONGRATU\nRATION'] },
   pptBody: {
     ko: ['좋은 방구란 소리와 냄', '새, 타이밍 등이 명확한 레', '이아웃 컨셉을 지니고 적', '절하게 배치가 잘 된 방구', '를 말합니다.'],
     en: ['A good toot has a clear', 'layout concept of sound,', 'smell and timing, with', 'proper place-', 'ment.']

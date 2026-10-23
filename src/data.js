@@ -108,10 +108,19 @@ export const MODES = {
 // 홈 말풍선 난장판에 섞이는 아무 말 (친구 말버릇과 같이)
 export const CHATTER = {
   ko: ['ㅋ', '뿡?', '방금 그거 나 아님', '냄새 확인 중', '쉿', '누구야', 'ㄹㅇ', '...', '!!', '배고픔', '괄약근 출근함', '곧 터짐 ㄱㄷ',
-    '여기 아무도 없음', '진동 아님', '회의 언제 끝남', '참는 중 (3시간째)', '뿌직', '아무 일도 없었다', '증거 불충분', 'ㅇㅇ', '?', '방구 장전 완료'],
+    '여기 아무도 없음', '진동 아님', '회의 언제 끝남', '참는 중 (3시간째)', '뿌직', '아무 일도 없었다', '증거 불충분', 'ㅇㅇ', '?', '방구 장전 완료', '데단해', '채고야', 'GRAET', '멋저요'],
   en: ['lol', 'toot?', "wasn't me", 'smell check', 'shh', 'who did it', 'fr', '...', '!!', 'hungry', 'clench mode on', 'any minute now',
-    'nobody here', 'not a buzz', 'when does this meeting end', 'holding (3h)', 'oops', 'nothing happened', 'no evidence', 'k', '?', 'toot loaded']
+    'nobody here', 'not a buzz', 'when does this meeting end', 'holding (3h)', 'oops', 'nothing happened', 'no evidence', 'k', '?', 'toot loaded', 'AWASOME', 'GRAET', 'EXCELENT']
 };
+
+// 일부러 틀린 칭찬 (구린 PPT · 썸네일 감성). 짤 · 획득 팝업 · 홈 말풍선에서 섞어 쓴다. \n = 이상한 데서 줄바꿈
+export const GOOFS = {
+  ko: ['데단해', '채고야', 'AWASOME', '정말굉\n장한걸?', '당신을 천제입니까?', 'GRAET',
+    '멋저요', '훌룡해', '굉장햇', '레전드 갱신하셧습니다', 'EXCELENT', 'CONGRATURATION', '당신은 방구의\n신 입니까?', '최고의 방\n구군요', 'WONDREFUL'],
+  en: ['AWASOME', 'GRAET', 'EXCELENT', 'CONGRATURATION', 'WONDREFUL', 'so amazeing', 'Are you\ngenious?', 'U R the\nbest toot', 'Very good\nof you', 'SUPERB!!1']
+};
+/** 한 줄로 짧은 것만 (말풍선 · 도장용) */
+export const shortGoofs = list => list.filter(s => !s.includes('\n') && [...s].length <= 8);
 
 export const HOME_LINES = {
   ko: ['언제 터지는지는 나도 모름.\n그게 포인트임.', '주머니 조심.', '지금은 조용함.\n지금은.', '회의 있으면 멈춤 눌러.', '낼지 참을지는\n폰 모드가 정함.'],

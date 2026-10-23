@@ -579,8 +579,8 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .c-award { left: 60%; top: 34%; width: min(30vw, 140px); animation: c-drop .5s 1s both; }
 .c-mega { left: -4vw; top: 30%; width: min(34vw, 160px); rotate: -20deg; animation: c-blast .25s .3s ease-in-out 6 alternate both; }
 .c-bam, .c-toot { font: 400 10vw var(--display); color: #FFD400; -webkit-text-stroke: 2px #111; paint-order: stroke fill; }
-.c-bam { left: 4vw; top: 21%; --t: -14deg; animation: c-bam .4s .35s both; }
-.c-toot { right: 6vw; top: 26%; color: #FF6FB5; --t: 12deg; animation: c-bam .4s .55s both; }
+.c-bam { left: 4vw; top: 21%; z-index: 1; --t: -14deg; animation: c-bam .4s .35s both; }
+.c-toot { right: 3vw; top: 26%; z-index: 1; color: #FF6FB5; --t: 12deg; animation: c-bam .4s .55s both; }
 .c-bill, .c-spark { left: 50%; top: 32%; animation: c-burst 1.4s cubic-bezier(.2, .8, .3, 1) both; }
 .c-twinkle { animation: c-twinkle 1.2s ease-in-out infinite both; }
 
@@ -590,7 +590,7 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .c-star { top: calc(16px + var(--safe-top)); width: 18vw; animation: c-spin 2.4s linear infinite; }
 .c-star.l { left: 2vw; } .c-star.r { right: 2vw; animation-direction: reverse; }
 .c-wordart { left: 0; right: 0; top: calc(70px + var(--safe-top)); text-align: center; animation: c-wipe .9s steps(8) both; }
-.c-wordart span { display: block; font: 400 clamp(44px, 16vw, 70px)/1 var(--display); background: linear-gradient(180deg, #FFF6B0, #E3B320 55%, #7A5600); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px #4A3600; }
+.c-wordart span { display: block; white-space: nowrap; font: 400 min(var(--fs, 16vw), 70px)/1 var(--display); background: linear-gradient(180deg, #FFF6B0, #E3B320 55%, #7A5600); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: 1px #4A3600; }
 .c-wordart .c-mirror { transform: scaleY(-1); opacity: .18; margin-top: -10px; height: .55em; overflow: hidden; }
 .c-marquee { left: 0; right: 0; top: calc(196px + var(--safe-top)); height: 40px; background: #0000AA; overflow: hidden; border-block: 3px ridge #C0C0C0; }
 .c-marquee div { display: flex; width: max-content; animation: c-marquee 7s linear infinite; font-weight: 900; font-size: 20px; line-height: 34px; color: #FFFF00; white-space: nowrap; }
@@ -645,6 +645,12 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .t-item .cele-actions { animation-delay: 2s; }
 .t-item .cele-actions button:first-child { background: #FFD400; }
 
+/* 틀린 칭찬 스티커 */
+.c-goof { white-space: pre; text-align: center; font: 400 clamp(22px, 7vw, 32px)/1.05 var(--display); color: #fff; -webkit-text-stroke: 1.5px #111; paint-order: stroke fill; z-index: 2; }
+.c-goof.jp { right: 4vw; top: calc(176px + var(--safe-top)); color: #FF2EA6; rotate: 10deg; animation: c-stamp-r .35s 1.2s both, c-bounce 1s 1.6s infinite; }
+.c-goof.ppt { left: 30vw; top: 47%; color: #FFE600; -webkit-text-stroke: 2px #E0262B; text-shadow: 2px 2px 0 #2238FF; --t: -12deg; animation: c-bam .4s 2.2s both; }
+.c-goof.onbox { left: 8vw; top: 52%; color: #FF6FB5; rotate: -10deg; animation: c-stamp-r .35s 2.1s both; }
+@keyframes c-stamp-r { from { scale: 2.6; opacity: 0; } to { scale: 1; opacity: 1; } }
 @keyframes c-spin { to { rotate: 360deg; } }
 @keyframes c-spinY { to { transform: rotateY(360deg); } }
 @keyframes c-fade { from { opacity: 0; } }
