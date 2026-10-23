@@ -1,39 +1,36 @@
 # 출시 순서
 
-## 1. 업로드 키 만들기 (한 번만, 잃어버리면 안 됨)
+## 1. 업로드 키 (한 번만) — CARPEDIEM 과 같은 방식
 
-```bash
-keytool -genkeypair -v -keystore bgbb-upload.jks -alias upload -keyalg RSA -keysize 4096 -validity 10000
-```
+키는 GitHub 안에서 만들고, **암호로 잠근 파일만** 저장소에 올라간다 (`android/keystore/upload.jks.gpg`).
+잠그지 않은 키와 암호는 저장소 · 채팅 · 로그 어디에도 남지 않는다.
 
-- `bgbb-upload.jks` 와 비밀번호는 저장소 밖 안전한 곳에 보관한다 (`.gitignore` 가 `*.jks` 를 막는다).
-- Play Console 에서 **Play 앱 서명** 을 쓴다 (기본값). 이 키는 업로드용이라 잃어버려도 Play 고객센터로 재설정할 수 있다.
+1. 저장소 Settings → Secrets and variables → Actions 에 `ANDROID_UPLOAD_PASSPHRASE` (16자 이상) 를 넣는다.
+   `SIDELOAD_PASSPHRASE` 와는 다른 값이어야 한다.
+2. Actions → **Build** → Run workflow → `make_upload_key` 를 켜고 실행. 키를 만들어 잠근 뒤 그 브랜치에 커밋한다
+   (로그에 공개해도 되는 인증서 SHA-256 지문만 나온다). 이미 있으면 거부한다.
+3. 암호는 비밀번호 관리 앱에 따로 적어 둔다. 잃어버려도 Play 앱 서명을 쓰므로 Play Console 에서 업로드 키 재설정을 요청할 수 있다.
 
 ## 2. 서명해서 빌드하기
 
-**GitHub Actions (권장)** – 저장소 Settings → Secrets and variables → Actions 에 네 개를 넣는다.
+`Build` 워크플로가 매번 잠긴 키를 `ANDROID_UPLOAD_PASSPHRASE` 로 풀어 AAB 에 서명한다 (키스토어 · 키 암호 = 같은 값, 별칭 `upload`).
+결과물 `bgbb-build` 의 `bgbb-release.aab` 가 Play 에 올릴 파일. 실행 요약에 "AAB 서명됨" 이 보이면 된다.
 
-| 이름 | 값 |
-|---|---|
-| `BGBB_KEYSTORE_BASE64` | `base64 -w0 bgbb-upload.jks` 결과 |
-| `BGBB_KEYSTORE_PASSWORD` | 키 저장소 비밀번호 |
-| `BGBB_KEY_ALIAS` | `upload` |
-| `BGBB_KEY_PASSWORD` | 키 비밀번호 |
+- 테스트용 APK (`bgbb-debug.apk`) 는 저장소의 고정 debug 키로 서명된다 (덮어 설치용, Play 와 무관).
+- 예전 방식 (`BGBB_KEYSTORE_BASE64` 등 4개 비밀 값) 도 아직 읽지만 쓰지 않는다.
 
-그러면 `Build` 워크플로의 결과물(`bgbb-build`)에 **서명된** `bgbb-release.aab` 가 들어간다.
-(비밀 값이 없으면 서명 안 된 AAB 가 나온다 — 빌드 확인용으로만 쓴다.)
-
-**내 컴퓨터** – `android/keystore.properties` (커밋하지 않음):
+**내 컴퓨터에서** – `android/keystore.properties` (커밋하지 않음) 에 풀어 둔 키 경로와 암호:
 
 ```properties
-storeFile=/절대/경로/bgbb-upload.jks
+storeFile=/절대/경로/upload.jks
 storePassword=...
 keyAlias=upload
 keyPassword=...
 ```
 
 ```bash
-cd android && ./gradlew bundleRelease   # → app/build/outputs/bundle/release/app-release.aab
+gpg -d -o upload.jks android/keystore/upload.jks.gpg   # 암호 = ANDROID_UPLOAD_PASSPHRASE
+cd android && ./gradlew bundleRelease
 ```
 
 ## 3. Play Console

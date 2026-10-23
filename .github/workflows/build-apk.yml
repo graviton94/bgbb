@@ -5,16 +5,64 @@ on:
     branches: [ "main" ]
   pull_request:
   workflow_dispatch:
+    inputs:
+      make_upload_key:
+        description: "Play 업로드 키를 처음 한 번 만들기 (Secrets 의 ANDROID_UPLOAD_PASSPHRASE 로 잠가 저장소에 올림)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
 
 jobs:
+  # 업로드 키를 GitHub 안에서 만들어 암호로 잠근 파일만 올린다 (CARPEDIEM 과 같은 방식).
+  # 잠그지 않은 키 · 암호는 저장소 · 로그 어디에도 안 남는다 (로그엔 공개해도 되는 인증서 지문만).
+  make-upload-key:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.make_upload_key }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Make and lock the upload key
+        env:
+          P: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          P_SIDELOAD: ${{ secrets.SIDELOAD_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$P" ]; then echo "::error::Secrets 에 ANDROID_UPLOAD_PASSPHRASE 가 없습니다"; exit 1; fi
+          if [ "${#P}" -lt 16 ]; then echo "::error::ANDROID_UPLOAD_PASSPHRASE 는 16자 이상이어야 합니다"; exit 1; fi
+          if [ "$P" = "$P_SIDELOAD" ]; then echo "::error::업로드 키 암호는 SIDELOAD_PASSPHRASE 와 달라야 합니다"; exit 1; fi
+          unset P_SIDELOAD
+          OUT=android/keystore/upload.jks.gpg
+          if [ -f "$OUT" ]; then echo "::error::업로드 키가 이미 있습니다 ($OUT)"; exit 1; fi
+          mkdir -p android/keystore
+          KS="$RUNNER_TEMP/upload.jks"
+          keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias upload -keyalg RSA -keysize 4096 -validity 10000 \
+            -storepass:env P -keypass:env P -dname "CN=Bbangguppung upload, O=graviton94" >/dev/null
+          keytool -list -v -keystore "$KS" -storepass:env P -alias upload | grep -E "SHA256:" | head -1
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 -o "$OUT" "$KS" 3<<<"$P"
+          rm -f "$KS"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$OUT"
+          git commit -m "New Play upload key, locked with the ANDROID_UPLOAD_PASSPHRASE secret"
+          git push
+
   build:
+    needs: make-upload-key
+    if: ${{ always() && needs.make-upload-key.result != 'failure' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}   # 키를 방금 올렸으면 그 커밋까지
 
       - uses: actions/setup-node@v4
         with:
@@ -37,32 +85,38 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
 
-      # 어떤 비밀 값이 들어 있는지 길이만 찍는다 (값은 안 찍음)
-      - name: Signing secrets (lengths only)
-        env:
-          S1: ${{ secrets.BGBB_KEYSTORE_BASE64 }}
-          S2: ${{ secrets.BGBB_KEYSTORE_PASSWORD }}
-          S3: ${{ secrets.BGBB_KEY_ALIAS }}
-          S4: ${{ secrets.BGBB_KEY_PASSWORD }}
-          S5: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
-          S6: ${{ secrets.SIDELOAD_PASSPHRASE }}
-        run: |
-          echo "BGBB_KEYSTORE_BASE64=${#S1} BGBB_KEYSTORE_PASSWORD=${#S2} BGBB_KEY_ALIAS=${#S3} BGBB_KEY_PASSWORD=${#S4} ANDROID_UPLOAD_PASSPHRASE=${#S5} SIDELOAD_PASSPHRASE=${#S6}"
-
-      # 서명 키가 등록돼 있으면 서명된 AAB, 없으면 서명 안 된 AAB (빌드 확인용)
+      # 서명: 저장소의 잠긴 업로드 키 (android/keystore/upload.jks.gpg) 를 ANDROID_UPLOAD_PASSPHRASE 로 풀어 씀
+      # (키스토어 · 키 암호도 같은 값, 별칭 upload). 없으면 예전 BGBB_* 비밀 값, 그것도 없으면 서명 안 된 AAB (빌드 확인용).
       - name: Release bundle
         working-directory: android
         env:
+          P: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
           KEYSTORE_BASE64: ${{ secrets.BGBB_KEYSTORE_BASE64 }}
           BGBB_KEYSTORE_PASSWORD: ${{ secrets.BGBB_KEYSTORE_PASSWORD }}
           BGBB_KEY_ALIAS: ${{ secrets.BGBB_KEY_ALIAS }}
           BGBB_KEY_PASSWORD: ${{ secrets.BGBB_KEY_PASSWORD }}
         run: |
-          if [ -n "$KEYSTORE_BASE64" ]; then
+          set -euo pipefail
+          if [ -n "$P" ] && [ -f keystore/upload.jks.gpg ]; then
+            gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 -d -o "$RUNNER_TEMP/upload.jks" keystore/upload.jks.gpg 3<<<"$P"
+            export BGBB_KEYSTORE="$RUNNER_TEMP/upload.jks" BGBB_KEYSTORE_PASSWORD="$P" BGBB_KEY_ALIAS=upload BGBB_KEY_PASSWORD="$P"
+          elif [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
             export BGBB_KEYSTORE="$RUNNER_TEMP/upload.jks"
           fi
           ./gradlew --no-daemon bundleRelease
+          rm -f "$RUNNER_TEMP/upload.jks"
+
+      - name: Is the AAB signed?
+        run: |
+          f=android/app/build/outputs/bundle/release/app-release.aab
+          if keytool -printcert -jarfile "$f" 2>/dev/null | grep -q "SHA256:"; then
+            echo "서명됨 (업로드 키 지문):"; keytool -printcert -jarfile "$f" | grep -E "Owner|SHA256:" | head -2
+            echo "### AAB 서명됨 — Play Console 에 올려도 됨" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::AAB 가 서명되지 않았습니다 (Play 에 못 올림). Actions → Build → Run workflow 에서 make_upload_key 를 켜고 한 번 실행하세요."
+            echo "### AAB 서명 안 됨 — 빌드 확인용" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Collect outputs
         run: |
