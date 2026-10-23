@@ -13,7 +13,7 @@
 방구뿡
 
 **간단한 설명 (80자)**
-주머니 속 셋이 하루 몇 번 아무 때나 뿡. 터질 때마다 칭호 · 짤 · 축하 PPT. 데단해.
+주머니 속 셋이 하루 몇 번 아무 때나 뿡. 터질 때마다 칭호 · 짤 · 축하 PPT.
 
 **자세한 설명**
 주머니에 햄찌 · 오목이 · 냥이가 숨어 있음.
@@ -28,13 +28,13 @@
 시간 · 요일 · 폰 상태 · 오늘 몇 번째인지로 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐"… 노멀 · 레어 · 레전드 40개 + 0.5% 잭팟 5개 + 1년에 그날만 나오는 시즌 칭호 11개 (설날 · 수능 · 크리스마스…). 이미 가진 칭호면 꽝.
 
 ■ 축하가 구림 (일부러)
-새 칭호를 따면 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄. 당신을 천제입니까?
+새 칭호를 따면 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄.
 
 ■ 터진 순간이 짤이 됨
 칭호마다 고정 짤 하나. 유튜브 썸네일, 구린 PPT, CCTV, 주식창, 영수증… 하루 3번 짤 뽑기도 있음. 짤 그대로 저장 · 공유.
 
 ■ 꾸미기 = 가진 것 중 랜덤 난장판
-배경 · 소품 · 착용 · 말풍선 · 뿡 효과. 칭호를 따면 공짜로 열리고 뿡코인으로도 삼. 홈 화면은 가진 것 중에서 매번 랜덤으로 섞임. 캐릭터 크기 30~300%, 360도 회전. 채고야.
+배경 · 소품 · 착용 · 말풍선 · 뿡 효과. 칭호를 따면 공짜로 열리고 뿡코인으로도 삼. 홈 화면은 가진 것 중에서 매번 랜덤으로 섞임. 캐릭터 크기 30~300%, 360도 회전.
 
 ■ 쫄?
 매일 회의 · 수업 시간은 '쫄 시간'으로. 그 시간엔 소리 · 진동 일체 없음.
@@ -49,7 +49,7 @@
 ■ 조용한 앱
 계정 · 서버 없음. 기록은 폰 안에만 있고 인터넷 없이 작동. 광고는 짤 뽑기를 더 하고 싶을 때 직접 골라서 보는 것 하나뿐.
 
-잠긴 기능 없음. 마음에 들면 응원하기로 간식 하나. GRAET.
+잠긴 기능 없음. 마음에 들면 응원하기로 간식 하나.
 
 ## English (en-US)
 
@@ -72,7 +72,7 @@ At that moment, if your phone…
 Time, day, phone state and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew"… 40 titles across Normal, Rare and Legend, five 0.5% jackpots and 11 once-a-year seasonal titles (Christmas, Halloween, Lunar New Year…). Already have it? Better luck next time.
 
 ■ Deliberately cringe celebrations
-New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jackpots get a money gun. AWASOME.
+New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jackpots get a money gun.
 
 ■ Every toot becomes a meme
 Each title has its own meme: YouTube thumbnails, cringe slides, CCTV, stock charts, receipts… plus 3 meme draws a day. Save and share as is.
@@ -93,7 +93,7 @@ The sound is random every time. Record 3 seconds to mix in your own voice.
 ■ A quiet app
 No account, no server. Your records stay on your phone and it works offline. The only ad is one you choose to watch for extra meme draws.
 
-Nothing is locked. If you enjoy it, buy them a snack from Support. GRAET.
+Nothing is locked. If you enjoy it, buy them a snack from Support.
 
 ## 비공개 테스트 (Play Console → 테스트 → 비공개 테스트)
 
@@ -107,7 +107,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support. GRAET.
   - 획득 팝업 4종 (빵빠레 · 구린 PPT · 돈폭탄 · 상자깡)
   - 꾸미기: 배경 · 소품 · 착용 · 말풍선 · 뿡 효과, 홈은 가진 것 중 랜덤
   - 쫄 시간 · 비상탈출 · 미디어 볼륨 기준 소리
-  데단해. 이상한 거 보이면 설정 → 의견 보내기!
+  이상한 거 보이면 설정 → 의견 보내기!
   ```
 - 출시 노트 (en-US):
   ```
@@ -115,7 +115,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support. GRAET.
   - 4 celebration popups (fanfare, cringe PPT, money bomb, box opening)
   - Style: backgrounds, props, hats, bubbles, toot FX; home shuffles what you own
   - Chicken hours, bail out, sound follows media volume
-  GRAET. Spot something weird? Settings → Send feedback!
+  Spot something weird? Settings → Send feedback!
   ```
 - 테스터에게 보낼 안내: Play 의 테스트 참여 링크 → '테스터 되기' → Play 스토어에서 설치. 하루 이상 켜 두고 소리 · 진동 · 무음 각각에서 한 번씩 터지는지 봐 달라고 하기.
 
