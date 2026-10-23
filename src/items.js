@@ -155,11 +155,7 @@ const LOOK = [
 
 // 아직 안 내보내는 것: 그림이 아직 임시(자리표시)이거나 누끼 · 위치가 잘못돼서 다시 발주한 것 (docs/skins/REORDER.md).
 // 새 그림이 오면 tools/prepare_skins.py 로 변환하고 여기서 빼면 바로 상점 · 칭호 보상에 나온다.
-export const PENDING = new Set([
-  // 아직 안 옴
-  'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
-  'fx_beans', 'fx_pixel', 'fx_petals'
-]);
+export const PENDING = new Set([]);   // 다 들어옴 (빠진 게 생기면 여기에 id)
 
 // font: 일부러 구린 꾸밈 글씨. 가진 글씨만 말풍선 · 스티커 · 짤 글자에 가끔 섞인다 (장착한 건 더 자주). deco = src/memes.js DECOR_FONTS 키
 const FONT = [
