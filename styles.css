@@ -701,3 +701,28 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .packs b { width: 100%; font-size: 13px; }
 .pack { flex: 1; min-width: 0; display: grid; gap: 2px; padding: 8px; border: 2px solid #111; border-radius: 12px; background: #FFD400; color: #111; cursor: pointer; font: 900 15px var(--body); }
 .pack small { font: 700 12px var(--body); }
+
+/* 사용설명 */
+.guide { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; background: var(--lime); color: #111; overflow: hidden; }
+.guide::backdrop { background: var(--lime); }
+.guide[open] { display: flex; flex-direction: column; }
+.guide-pages { flex: 1; display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.guide-pages::-webkit-scrollbar { display: none; }
+.guide-page { flex: 0 0 100%; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: calc(24px + var(--safe-top)) 28px 0; box-sizing: border-box; }
+.guide-art { display: flex; justify-content: center; align-items: flex-end; height: 34vh; }
+.guide-art img { height: 100%; max-width: 48%; object-fit: contain; filter: drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff); }
+.guide-art img + img { margin-left: -12%; height: 80%; }
+.guide-page h3 { margin: 0; font: 400 clamp(32px, 10vw, 44px)/1.1 var(--display); }
+.guide-page p { margin: 0; font-size: 16px; line-height: 1.6; }
+.guide-page small { color: #3A3A30; }
+.guide-dots { display: flex; justify-content: center; gap: 8px; padding: 12px; }
+.guide-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,.2); }
+.guide-dots i.on { background: #111; width: 22px; border-radius: 4px; }
+.guide-actions { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; padding: 0 16px calc(20px + var(--safe-bottom)); }
+.guide .btn.ghost { color: #3A3A30; }
+/* 패치노트 */
+.notes { display: grid; gap: 14px; margin-bottom: 16px; max-height: 55vh; overflow-y: auto; }
+.notes h4 { margin: 0 0 4px; font: 400 20px var(--display); }
+.notes h4 small { font: 600 12px var(--body); color: var(--muted); }
+.notes ul { margin: 0; padding-left: 18px; line-height: 1.6; }
+.guide:focus, .guide-pages:focus { outline: none; }

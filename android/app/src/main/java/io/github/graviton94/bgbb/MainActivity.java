@@ -62,6 +62,7 @@ public class MainActivity extends Activity {
     private PermissionRequest pendingMic;
     private Support support;
     private Ads ads;
+    private Updater updater;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -132,6 +133,10 @@ public class MainActivity extends Activity {
             @Override public void reward() { callJs("bgbbOnAdReward", "true"); }
         });
         ads.start();
+        updater = new Updater(this, new Updater.Sink() {
+            @Override public void available(int code) { callJs("bgbbOnUpdate", String.valueOf(code)); }
+            @Override public void downloaded() { callJs("bgbbOnUpdateReady", "true"); }
+        });
 
         web.addJavascriptInterface(new Bridge(), "BgbbNative");
         web.loadUrl("https://" + HOST + "/index.html");
@@ -148,6 +153,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (updater != null) updater.check();
         android.content.IntentFilter f = new android.content.IntentFilter();
         f.addAction("android.media.VOLUME_CHANGED_ACTION");
         f.addAction(android.media.AudioManager.RINGER_MODE_CHANGED_ACTION);
@@ -166,6 +172,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         support.destroy();
+        updater.destroy();
         web.destroy();
         super.onDestroy();
     }
@@ -416,6 +423,22 @@ public class MainActivity extends Activity {
         }
 
         /** 보상형 광고: 준비됐는지 · 보여 주기 (끝까지 보면 bgbbOnAdReward) */
+        /** 새 버전: 받기 시작 · 받은 것 설치 */
+        @JavascriptInterface
+        public void checkUpdate() {
+            runOnUiThread(() -> updater.check());
+        }
+
+        @JavascriptInterface
+        public void startUpdate() {
+            runOnUiThread(() -> updater.start());
+        }
+
+        @JavascriptInterface
+        public void completeUpdate() {
+            runOnUiThread(() -> updater.complete());
+        }
+
         @JavascriptInterface
         public boolean adReady() {
             return ads != null && ads.ready();

@@ -1,0 +1,47 @@
+// 패치노트: 위가 최신. 앱을 업데이트하고 처음 열면 '지난번에 본 버전' 이후 것만 한 번 띄운다 (설정 → 패치노트 에서 다시 보기).
+// v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
+export const CHANGELOG = [
+  {
+    v: '2.2.0', date: '2026-10-24',
+    ko: [
+      '시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나옴',
+      '짤 뽑기 다 썼으면 광고 보고 +3 (하루 2번, 원할 때만)',
+      '꾸미기에 뿡코인 충전 생김',
+      '사용설명 · 패치노트 · 새 버전 알림 생김. 데단해'
+    ],
+    en: [
+      '11 seasonal titles: Lunar New Year, Christmas, Halloween… one day a year only',
+      'Out of meme draws? Watch an ad for +3 (twice a day, only if you want)',
+      'Toot coins can now be topped up in Style',
+      'New: how-to guide, patch notes, update alerts. AWASOME'
+    ]
+  },
+  {
+    v: '2.1.0', date: '2026-10-23',
+    ko: [
+      '획득 팝업 4종: 빵빠레 · 구린 PPT · 돈폭탄 · 상자깡',
+      '구린 글씨 5종 모으기 (궁서체 · 와당체 …)',
+      '배경 13종 · 소품 · 효과 · 공유 프레임 6종 새로 그림',
+      '문법 파괴 칭찬 기믹. 채고야'
+    ],
+    en: [
+      '4 celebration popups: fanfare, cringe PPT, money bomb, box opening',
+      'Collect 5 cringe fonts',
+      '13 backgrounds, new props, toot effects and 6 share frames',
+      'Broken-grammar praise everywhere. GRAET'
+    ]
+  },
+  {
+    v: '2.0.0', date: '2026-10-21',
+    ko: ['방구뿡 첫 버전. 주머니 속 셋이 아무 때나 뿡'],
+    en: ['First version. Three pocket pals toot whenever']
+  }
+];
+export const APP_VERSION = CHANGELOG[0].v;
+
+/** a < b ? (2.1.0 < 2.2.0) */
+export const older = (a, b) => {
+  const x = String(a || '0').split('.').map(Number), y = String(b).split('.').map(Number);
+  for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) < (y[i] || 0);
+  return false;
+};

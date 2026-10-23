@@ -172,6 +172,8 @@
       </div>
 
       <button class="btn primary wide" id="openSupport" type="button" data-i18n="settings.support"></button>
+      <button class="btn wide" id="openGuide" type="button" data-i18n="settings.guide"></button>
+      <button class="btn wide" id="openNotes" type="button" data-i18n="settings.notes"></button>
       <button class="btn wide" id="feedback" type="button" data-i18n="settings.feedback"></button>
       <button class="btn ghost wide danger" id="reset" type="button" data-i18n="settings.reset"></button>
       <p class="links">
@@ -209,17 +211,32 @@
   </dialog>
 
   <!-- 첫 실행 -->
-  <dialog class="sheet small" id="welcome">
+  <!-- 사용설명 (처음 한 번 · 설정에서 다시 보기): 옆으로 넘기는 5장 -->
+  <dialog class="guide" id="guide" aria-label="사용설명">
+    <div class="guide-pages" id="guidePages"></div>
+    <div class="guide-dots" id="guideDots" aria-hidden="true"></div>
+    <div class="guide-actions">
+      <button class="btn ghost" id="guideSkip" type="button" data-i18n="guide.skip"></button>
+      <button class="btn primary" id="guideNext" type="button" data-i18n="guide.next"></button>
+    </div>
+  </dialog>
+
+  <!-- 패치노트: 업데이트하고 처음 열 때 한 번 -->
+  <dialog class="sheet" id="notesSheet" aria-labelledby="notesTitle">
     <div class="sheet-body">
-      <h3 class="welcome-title" data-i18n-html="welcome.title"></h3>
-      <ul class="welcome-list">
-        <li data-i18n-html="welcome.loud"></li>
-        <li data-i18n-html="welcome.soft"></li>
-        <li data-i18n-html="welcome.hold"></li>
-      </ul>
-      <p data-i18n-html="welcome.titles"></p>
-      <p class="muted small" data-i18n="welcome.freeze"></p>
-      <button class="btn primary wide" data-close type="button" data-i18n="welcome.start"></button>
+      <h3 id="notesTitle" data-i18n="notes.title"></h3>
+      <div class="notes" id="notesList"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="notes.ok"></button>
+    </div>
+  </dialog>
+
+  <!-- 새 버전 알림 (Google Play 인앱 업데이트) -->
+  <dialog class="sheet small" id="updateSheet" aria-labelledby="updTitle">
+    <div class="sheet-body">
+      <h3 id="updTitle"></h3>
+      <p id="updBody"></p>
+      <button class="btn primary wide" id="updGo" type="button"></button>
+      <button class="btn ghost wide" id="updLater" type="button" data-i18n="update.later"></button>
     </div>
   </dialog>
 

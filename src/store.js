@@ -10,6 +10,7 @@ const RECENT = 30;
 function initial() {
   return {
     onboarded: false,
+    seenVersion: '',      // 패치노트를 마지막으로 본 버전
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
     schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 } },   // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음)

@@ -11,6 +11,7 @@ import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { celebrateTitle, celebrateItem } from './cele.js';
+import { CHANGELOG, APP_VERSION, older } from './changelog.js';
 import { composeMeme, newsMeme, titleMeme, renderMeme, decorFont, setDecorFonts } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
@@ -852,10 +853,79 @@ document.querySelectorAll('dialog').forEach(d => {
     if (e.target === d || e.target.closest('[data-close]')) d.close();
   });
 });
-$('welcome').addEventListener('close', () => {
+// ---------------------------------------------------------- 사용설명 (옆으로 넘기는 5장)
+const GUIDE = [
+  { face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
+  { face: ['hamster_burst'] },
+  { face: ['cat_hold'] },
+  { face: ['hamster_thumbs_up'], real: true },
+  { face: ['tit_eng'] }
+];
+function openGuide() {
+  $('guidePages').innerHTML = GUIDE.map((g, i) => `<section class="guide-page">
+    <div class="guide-art">${g.face.map(f => `<img src="assets/${g.real ? 'faces_real' : 'faces'}/${f}.webp" alt="">`).join('')}</div>
+    <h3>${t(`guide.${i + 1}t`)}</h3><p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
+  $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
+  $('guidePages').scrollLeft = 0;
+  guideAt(0);
+  if (!$('guide').open) $('guide').showModal();
+}
+let guidePage = 0;
+function guideAt(i) {
+  guidePage = i;
+  [...$('guideDots').children].forEach((d, k) => d.classList.toggle('on', k === i));
+  $('guideNext').textContent = t(i === GUIDE.length - 1 ? 'guide.go' : 'guide.next');
+}
+$('guidePages').addEventListener('scroll', () => {
+  const w = $('guidePages').clientWidth;
+  if (w) guideAt(Math.round($('guidePages').scrollLeft / w));
+}, { passive: true });
+$('guideNext').addEventListener('click', () => {
+  if (guidePage >= GUIDE.length - 1) { $('guide').close(); return; }
+  $('guidePages').scrollTo({ left: (guidePage + 1) * $('guidePages').clientWidth, behavior: 'smooth' });
+});
+$('guideSkip').addEventListener('click', () => $('guide').close());
+$('guide').addEventListener('close', () => {
+  if (state.onboarded) return;
   state.onboarded = true;
+  state.seenVersion = APP_VERSION;   // 처음 깐 사람은 패치노트 안 띄움
   if (native && state.notify && !native.notificationsAllowed()) native.requestNotifications();
   commit();
+});
+$('openGuide').addEventListener('click', () => { $('settingsSheet').close(); openGuide(); });
+
+// ---------------------------------------------------------- 패치노트
+function showNotes(since = null) {
+  const list = CHANGELOG.filter(x => !since || older(since, x.v)).slice(0, since ? 3 : CHANGELOG.length);
+  $('notesList').innerHTML = list.map(x => `<section><h4>v${esc(x.v)} <small>${esc(x.date)}</small></h4><ul>${L({ ko: x.ko, en: x.en }).map(l => `<li>${esc(l)}</li>`).join('')}</ul></section>`).join('');
+  $('notesSheet').showModal();
+}
+$('openNotes').addEventListener('click', () => { $('settingsSheet').close(); showNotes(); });
+
+// ---------------------------------------------------------- 새 버전 (Google Play 인앱 업데이트, Play 에서 깐 앱만)
+let updateMode = 'get';
+function updateSheet(mode) {
+  updateMode = mode;
+  const ready = mode === 'ready';
+  $('updTitle').textContent = t(ready ? 'update.readyTitle' : 'update.title');
+  $('updBody').textContent = t(ready ? 'update.readyBody' : 'update.body');
+  $('updGo').textContent = t(ready ? 'update.restart' : 'update.go');
+  if (!$('updateSheet').open) $('updateSheet').showModal();
+}
+window.bgbbOnUpdate = code => {
+  const snooze = state.updateSnooze || {};
+  if (snooze.until && Date.now() < snooze.until) return;   // '나중에' 누른 뒤 하루는 조용히
+  updateSheet('get');
+};
+window.bgbbOnUpdateReady = () => updateSheet('ready');
+$('updGo').addEventListener('click', () => {
+  $('updateSheet').close();
+  if (updateMode === 'ready') native?.completeUpdate?.();
+  else { native?.startUpdate?.(); toast(t('update.downloading')); }
+});
+$('updLater').addEventListener('click', () => {
+  $('updateSheet').close();
+  if (updateMode === 'get') { state.updateSnooze = { code: 'any', until: Date.now() + 86400e3 }; commit(); }
 });
 
 function showScreen(name) {
@@ -900,5 +970,11 @@ syncSchedule(previewOperation);
 drainNative();
 native?.loadTips?.(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));   // 다른 기기에서 응원한 기록 복원
 render();
-if (!state.onboarded) $('welcome').showModal();
+if (!state.onboarded) openGuide();
+else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음 연 날: 그 사이 바뀐 것만
+  showNotes(state.seenVersion || CHANGELOG[1]?.v);
+  state.seenVersion = APP_VERSION;
+  commit();
+}
+native?.checkUpdate?.();
 addEventListener('pagehide', flush);
