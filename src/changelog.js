@@ -7,13 +7,13 @@ export const CHANGELOG = [
       '시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나옴',
       '짤 뽑기 다 썼으면 광고 보고 +3 (하루 2번, 원할 때만)',
       '꾸미기에 뿡코인 충전 생김',
-      '사용설명 · 패치노트 · 새 버전 알림 생김. 데단해'
+      '사용설명 · 패치노트 · 새 버전 알림 생김'
     ],
     en: [
       '11 seasonal titles: Lunar New Year, Christmas, Halloween… one day a year only',
       'Out of meme draws? Watch an ad for +3 (twice a day, only if you want)',
       'Toot coins can now be topped up in Style',
-      'New: how-to guide, patch notes, update alerts. AWASOME'
+      'New: how-to guide, patch notes, update alerts'
     ]
   },
   {
@@ -22,13 +22,13 @@ export const CHANGELOG = [
       '획득 팝업 4종: 빵빠레 · 구린 PPT · 돈폭탄 · 상자깡',
       '구린 글씨 5종 모으기 (궁서체 · 와당체 …)',
       '배경 13종 · 소품 · 효과 · 공유 프레임 6종 새로 그림',
-      '문법 파괴 칭찬 기믹. 채고야'
+      '곳곳에 문법 파괴 칭찬 기믹'
     ],
     en: [
       '4 celebration popups: fanfare, cringe PPT, money bomb, box opening',
       'Collect 5 cringe fonts',
       '13 backgrounds, new props, toot effects and 6 share frames',
-      'Broken-grammar praise everywhere. GRAET'
+      'Broken-grammar praise all over the app'
     ]
   },
   {
