@@ -158,8 +158,7 @@ const LOOK = [
 export const PENDING = new Set([
   // 아직 안 옴
   'prop_warning', 'prop_cctv', 'prop_chair', 'prop_pumpkin', 'prop_yeot',
-  'fx_beans', 'fx_pixel', 'fx_petals',
-  'frame_polaroid', 'frame_newspaper', 'frame_vhs', 'frame_gold', 'frame_wanted', 'frame_museum'
+  'fx_beans', 'fx_pixel', 'fx_petals'
 ]);
 
 // font: 일부러 구린 꾸밈 글씨. 가진 글씨만 말풍선 · 스티커 · 짤 글자에 가끔 섞인다 (장착한 건 더 자주). deco = src/memes.js DECOR_FONTS 키
