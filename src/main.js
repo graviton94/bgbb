@@ -11,7 +11,7 @@ import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { celebrateTitle, celebrateItem } from './cele.js';
-import { composeMeme, newsMeme, titleMeme, renderMeme, DECOR_FONTS } from './memes.js';
+import { composeMeme, newsMeme, titleMeme, renderMeme, decorFont, setDecorFonts } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
 const $ = id => document.getElementById(id);
@@ -334,7 +334,7 @@ function renderBubbles() {
   const mine = [...L(charById(heroId()).bubbles)].sort(() => Math.random() - 0.5);
   const more = [...L(CHATTER)].sort(() => Math.random() - 0.5);
   const lines = [...mine.slice(0, 2), ...more, ...mine.slice(2)];
-  $('bubbles').innerHTML = bubbleLayout.map((b, i) => { const skin = pickOwned('bubble'), font = Math.random() < 0.35 ? `f-${pick(DECOR_FONTS)}` : ''; return `<span class="bubble ${font} ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${skin?.id}"
+  $('bubbles').innerHTML = bubbleLayout.map((b, i) => { const skin = pickOwned('bubble'), font = (f => (f ? `f-${f}` : ''))(decorFont(0.35)); return `<span class="bubble ${font} ${b.accent ? 'accent' : ''} ${b.flip ? 'flip' : ''} ${skin?.src ? 'img' : ''}" data-skin="${skin?.id}"
     style="left:${b.left};right:${b.right};bottom:${b.bottom};transform:rotate(${b.rot.toFixed(0)}deg) scale(${b.scale.toFixed(2)});transform-origin:${b.flip ? 'right' : 'left'} bottom;--bubble-img:${skin?.src ? `url(${skin.src})` : 'none'}">${esc(lines[i % lines.length])}</span>`; }).join('');
 }
 const newBubbles = () => renderBubbles();
@@ -516,6 +516,9 @@ function pickOwned(slot) {
 }
 let sessionBg = null;   // 이번에 열었을 때 뽑힌 배경 (shuffleStage)
 function applySkin() {
+  // 모은 구린 글씨 (장착한 건 두 번 넣어 더 자주)
+  const fonts = ownedOf('font').filter(x => x.deco);
+  setDecorFonts(fonts.flatMap(x => (state.equip.font === x.id ? [x.deco, x.deco] : [x.deco])));
   const owned = ownedOf('bg');
   const bg = (sessionBg && owned.includes(sessionBg) && sessionBg) || itemById(state.equip.bg) || itemById(DEFAULT_EQUIP.bg);
   const app = document.querySelector('.app');
@@ -539,6 +542,7 @@ function itemPreview(x) {
   if (x.slot === 'bg') return `<span class="sw" style="background:${x.css}${x.frame ? `;box-shadow:inset 0 0 0 4px ${x.frame}` : ''}"></span>`;
   if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
   if (x.slot === 'bubble') return `<span class="bubble ${x.src ? 'img' : ''}" data-skin="${x.id}" style="--bubble-img:${x.src ? `url(${x.src})` : 'none'}">${t('shop.sample')}</span>`;
+  if (x.slot === 'font') return `<span class="font-pv ${x.deco ? `f-${x.deco}` : ''}">${t('shop.fontSample')}</span>`;
   if (x.slot === 'wear') return `<span class="wear-pv"><img src="${face(heroId(), 'blank', realLook())}" alt="">${x.src ? `<img src="${x.src}" alt="">` : ''}</span>`;
   return `<img src="${face(heroId(), 'blank', x.id === 'look_real')}" alt="">`;
 }
@@ -555,6 +559,7 @@ function renderShop() {
       <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${esc(how)}</small></button></li>`;
   }).join('');
 }
+$('topCoins').addEventListener('click', () => document.querySelector('.tab[data-screen="shop"]')?.click());
 $('slots').addEventListener('click', e => {
   const b = e.target.closest('.chip');
   if (!b) return;
@@ -585,6 +590,7 @@ $('shopList').addEventListener('click', e => {
 function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
+  $('topCoins').textContent = `🪙 ${state.coins}`;
   renderStatus();
   renderHome();
   applySkin();

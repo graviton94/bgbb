@@ -3,7 +3,7 @@
 import { face, GOOFS, shortGoofs } from './data.js';
 import { SHADES_URL, SHADES_BOX } from './pixels.js';
 import { itemById } from './items.js';
-import { DECOR_FONTS } from './memes.js';
+import { decorFont } from './memes.js';
 import { t, L } from './i18n.js';
 
 const deco = name => `assets/deco/${name}.webp`;
@@ -17,7 +17,7 @@ const pick = list => list[Math.floor(Math.random() * list.length)];
 const goof = () => pick(L(GOOFS));
 const shortGoof = () => pick(shortGoofs(L(GOOFS)));
 /** 틀린 칭찬 스티커 (줄바꿈 그대로) */
-const decor = (p = 0.6) => (Math.random() < p ? `f-${pick(DECOR_FONTS)}` : '');
+const decor = p => { const f = decorFont(p); return f ? `f-${f}` : ''; };
 const goofTag = (cls, s = goof()) => `<span class="c-goof ${cls} ${decor(0.7)}">${esc(s)}</span>`;
 
 const COLORS = ['#D7FF3D', '#FFD400', '#FF6FB5', '#7EC8FF', '#FFFFFF', '#FF2E2E'];
@@ -62,7 +62,7 @@ function titleStage({ tier, title, char, expr, when, mode, coins, dex, all, unlo
     ${img(deco('stars'), 'c-star l')}${img(deco('stars'), 'c-star r')}
     ${(w => `<div class="c-wordart" style="--fs:${Math.min(16, 92 / [...w].length).toFixed(1)}vw"><span>${esc(w)}</span><span class="c-mirror" aria-hidden="true">${esc(w)}</span></div>`)(Math.random() < 0.5 ? t('cele.legend') : `${shortGoof()}!!`)}
     <div class="c-marquee"><div>${many(2, () => `<span>${esc(t('cele.marquee', { name: title }))}&nbsp;</span>`)}</div></div>
-    <div class="c-ppt-box ${Math.random() < 0.6 ? pick(['f-gungseo', 'f-gungseo', 'f-wadang']) : ''}">${rainbowLines(t('cele.pptBody', { mode, name: title }))}</div>
+    <div class="c-ppt-box ${decor(0.7)}">${rainbowLines(t('cele.pptBody', { mode, name: title }))}</div>
     ${img(src('fx_rainbow'), 'c-ppt-rainbow')}
     ${who(char, 'shameless', { real: true, glasses: true, cls: 'c-ppt-who' })}
     ${img(src('prop_trophy'), 'c-ppt-trophy')}

@@ -301,7 +301,7 @@ export const LEGEND = {
     items: [charItem(id, pick(['blank', 'eng', 'shameless']), -10, 0, 64, { real: true, floor: 100 }),
       art(title && chance(0.5) ? title : pick(L(WL.thumbTop)), 10, 6, 84, 8.2, { fill: '#FFE600', stroke: '#E0262B', sw: 1.4, r: -5, align: 'center' }),
       art(pick(L(WL.thumbBig)), 40, 20, 60, 27, { fill: '#2238FF', stroke: '#FF1E1E', sw: 2, shadow: [1.2, 1.2, '#FFFFFF'], align: 'center' }),
-      art(pick(L(WL.thumbSub)), 30, 58, 70, 11, { font: pick(['body', 'wadang', 'gugi', 'poster']), weight: 900, fill: '#FFFFFF', shadow: [0.8, 0.8, '#333333'], align: 'center' }),
+      art(pick(L(WL.thumbSub)), 30, 58, 70, 11, { font: decorFont(0.6, 'body', R), weight: 900, fill: '#FFFFFF', shadow: [0.8, 0.8, '#333333'], align: 'center' }),
       art(pick(L(WL.thumbFoot)), 50, 90, 48, 3.6, { font: 'body', weight: 500, fill: '#D10000', align: 'center' })],
     fx: { x: 0.25, y: 0.7 }
   }),
@@ -309,9 +309,9 @@ export const LEGEND = {
   ppt: ({ id }) => ({
     ...grad(180, ['#3A3A3A', '#9A9A9A', '#2E2E2E']),
     items: [{ k: 'img', src: deco('stars'), x: 2, y: 3, w: 13 }, { k: 'img', src: deco('stars'), x: 85, y: 3, w: 13, flip: true },
-      art(pick(L(WL.pptTitle)), 4, 4, 92, 12.5, { font: pick(['display', 'display', 'gungseo', 'wadang']), fill: GOLD, stroke: '#4A3600', sw: 0.5, reflect: true, align: 'center', lh: 1.05 }),
+      art(pick(L(WL.pptTitle)), 4, 4, 92, 12.5, { font: decorFont(0.4, 'display', R), fill: GOLD, stroke: '#4A3600', sw: 0.5, reflect: true, align: 'center', lh: 1.05 }),
       { k: 'rect', x: 3, y: 50, w: 64, h: 40, color: '#FFFFFF', line: '#8A2BE2', lw: 0.7, rad: 5 },
-      art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: pick(['body', 'gungseo', 'gungseo', 'wadang']), weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
+      art(L(WL.pptBody).join('\n'), 6, 54, 58, 4.3, { font: decorFont(0.7, 'body', R), weight: 700, colors: ['#F7A600', '#2E9E2E', '#1E7BD8', '#8A2BE2', '#E0262B'], lh: 1.45 }),
       charItem(id, 'thumbs_up', 56, 0, 48, { real: true, floor: 100, sticker: true })],
     fx: { x: 0.8, y: 0.75 }
   })
@@ -625,8 +625,17 @@ export function composeMeme(ctx) {
 /** 속보 짤 (칭호 꽝 · 연습). headline = 속보 문구 */
 export const newsMeme = ctx => withSeed(null, () => { const real = chance(0.3); return { name: 'news', real, ...UNIQUE.news({ ...ctx, real }) }; });
 
-/** 일부러 구린 꾸밈 글씨 (궁서 · 양재와당 느낌). 말풍선 · 스티커 · 짤 글자에 가끔 쓴다 (styles.css .f-*) */
-export const DECOR_FONTS = ['gungseo', 'wadang', 'poster', 'gugi', 'brush'];
+/**
+ * 일부러 구린 꾸밈 글씨 (궁서 · 양재와당 느낌, styles.css .f-*). 꾸미기에서 모은 글씨만 쓴다 (main.js 가 setDecorFonts 로 알려 줌).
+ * 장착한 글씨는 목록에 두 번 들어가 더 자주 나온다.
+ */
+export let DECOR_FONTS = [];
+export const setDecorFonts = list => { DECOR_FONTS = list; };
+/** p 확률로 가진 꾸밈 글씨 하나, 아니면 fallback */
+export const decorFont = (p, fallback = null, rand = Math.random) => {
+  const a = rand(), b = rand();   // 늘 두 번 뽑는다: 글씨를 더 모아도 칭호 짤의 나머지 배치는 그대로
+  return DECOR_FONTS.length && a < p ? DECOR_FONTS[Math.floor(b * DECOR_FONTS.length)] : fallback;
+};
 
 // ---------------------------------------------------------------- 화면에 그리기 (DOM, 글자는 cqw)
 const pos = it => `left:${it.x}%;top:${it.y}%;width:${it.w}%;`;

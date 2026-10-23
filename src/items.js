@@ -7,7 +7,7 @@ const skin = (slot, id) => `assets/skin/${slot}/${id}.webp`;
 // 사진 배경: 위쪽(큰 글자 자리)은 바탕색으로 살짝 덮어 글자가 읽히게
 const photo = (id, dark) => `linear-gradient(180deg, ${dark ? 'rgba(12,12,16,.82), rgba(12,12,16,.5) 30%, rgba(12,12,16,0) 52%' : 'rgba(242,242,240,.9), rgba(242,242,240,.55) 30%, rgba(242,242,240,0) 52%'}), url(${skin('bg', id)}) center / cover`;
 
-export const SLOTS = ['bg', 'prop', 'wear', 'fx', 'bubble', 'frame', 'look'];
+export const SLOTS = ['bg', 'prop', 'wear', 'fx', 'bubble', 'font', 'frame', 'look'];
 export const SLOT_NAMES = {
   bg: { ko: '배경', en: 'Background' },
   prop: { ko: '소품', en: 'Prop' },
@@ -15,6 +15,7 @@ export const SLOT_NAMES = {
   fx: { ko: '뿡 효과', en: 'Toot FX' },
   bubble: { ko: '말풍선', en: 'Bubble' },
   frame: { ko: '공유 프레임', en: 'Share frame' },
+  font: { ko: '구린 글씨', en: 'Cringe font' },
   look: { ko: '모습', en: 'Look' }
 };
 
@@ -166,10 +167,20 @@ export const PENDING = new Set([
   'frame_polaroid', 'frame_newspaper', 'frame_vhs', 'frame_gold', 'frame_wanted', 'frame_museum'
 ]);
 
-const BY_SLOT = { bg: BG, prop: PROP, wear: WEAR, fx: FX, bubble: BUBBLE, frame: FRAME, look: LOOK };
+// font: 일부러 구린 꾸밈 글씨. 가진 글씨만 말풍선 · 스티커 · 짤 글자에 가끔 섞인다 (장착한 건 더 자주). deco = src/memes.js DECOR_FONTS 키
+const FONT = [
+  { id: 'font_basic', name: { ko: '안 구림 (기본)', en: 'Not cringe (default)' }, free: true },
+  { id: 'font_gungseo', name: { ko: '근엄한 궁서체', en: 'Solemn brush serif' }, title: 'hold_basic', price: 60, deco: 'gungseo' },
+  { id: 'font_wadang', name: { ko: '촌스러운 와당체', en: 'Tacky retro display' }, title: 'soft3', price: 70, deco: 'wadang' },
+  { id: 'font_gugi', name: { ko: '동네 간판체', en: 'Corner-shop sign' }, title: 'lunch', price: 50, deco: 'gugi' },
+  { id: 'font_poster', name: { ko: '옛날 극장 간판', en: 'Old cinema poster' }, title: 'night_quiet', price: 80, deco: 'poster' },
+  { id: 'font_brush', name: { ko: '일필휘지 붓글씨', en: 'One-stroke brush' }, title: 'hold3', price: 70, deco: 'brush' }
+];
+
+const BY_SLOT = { bg: BG, prop: PROP, wear: WEAR, fx: FX, bubble: BUBBLE, font: FONT, frame: FRAME, look: LOOK };
 export const ITEMS = SLOTS.flatMap(slot => BY_SLOT[slot].filter(x => !PENDING.has(x.id)).map(x => ({ ...x, slot })));
 export const itemById = id => ITEMS.find(x => x.id === id);
-export const DEFAULT_EQUIP = { bg: 'bg_plain', prop: 'prop_none', wear: 'wear_none', fx: 'fx_toot', bubble: 'bubble_basic', frame: 'frame_strip', look: 'look_art' };
+export const DEFAULT_EQUIP = { bg: 'bg_plain', prop: 'prop_none', wear: 'wear_none', fx: 'fx_toot', bubble: 'bubble_basic', font: 'font_basic', frame: 'frame_strip', look: 'look_art' };
 
 /** 시즌 한정: 지금이 그 달인지 (시즌 없는 건 늘 true) */
 export const inSeason = (x, now = Date.now()) => !x.season || x.season.includes(new Date(now).getMonth() + 1);
