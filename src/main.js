@@ -510,7 +510,7 @@ function renderStatus() {
       : `${esc(t('status.window'))}${rest.on && rest.from !== rest.to ? `<small>${esc(t('status.except', { window: restLabel().replace('~', ' ~ ') }))}</small>` : ''}`;
   $('mute').hidden = false;
   $('mute').classList.toggle('off', !s.web && !s.dnd && !s.vol);
-  $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : t('status.muted');
+  $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
