@@ -7,6 +7,7 @@ import com.android.billingclient.api.BillingClient;
 import com.android.billingclient.api.BillingClientStateListener;
 import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
+import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.Purchase;
@@ -21,9 +22,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * 응원하기: Google Play 일회성 상품. 잠긴 기능은 없고, 산 상품 ID 만 JS 에 알려 준다.
+ * 응원하기 + 뿡코인 충전: Google Play 일회성 상품.
+ * 응원하기(tip_*)는 한 번 사면 계속 가짐 (확인 acknowledge). 뿡코인 팩(COIN_PACKS)은 소모성:
+ * JS 가 코인을 넣고 coinsCredited(토큰) 을 부르면 그때 소모(consume) 한다 → 앱이 중간에 죽어도 다음에 다시 알려 주고,
+ * JS 는 토큰으로 두 번 넣지 않는다.
+ *
+ * (원래 설명) 응원하기: Google Play 일회성 상품. 잠긴 기능은 없고, 산 상품 ID 만 JS 에 알려 준다.
  * 결제는 Google Play 가 처리하며 앱은 결제 정보를 다루지 않는다.
  * Play 에서 설치하지 않았거나 상품이 없으면 가격 목록이 비어서 JS 가 '응원할 수 없음' 을 보여 준다.
  */
@@ -32,7 +39,10 @@ final class Support implements PurchasesUpdatedListener {
     interface Sink {
         void prices(String json);   // {"tip_seeds":"₩1,500", ...}
         void owned(String json);    // ["tip_seeds", ...]
+        void coins(String productId, String purchaseToken);   // 아직 코인을 안 넣은 충전 (넣고 나서 consume)
     }
+
+    static final Set<String> COIN_PACKS = Set.of("coins_s", "coins_m", "coins_l");
 
     private final Activity activity;
     private final Sink sink;
@@ -91,7 +101,7 @@ final class Support implements PurchasesUpdatedListener {
     @Override
     public void onPurchasesUpdated(BillingResult result, List<Purchase> purchases) {
         if (result.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (Purchase p : purchases) acknowledge(p);
+            for (Purchase p : purchases) handle(p);
         }
         refreshOwned();
     }
@@ -107,11 +117,29 @@ final class Support implements PurchasesUpdatedListener {
                     JSONArray owned = new JSONArray();
                     for (Purchase p : purchases) {
                         if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) continue;
+                        if (isCoins(p)) { handle(p); continue; }   // 소모 안 된 충전 = 코인을 아직 못 넣은 것
                         acknowledge(p);
                         for (String id : p.getProducts()) owned.put(id);
                     }
                     if (result.getResponseCode() == BillingClient.BillingResponseCode.OK) sink.owned(owned.toString());
                 });
+    }
+
+    private static boolean isCoins(Purchase p) {
+        for (String id : p.getProducts()) if (COIN_PACKS.contains(id)) return true;
+        return false;
+    }
+
+    private void handle(Purchase p) {
+        if (p.getPurchaseState() != Purchase.PurchaseState.PURCHASED) return;
+        if (!isCoins(p)) { acknowledge(p); return; }
+        for (String id : p.getProducts()) if (COIN_PACKS.contains(id)) sink.coins(id, p.getPurchaseToken());
+    }
+
+    /** JS 가 코인을 넣은 뒤 부른다: 이제 소모해서 같은 팩을 또 살 수 있게 */
+    void consume(String purchaseToken) {
+        withConnection(() -> client.consumeAsync(
+                ConsumeParams.newBuilder().setPurchaseToken(purchaseToken).build(), (r, token) -> { }), null);
     }
 
     /** 3일 안에 확인(acknowledge)하지 않으면 Play 가 자동 환불하므로 반드시 확인한다. */

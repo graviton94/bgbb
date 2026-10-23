@@ -28,6 +28,13 @@ def signingFile = rootProject.file('keystore.properties')
 if (signingFile.exists()) signingFile.withInputStream { signing.load(it) }
 def sign = { String key, String env -> System.getenv(env) ?: signing.getProperty(key) }
 
+// ---- 광고 (AdMob 보상형 하나). 실제 ID 를 받으면 아래 두 값만 바꾼다. 비어 있으면 Google 공식 테스트 광고.
+// 앱 ID 는 ~ 가 들어간 것, 광고 단위 ID 는 / 가 들어간 것. 둘 다 비밀 값이 아니다 (APK 안에 그대로 들어감).
+def ADMOB_APP_ID = ''        // 예: ca-app-pub-1234567890123456~1234567890
+def ADMOB_REWARDED_ID = ''   // 예: ca-app-pub-1234567890123456/1234567890
+def TEST_APP_ID = 'ca-app-pub-3940256099942544~3347511713'
+def TEST_REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917'
+
 android {
     namespace 'io.github.graviton94.bgbb'
     compileSdk 36
@@ -36,8 +43,14 @@ android {
         applicationId 'io.github.graviton94.bgbb'
         minSdk 26
         targetSdk 36
-        versionCode 3
-        versionName '2.1.0'
+        versionCode 4
+        versionName '2.2.0'
+        manifestPlaceholders = [admobAppId: ADMOB_APP_ID ?: TEST_APP_ID]
+        buildConfigField 'String', 'ADMOB_REWARDED', "\"${ADMOB_REWARDED_ID ?: TEST_REWARDED_ID}\""
+    }
+
+    buildFeatures {
+        buildConfig true
     }
 
     sourceSets {
@@ -75,6 +88,9 @@ android {
             if (signingConfigs.release.storeFile) signingConfig signingConfigs.release
         }
         debug {
+            // 테스트 APK 는 늘 테스트 광고 (내 광고를 직접 누르면 AdMob 계정이 막힐 수 있음)
+            manifestPlaceholders = [admobAppId: TEST_APP_ID]
+            buildConfigField 'String', 'ADMOB_REWARDED', "\"${TEST_REWARDED_ID}\""
             signingConfig signingConfigs.debug
             applicationIdSuffix '.debug'
             versionNameSuffix '-debug'
@@ -97,6 +113,8 @@ tasks.named('preBuild') {
 
 dependencies {
     implementation 'com.android.billingclient:billing:8.0.0'
+    implementation 'com.google.android.gms:play-services-ads:23.6.0'
+    implementation 'com.google.android.ump:user-messaging-platform:3.1.0'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20240303'
 }

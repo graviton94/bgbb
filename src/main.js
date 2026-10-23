@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, TIPS, CHATTER, BURST_FACE, GOOFS, shortGoofs, charById, face, vibeFor, pickStyle } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, AD_BONUS, AD_PER_DAY, CHATTER, BURST_FACE, GOOFS, shortGoofs, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -30,6 +30,8 @@ addEventListener('unhandledrejection', e => keepError(`promise: ${e.reason?.mess
 
 // 짧은 손맛 진동 (앱에서만; 브라우저 미리보기는 조용히 무시)
 const haptic = ms => { if (native) navigator.vibrate?.(ms); };
+
+let tipPrices = null;   // { productId: '₩1,500' } — Play 가 알려준 가격 (응원하기 · 뿡코인 충전)
 
 // ---------------------------------------------------------- 토스트 (최신 3개까지 순서대로)
 const toasts = [];
@@ -179,7 +181,20 @@ function runFx(meme) {
 
 // ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 '연습 한 방' (속보 짤)
 const GACHA = 3;
-const gachaLeft = () => (state.gacha.day === dayKey() ? Math.max(0, GACHA - state.gacha.n) : GACHA);
+/** 오늘 짤 뽑기 기록 (날이 바뀌면 새로) */
+const gachaToday = () => (state.gacha.day === dayKey() ? state.gacha : (state.gacha = { day: dayKey(), n: 0, ads: 0 }));
+const gachaLeft = () => { const g = gachaToday(); return Math.max(0, GACHA + (g.ads || 0) * AD_BONUS - g.n); };
+// 보상형 광고: 네이티브가 볼 광고를 받아 두면 true (브라우저 미리보기는 늘 false)
+let adReady = false;
+const canWatchAd = () => adReady && (gachaToday().ads || 0) < AD_PER_DAY;
+window.bgbbOnAdReady = v => { adReady = v === 'true' || v === true; renderHome(); };
+window.bgbbOnAdReward = () => {
+  const g = gachaToday();
+  g.ads = (g.ads || 0) + 1;
+  commit();
+  play('ui_levelup', 0.5);
+  toast(t('gacha.adGot'));
+};
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
 $('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));
@@ -372,7 +387,7 @@ function renderHome() {
   $('dexCount').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
   $('freeze').textContent = t(state.frozen ? 'home.unfreeze' : 'home.freeze');
   const left = gachaLeft();
-  $('practice').textContent = left ? t('home.gacha', { n: left }) : t('home.practice');
+  $('practice').textContent = left ? t('home.gacha', { n: left }) : canWatchAd() ? t('gacha.ad') : t('home.practice');
   $('freeze').classList.toggle('on', state.frozen);
 }
 
@@ -392,14 +407,16 @@ $('hero').addEventListener('click', () => {
 });
 
 $('practice').addEventListener('click', () => {
+  if (!gachaLeft() && canWatchAd()) { native.showRewardedAd(); return; }
   const id = heroId();
   playFriend(id, styleOf(id), getDiy());
   const ev = { t: Date.now(), char: id, mode: 'loud' };
   if (gachaLeft() > 0) {
-    state.gacha = { day: dayKey(), n: GACHA - gachaLeft() + 1 };
+    gachaToday().n++;
     commit();
     showBurst(ev, { kind: 'gacha' });
-  } else showBurst(ev);
+  } else if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +3
+  else showBurst(ev);
 });
 
 $('cushionBtn').addEventListener('click', openCushion);
@@ -548,6 +565,9 @@ function itemPreview(x) {
 }
 function renderShop() {
   $('coins').textContent = t('shop.coins', { n: state.coins });
+  const packs = COIN_PACKS.filter(p => tipPrices?.[p.id]);
+  $('coinPacks').hidden = !packs.length;
+  $('coinPacks').innerHTML = packs.length ? `<b>${esc(t('shop.charge'))}</b>${packs.map(p => `<button class="pack" data-id="${p.id}" type="button"><span>🪙 ${p.coins}</span><small>${esc(tipPrices[p.id])}</small></button>`).join('')}` : '';
   $('slots').innerHTML = SLOTS.filter(s => ITEMS.filter(x => x.slot === s).length > 1).map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
   $('shopList').innerHTML = ITEMS.filter(x => x.slot === shopSlot).map(x => {
     const owned = isOwned(x, state.titles, state.bought), on = state.equip[x.slot] === x.id;
@@ -560,6 +580,24 @@ function renderShop() {
   }).join('');
 }
 $('topCoins').addEventListener('click', () => document.querySelector('.tab[data-screen="shop"]')?.click());
+$('coinPacks').addEventListener('click', e => {
+  const b = e.target.closest('.pack');
+  if (b) native?.buyTip(b.dataset.id);   // 결제는 응원하기와 같은 길 (Play 일회성 상품, 소모성)
+});
+// 충전 결제 확인: 코인을 넣고 나서 네이티브에 소모하라고 알린다. 같은 결제(토큰)는 두 번 넣지 않음
+window.bgbbOnCoinPack = json => {
+  let p;
+  try { p = JSON.parse(json); } catch (e) { return; }
+  const pack = COIN_PACKS.find(x => x.id === p.id);
+  if (pack && p.token && !state.coinTokens.includes(p.token)) {
+    state.coins += pack.coins;
+    state.coinTokens = [p.token, ...state.coinTokens].slice(0, 50);
+    commit();
+    play('ui_treasure', 0.7);
+    toast(t('shop.charged', { n: pack.coins }), 3000);
+  }
+  if (p.token) native?.coinsCredited?.(p.token);
+};
 $('slots').addEventListener('click', e => {
   const b = e.target.closest('.chip');
   if (!b) return;
@@ -760,7 +798,6 @@ document.addEventListener('click', e => {
 });
 
 // ---------------------------------------------------------- 응원하기 (Google Play 일회성 결제)
-let tipPrices = null;   // { productId: '₩1,500' } — Play 가 알려준 가격
 
 function renderTips() {
   const box = $('tips');
@@ -778,7 +815,7 @@ function renderTips() {
 $('openSupport').addEventListener('click', () => {
   $('supportSheet').showModal();
   renderTips();
-  native?.loadTips(JSON.stringify(TIPS.map(tip => tip.id)));
+  native?.loadTips(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));
 });
 $('tips').addEventListener('click', e => {
   const b = e.target.closest('.tip');
@@ -789,6 +826,7 @@ $('tips').addEventListener('click', e => {
 window.bgbbOnTipPrices = json => {
   try { tipPrices = JSON.parse(json); } catch (e) { tipPrices = {}; }
   renderTips();
+  if (screen === 'shop') renderShop();
 };
 window.bgbbOnTipsOwned = json => {
   let owned = [];
@@ -860,7 +898,7 @@ subscribe(render);
 native?.setNotify?.(state.notify);
 syncSchedule(previewOperation);
 drainNative();
-native?.loadTips?.(JSON.stringify(TIPS.map(tip => tip.id)));   // 다른 기기에서 응원한 기록 복원
+native?.loadTips?.(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));   // 다른 기기에서 응원한 기록 복원
 render();
 if (!state.onboarded) $('welcome').showModal();
 addEventListener('pagehide', flush);

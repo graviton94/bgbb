@@ -18,6 +18,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bgbb">
 
+        <!-- AdMob 앱 ID (build.gradle 의 ADMOB_APP_ID, 비어 있으면 테스트 ID) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -20,7 +20,8 @@ function initial() {
     titles: {},           // 칭호 id → { n, first, ev: 처음 받은 순간 { t, char, mode } (칭호 짤이 이걸로 고정), last }
     recent: [],           // 최근 터진 기록 [{ t, char, mode, title }]
     cushion: 0,           // 방석 모드에 걸린 횟수
-    gacha: { day: '', n: 0 },     // 오늘 '짤 뽑기' 쓴 횟수 (하루 3번)
+    gacha: { day: '', n: 0, ads: 0 },   // 오늘 '짤 뽑기' 쓴 횟수 (하루 3번 + 광고 본 만큼 3번씩)
+    coinTokens: [],       // 이미 코인을 넣은 충전 결제 토큰 (같은 결제를 두 번 넣지 않게, 최근 것만)
     coins: 0,             // 뿡코인 (꾸미기 상점)
     bought: {},           // 산 꾸미기 아이템 id → true
     equip: { ...DEFAULT_EQUIP },   // 장착 중 { bg, prop, bubble, look }

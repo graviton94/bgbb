@@ -61,6 +61,7 @@ public class MainActivity extends Activity {
     private WebView web;
     private PermissionRequest pendingMic;
     private Support support;
+    private Ads ads;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,7 +121,17 @@ public class MainActivity extends Activity {
         support = new Support(this, new Support.Sink() {
             @Override public void prices(String json) { callJs("bgbbOnTipPrices", json); }
             @Override public void owned(String json) { callJs("bgbbOnTipsOwned", json); }
+            @Override public void coins(String id, String token) {
+                JSONObject o = new JSONObject();
+                try { o.put("id", id); o.put("token", token); } catch (Exception ignored) { }
+                callJs("bgbbOnCoinPack", o.toString());
+            }
         });
+        ads = new Ads(this, new Ads.Sink() {
+            @Override public void ready(boolean ready) { callJs("bgbbOnAdReady", ready ? "true" : "false"); }
+            @Override public void reward() { callJs("bgbbOnAdReward", "true"); }
+        });
+        ads.start();
 
         web.addJavascriptInterface(new Bridge(), "BgbbNative");
         web.loadUrl("https://" + HOST + "/index.html");
@@ -396,6 +407,23 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void buyTip(String productId) {
             runOnUiThread(() -> support.buy(productId));
+        }
+
+        /** 뿡코인 충전을 JS 가 넣었음 → 소모 처리 (같은 팩을 또 살 수 있게) */
+        @JavascriptInterface
+        public void coinsCredited(String purchaseToken) {
+            runOnUiThread(() -> support.consume(purchaseToken));
+        }
+
+        /** 보상형 광고: 준비됐는지 · 보여 주기 (끝까지 보면 bgbbOnAdReward) */
+        @JavascriptInterface
+        public boolean adReady() {
+            return ads != null && ads.ready();
+        }
+
+        @JavascriptInterface
+        public void showRewardedAd() {
+            runOnUiThread(() -> ads.show());
         }
 
         /** 속보 카드 PNG 를 갤러리(Pictures/방구뿡)에 저장하고 공유창을 띄운다. Android 10+ (권한 불필요). */

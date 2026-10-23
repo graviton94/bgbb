@@ -1,6 +1,6 @@
 # Google Play 스토어 등록 정보
 
-패키지 `io.github.graviton94.bgbb` · 카테고리 **엔터테인먼트** · 무료 · 광고 없음 · 인앱 상품 있음(응원하기)
+패키지 `io.github.graviton94.bgbb` · 카테고리 **엔터테인먼트** · 무료 · 광고 포함 (보상형 1종, 사용자가 고를 때만) · 인앱 상품 있음 (응원하기 · 뿡코인 충전)
 
 이미지 (`npm run store-images` · `python3 tools/make_icons.py` 로 다시 만듦)
 - 앱 아이콘 512×512: `icon-512.png`
@@ -47,7 +47,7 @@
 소리는 매번 랜덤 (기본 · 소심 · 우렁참). 3초 녹음으로 내 목소리도 섞을 수 있음.
 
 ■ 조용한 앱
-계정 · 광고 · 서버 없음. 기록은 폰 안에만 있고 인터넷 없이 작동.
+계정 · 서버 없음. 기록은 폰 안에만 있고 인터넷 없이 작동. 광고는 짤 뽑기를 더 하고 싶을 때 직접 골라서 보는 것 하나뿐.
 
 잠긴 기능 없음. 마음에 들면 응원하기로 간식 하나. GRAET.
 
@@ -91,7 +91,7 @@ Leave your phone under a cushion or on a friend's seat. The moment someone picks
 The sound is random every time. Record 3 seconds to mix in your own voice.
 
 ■ A quiet app
-No account, no ads, no server. Your records stay on your phone and it works offline.
+No account, no server. Your records stay on your phone and it works offline. The only ad is one you choose to watch for extra meme draws.
 
 Nothing is locked. If you enjoy it, buy them a snack from Support. GRAET.
 
@@ -118,6 +118,16 @@ Nothing is locked. If you enjoy it, buy them a snack from Support. GRAET.
   ```
 - 테스터에게 보낼 안내: Play 의 테스트 참여 링크 → '테스터 되기' → Play 스토어에서 설치. 하루 이상 켜 두고 소리 · 진동 · 무음 각각에서 한 번씩 터지는지 봐 달라고 하기.
 
+## 뿡코인 충전 (Play Console → 수익 창출 → 일회성 제품, 소모성)
+
+| 제품 ID | 이름 (ko / en) | 코인 | 권장 가격 |
+|---|---|---|---|
+| `coins_s` | 뿡코인 한 줌 / A handful of coins | 150 | 1,200원 |
+| `coins_m` | 뿡코인 한 봉지 / A bag of coins | 500 | 3,300원 |
+| `coins_l` | 뿡코인 한 자루 / A sack of coins | 1,500 | 8,800원 |
+
+코인 수는 앱(`src/data.js` COIN_PACKS)이 정하고, Play 에는 ID · 이름 · 가격만 만든다. 만들어 두지 않으면 상점에 충전 칸이 안 보인다.
+
 ## 인앱 상품 (Play Console → 수익 창출 → 일회성 제품)
 
 | 제품 ID | 이름 (ko / en) | 권장 가격 |
@@ -131,8 +141,15 @@ ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 
 
 ## 데이터 보안 (Play Console → 앱 콘텐츠 → 데이터 보안)
 
-- 사용자 데이터를 수집하거나 공유하나요? → **아니요**
-  - 작전 기록 · 칭호 · 녹음은 모두 기기 안에만 저장되고 앱이 어디로도 보내지 않는다.
+- 사용자 데이터를 수집하거나 공유하나요? → **예 (광고 SDK 때문에만)**. 앱 자체는 아무것도 보내지 않고, Google AdMob SDK 가 아래를 다룬다:
+  | 데이터 유형 | 수집 | 공유 | 목적 | 비고 |
+  |---|---|---|---|---|
+  | 기기 또는 기타 ID (광고 ID) | 예 | 예 (Google) | 광고 · 분석 · 사기 방지 | 필수 아님: 폰 설정에서 광고 ID 삭제 가능 |
+  | 대략적인 위치 (IP 기반) | 예 | 예 (Google) | 광고 · 사기 방지 | |
+  | 앱 활동 (광고 상호작용) | 예 | 예 (Google) | 광고 · 분석 | |
+  | 앱 정보 및 성능 (비정상 종료 · 진단) | 예 | 예 (Google) | 분석 · 사기 방지 | |
+  - 전송 중 암호화: 예 · 삭제 요청: 광고 ID 재설정/삭제로 (계정이 없어 개발자에게 지울 데이터 없음)
+  - 작전 기록 · 칭호 · 녹음 · 뿡코인은 모두 기기 안에만 저장되고 앱이 어디로도 보내지 않는다.
   - 알림(POST_NOTIFICATIONS): 터진 뒤 기기 안에서 만든 한 줄 알림을 띄울 때만. 설정에서 끌 수 있음.
   - 마이크(RECORD_AUDIO): '내 목소리 녹음' 을 누를 때만, 3초 녹음을 기기 안에 저장. 전송 없음.
   - 의견 보내기: 사용자의 메일 앱을 열 뿐이며, 사용자가 직접 보낼 때만 전송된다 (앱 수집 아님).
@@ -142,6 +159,6 @@ ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 
 ## 그 밖의 앱 콘텐츠 설문
 
 - 개인정보처리방침: https://graviton94.github.io/bgbb/privacy/
-- 광고: 없음 · 대상 연령: 13세 이상 (어린이 대상 아님)
+- 광고: **있음** (AdMob 보상형 광고, 짤 뽑기 +3 을 고를 때만) · 대상 연령: 13세 이상 (어린이 대상 아님)
 - 콘텐츠 등급(IARC): 폭력·성·약물·도박 없음, 사용자 간 소통 없음. 방귀 소리 같은 **가벼운 유머(crude humor)** 가 있다고 답한다.
 - 정부 앱 / 금융 / 건강: 해당 없음
