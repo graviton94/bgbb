@@ -101,21 +101,26 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
-- 출시 노트 (ko-KR):
+- 출시 노트 (Play Console 에 그대로 붙여 넣기, 언어별 500자 이내):
   ```
-  비공개 테스트 v2.1.0
-  - 획득 팝업 4종 (빵빠레 · 구린 PPT · 돈폭탄 · 상자깡)
-  - 꾸미기: 배경 · 소품 · 착용 · 말풍선 · 뿡 효과, 홈은 가진 것 중 랜덤
-  - 쫄 시간 · 비상탈출 · 미디어 볼륨 기준 소리
+  <ko-KR>
+  비공개 테스트 v2.2.0
+  - 시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나와요
+  - 짤 뽑기를 다 쓰면 광고 보고 +3 (하루 2번, 원할 때만)
+  - 꾸미기에서 뿡코인 충전, 설정에서 응원하기
+  - 사용설명 · 패치노트 · 새 버전 알림
+  - 앱 안 볼륨 키는 미디어 볼륨 조절. 미디어 볼륨 0 이면 진동, 무음 모드면 조용
   이상한 거 보이면 설정 → 의견 보내기!
-  ```
-- 출시 노트 (en-US):
-  ```
-  Closed test v2.1.0
-  - 4 celebration popups (fanfare, cringe PPT, money bomb, box opening)
-  - Style: backgrounds, props, hats, bubbles, toot FX; home shuffles what you own
-  - Chicken hours, bail out, sound follows media volume
+  </ko-KR>
+  <en-US>
+  Closed test v2.2.0
+  - 11 seasonal titles: Lunar New Year, Christmas, Halloween… one day a year only
+  - Out of meme draws? Watch an ad for +3 (twice a day, only if you want)
+  - Top up toot coins in Style, support the app in Settings
+  - How-to guide, patch notes and update alerts
+  - Volume keys in the app now set media volume. Media volume 0 buzzes, silent mode stays quiet
   Spot something weird? Settings → Send feedback!
+  </en-US>
   ```
 - 테스터에게 보낼 안내: Play 의 테스트 참여 링크 → '테스터 되기' → Play 스토어에서 설치. 하루 이상 켜 두고 소리 · 진동 · 무음 각각에서 한 번씩 터지는지 봐 달라고 하기.
 
