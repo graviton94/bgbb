@@ -137,6 +137,16 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   background: var(--card); font-size: 13px; font-weight: 800; cursor: pointer;
 }
 .mute.off { background: var(--ink); color: #fff; }
+.mute-wrap { flex: none; display: flex; align-items: center; gap: 6px; }
+.rules-i { width: 26px; height: 26px; padding: 0; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--card); font: italic 900 14px/1 Georgia, serif; cursor: pointer; }
+.rules { list-style: none; margin: 4px 0 8px; padding: 0; display: grid; gap: 6px; }
+.rules li { position: relative; display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 8px; padding: 10px 12px; border: 2px solid var(--ink); border-radius: 12px; background: #fff; font-size: 15px; }
+.rules li span { font-size: 22px; text-align: center; }
+.rules li em { font-style: normal; font-weight: 900; }
+.rules li.now { background: #D7FF3D; }
+.rules li i { position: absolute; top: -9px; right: 10px; padding: 1px 7px; border-radius: 999px; background: var(--ink); color: #fff; font: 800 11px/1.4 var(--body); font-style: normal; }
+.rules-note { margin: 6px 0; font-size: 14px; line-height: 1.55; }
+.coin { width: 1.15em; height: 1.15em; vertical-align: -0.2em; object-fit: contain; }
 .status {
   align-self: flex-start;
   display: inline-flex; align-items: center; gap: 8px;
@@ -703,7 +713,7 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .packs b { width: 100%; font-size: 13px; }
 .pack { flex: 1; min-width: 0; display: grid; gap: 2px; padding: 8px; border: 2px solid #111; border-radius: 12px; background: #FFF6C8; color: #111; cursor: pointer; font: 900 15px var(--body); }
 .pack small { font: 700 12px var(--body); }
-.pack img { width: 100%; max-width: 72px; aspect-ratio: 1; justify-self: center; object-fit: contain; }
+.pack > img { width: 100%; max-width: 72px; aspect-ratio: 1; justify-self: center; object-fit: contain; }
 
 /* 사용설명 */
 .guide { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; background: var(--lime); color: #111; overflow: hidden; }

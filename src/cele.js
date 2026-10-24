@@ -1,6 +1,6 @@
 // 획득 팝업 (터지는 화면 앞에 2~3초): 노멀·레어 = 빵빠레 + 지폐 펑 · 레전드 = B급 PPT · 잭팟 = 돈폭탄 · 아이템 = 상자깡.
 // 그림은 전부 이미 있는 에셋 (assets/deco · assets/skin · 실사 얼굴). 없는 에셋은 그냥 빠진다.
-import { face, GOOFS, shortGoofs } from './data.js';
+import { face, GOOFS, shortGoofs, coinify } from './data.js';
 import { SHADES_URL, SHADES_BOX } from './pixels.js';
 import { itemById } from './items.js';
 import { decorFont } from './memes.js';
@@ -33,7 +33,7 @@ const shades = `<img class="c-shades" src="${SHADES_URL}" style="left:${SHADES_B
 /** 캐릭터 한 명: 원화 + 착용 / 실사 + 선글라스 */
 const who = (id, expr, { real = false, wear = null, glasses = false, cls = '' } = {}) =>
   `<div class="c-who ${cls}"><img src="${face(id, expr, real)}" alt="">${glasses ? shades : ''}${wear ? `<img class="c-wear" src="${wear}" alt="">` : ''}</div>`;
-const coinPill = (n, cls = '') => `<span class="c-coins ${cls}" data-to="${n}">🪙 +<b>0</b></span>`;
+const coinPill = (n, cls = '') => `<span class="c-coins ${cls}" data-to="${n}">${coinify('🪙')} +<b>0</b></span>`;
 
 /** 4줄 무지개 글씨 (구린 PPT 본문) */
 function rainbowLines(text) {
@@ -105,7 +105,7 @@ function itemStage({ name, slot, preview, from }) {
     <div class="c-info c-item-info">
       <span class="c-meta">${esc(slot)}</span>
       <strong>${esc(name)}</strong>
-      <span class="c-meta">${esc(from)}</span>
+      <span class="c-meta">${coinify(esc(from))}</span>
     </div>`;
 }
 

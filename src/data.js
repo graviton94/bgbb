@@ -163,6 +163,9 @@ export const TIPS = [
   { id: 'tip_feast', img: 'assets/shop/tip_feast.webp', name: { ko: '세 친구 잔칫상', en: 'A feast for all three' } }
 ];
 
+// 뿡코인 표시: 글자 속 🪙 를 Fluent 3D 코인 그림으로 (폰마다 이모지 모양이 달라서). 이미 이스케이프한 문자열에 쓴다
+export const coinify = html => String(html).replaceAll('🪙', '<img class="coin" src="assets/shop/coin.webp" alt="🪙">');
+
 // 뿡코인 충전 (Play Console 에 같은 ID 로 '일회성 제품' 을 만든다, 소모성). 가격 · 이름은 Play 가 보여 준 그대로
 export const COIN_PACKS = [
   { id: 'coins_s', coins: 150, img: 'assets/shop/coins_s.webp' },

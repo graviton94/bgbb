@@ -1,5 +1,5 @@
 // 화면 연결: 상태가 바뀌면 render() 한 번으로 모든 화면을 맞춘다.
-import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, AD_BONUS, AD_PER_DAY, CHATTER, BURST_FACE, GOOFS, shortGoofs, charById, face, vibeFor, pickStyle } from './data.js';
+import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, coinify, AD_BONUS, AD_PER_DAY, CHATTER, BURST_FACE, GOOFS, shortGoofs, charById, face, vibeFor, pickStyle } from './data.js';
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
@@ -518,6 +518,19 @@ function renderStatus() {
   $('mute').classList.toggle('off', !s.web && !s.dnd && !s.vol);
   $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
+/** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트). now = 지금 폰 상태 줄을 형광으로 */
+function soundRules(now) {
+  const row = (m, icon) => `<li class="${m === now ? 'now' : ''}"><span>${icon}</span><b>${t(`rules.${m}`)}</b><em>${t(`rules.${m}R`)}</em>${m === now ? `<i>${t('rules.now')}</i>` : ''}</li>`;
+  return `<ul class="rules">${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ul><p class="rules-note">${t('rules.note')}</p>`;
+}
+$('rulesInfo').addEventListener('click', () => {
+  const s = soundStatus();
+  const quiet = state.frozen || resting() || !inWindow();
+  $('rulesBody').innerHTML = soundRules(s.dnd ? 'hold' : s.mode)
+    + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
+    + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
+  $('rulesSheet').showModal();
+});
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
   if (s.web) { openSettings(); return; }   // 브라우저는 폰 볼륨을 못 바꾼다: 미리보기 상태 고르는 설정으로
@@ -573,10 +586,10 @@ function itemPreview(x) {
   return `<img src="${face(heroId(), 'blank', x.id === 'look_real')}" alt="">`;
 }
 function renderShop() {
-  $('coins').textContent = t('shop.coins', { n: state.coins });
+  $('coins').innerHTML = coinify(esc(t('shop.coins', { n: state.coins })));
   const packs = COIN_PACKS.filter(p => tipPrices?.[p.id]);
   $('coinPacks').hidden = !packs.length;
-  $('coinPacks').innerHTML = packs.length ? `<b>${esc(t('shop.charge'))}</b>${packs.map(p => `<button class="pack" data-id="${p.id}" type="button"><img src="${p.img}" alt=""><span>🪙 ${p.coins}</span><small>${esc(tipPrices[p.id])}</small></button>`).join('')}` : '';
+  $('coinPacks').innerHTML = packs.length ? `<b>${esc(t('shop.charge'))}</b>${packs.map(p => `<button class="pack" data-id="${p.id}" type="button"><img src="${p.img}" alt=""><span>${coinify('🪙')} ${p.coins}</span><small>${esc(tipPrices[p.id])}</small></button>`).join('')}` : '';
   $('slots').innerHTML = SLOTS.filter(s => ITEMS.filter(x => x.slot === s).length > 1).map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
   $('shopList').innerHTML = ITEMS.filter(x => x.slot === shopSlot).map(x => {
     const owned = isOwned(x, state.titles, state.bought), on = state.equip[x.slot] === x.id;
@@ -585,7 +598,7 @@ function renderShop() {
     const how = on ? t('shop.equipped') : owned ? t('shop.equip')
       : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : `${season ? `${season} · ` : ''}${t('shop.buy', { n: x.price })}`;
     return `<li><button class="item ${owned ? '' : 'locked'} ${on ? 'on' : ''}" data-id="${x.id}" type="button">
-      <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${esc(how)}</small></button></li>`;
+      <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${coinify(esc(how))}</small></button></li>`;
   }).join('');
 }
 $('topCoins').addEventListener('click', () => document.querySelector('.tab[data-screen="shop"]')?.click());
@@ -637,7 +650,7 @@ $('shopList').addEventListener('click', e => {
 function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
-  $('topCoins').textContent = `🪙 ${state.coins}`;
+  $('topCoins').innerHTML = `${coinify('🪙')} ${state.coins}`;
   renderStatus();
   renderHome();
   applySkin();
@@ -864,7 +877,7 @@ document.querySelectorAll('dialog').forEach(d => {
 // ---------------------------------------------------------- 사용설명 (옆으로 넘기는 5장)
 const GUIDE = [
   { face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
-  { face: ['hamster_burst'] },
+  { face: ['hamster_burst'], rules: true },
   { face: ['cat_hold'] },
   { face: ['hamster_thumbs_up'], real: true },
   { face: ['tit_eng'] }
@@ -872,7 +885,7 @@ const GUIDE = [
 function openGuide() {
   $('guidePages').innerHTML = GUIDE.map((g, i) => `<section class="guide-page">
     <div class="guide-art">${g.face.map(f => `<img src="assets/${g.real ? 'faces_real' : 'faces'}/${f}.webp" alt="">`).join('')}</div>
-    <h3>${t(`guide.${i + 1}t`)}</h3><p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
+    <h3>${t(`guide.${i + 1}t`)}</h3>${g.rules ? soundRules() : ''}<p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
   guideAt(0);

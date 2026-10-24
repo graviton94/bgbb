@@ -29,7 +29,7 @@
     <main>
       <!-- 홈: 무표정 -->
       <section class="screen active" id="screen-home">
-        <div class="label-row"><div class="label" id="bigLabel"></div><button class="mute" id="mute" type="button" hidden></button></div>
+        <div class="label-row"><div class="label" id="bigLabel"></div><span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button><button class="rules-i" id="rulesInfo" type="button" aria-label="?">i</button></span></div>
         <h1 class="big" id="big"></h1>
         <p class="line" id="homeLine"></p>
         <p class="today-stats" id="todayStats"></p>
@@ -231,6 +231,15 @@
   </dialog>
 
   <!-- 패치노트: 업데이트하고 처음 열 때 한 번 -->
+  <!-- 소리 규칙: 미디어 볼륨 기준 (홈 볼륨 버튼 옆 ⓘ) -->
+  <dialog class="sheet" id="rulesSheet" aria-labelledby="rulesTitle">
+    <div class="sheet-body">
+      <h3 id="rulesTitle" data-i18n="rules.title"></h3>
+      <div id="rulesBody"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="rules.ok"></button>
+    </div>
+  </dialog>
+
   <dialog class="sheet" id="notesSheet" aria-labelledby="notesTitle">
     <div class="sheet-body">
       <h3 id="notesTitle" data-i18n="notes.title"></h3>
