@@ -149,8 +149,8 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 
 | 제품 ID | 설명 (ko) | 설명 (en) |
 |---|---|---|
-| `tip_seeds` | 앵무새 친구에게 해바라기씨 한 줌. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A handful of seeds for the parrot. Supports Pocket Toot; nothing is locked. |
-| `tip_churu` | 고양이 친구에게 츄르 한 봉지. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A bag of treats for the cat. Supports Pocket Toot; nothing is locked. |
+| `tip_seeds` | 햄찌랑 오목눈이에게 해바라기씨 한 줌. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A handful of seeds for the hamster and the chickadee. Supports Pocket Toot; nothing is locked. |
+| `tip_churu` | 뚱냥이에게 츄르 한 봉지. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A bag of treats for the chubby cat. Supports Pocket Toot; nothing is locked. |
 | `tip_feast` | 세 친구에게 잔칫상 한 상. 방구뿡을 크게 응원해요. 잠긴 기능은 없어요. | A feast for all three pals. A big thanks to Pocket Toot; nothing is locked. |
 
 앱은 ID 만 보고, 가격·이름은 Play 가 보여 준 그대로 쓴다.
