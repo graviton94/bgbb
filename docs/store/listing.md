@@ -129,6 +129,12 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 
 상품 아이콘: `docs/store/products/<제품 ID>.png` (512×512, 32비트 PNG).
 
+| 제품 ID | 설명 (ko) | 설명 (en) |
+|---|---|---|
+| `coins_s` | 뿡코인 150개. 꾸미기에서 배경 · 소품 · 글씨를 바로 열 수 있어요. | 150 toot coins. Unlock backgrounds, props and fonts in Style right away. |
+| `coins_m` | 뿡코인 500개. 갖고 싶던 꾸미기 몇 개는 한 번에 열려요. | 500 toot coins. Enough to unlock a few Style items at once. |
+| `coins_l` | 뿡코인 1,500개. 꾸미기 상점 절반쯤은 싹 열 수 있어요. | 1,500 toot coins. Unlock about half of the Style shop. |
+
 코인 수는 앱(`src/data.js` COIN_PACKS)이 정하고, Play 에는 ID · 이름 · 가격만 만든다. 만들어 두지 않으면 상점에 충전 칸이 안 보인다.
 
 ## 인앱 상품 (Play Console → 수익 창출 → 일회성 제품)
@@ -141,7 +147,13 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 
 상품 아이콘: `docs/store/products/<제품 ID>.png`.
 
-설명 예: "방구뿡을 응원해요. 잠긴 기능은 없어요." · 앱은 ID 만 보고, 가격·이름은 Play 가 보여 준 그대로 쓴다.
+| 제품 ID | 설명 (ko) | 설명 (en) |
+|---|---|---|
+| `tip_seeds` | 앵무새 친구에게 해바라기씨 한 줌. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A handful of seeds for the parrot. Supports Pocket Toot; nothing is locked. |
+| `tip_churu` | 고양이 친구에게 츄르 한 봉지. 방구뿡을 응원해요. 잠긴 기능은 없어요. | A bag of treats for the cat. Supports Pocket Toot; nothing is locked. |
+| `tip_feast` | 세 친구에게 잔칫상 한 상. 방구뿡을 크게 응원해요. 잠긴 기능은 없어요. | A feast for all three pals. A big thanks to Pocket Toot; nothing is locked. |
+
+앱은 ID 만 보고, 가격·이름은 Play 가 보여 준 그대로 쓴다.
 ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 으로 보인다 (앱은 정상 동작).
 
 ## 데이터 보안 (Play Console → 앱 콘텐츠 → 데이터 보안)
