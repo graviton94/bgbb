@@ -158,16 +158,16 @@ export const FREQUENCIES = {
 
 // Google Play 응원하기 상품 (Play Console 에 같은 ID 로 '일회성 제품' 을 만든다)
 export const TIPS = [
-  { id: 'tip_seeds', name: { ko: '해바라기씨 한 줌', en: 'A handful of seeds' } },
-  { id: 'tip_churu', name: { ko: '츄르 한 봉지', en: 'A bag of cat treats' } },
-  { id: 'tip_feast', name: { ko: '세 친구 잔칫상', en: 'A feast for all three' } }
+  { id: 'tip_seeds', img: 'assets/shop/tip_seeds.webp', name: { ko: '해바라기씨 한 줌', en: 'A handful of seeds' } },
+  { id: 'tip_churu', img: 'assets/shop/tip_churu.webp', name: { ko: '츄르 한 봉지', en: 'A bag of cat treats' } },
+  { id: 'tip_feast', img: 'assets/shop/tip_feast.webp', name: { ko: '세 친구 잔칫상', en: 'A feast for all three' } }
 ];
 
 // 뿡코인 충전 (Play Console 에 같은 ID 로 '일회성 제품' 을 만든다, 소모성). 가격 · 이름은 Play 가 보여 준 그대로
 export const COIN_PACKS = [
-  { id: 'coins_s', coins: 150 },
-  { id: 'coins_m', coins: 500 },
-  { id: 'coins_l', coins: 1500 }
+  { id: 'coins_s', coins: 150, img: 'assets/shop/coins_s.webp' },
+  { id: 'coins_m', coins: 500, img: 'assets/shop/coins_m.webp' },
+  { id: 'coins_l', coins: 1500, img: 'assets/shop/coins_l.webp' }
 ];
 // 보상형 광고: '짤 뽑기' 3번을 다 쓴 뒤 광고를 끝까지 보면 +3, 하루 2번까지
 export const AD_BONUS = 3, AD_PER_DAY = 2;

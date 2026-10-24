@@ -576,7 +576,7 @@ function renderShop() {
   $('coins').textContent = t('shop.coins', { n: state.coins });
   const packs = COIN_PACKS.filter(p => tipPrices?.[p.id]);
   $('coinPacks').hidden = !packs.length;
-  $('coinPacks').innerHTML = packs.length ? `<b>${esc(t('shop.charge'))}</b>${packs.map(p => `<button class="pack" data-id="${p.id}" type="button"><span>🪙 ${p.coins}</span><small>${esc(tipPrices[p.id])}</small></button>`).join('')}` : '';
+  $('coinPacks').innerHTML = packs.length ? `<b>${esc(t('shop.charge'))}</b>${packs.map(p => `<button class="pack" data-id="${p.id}" type="button"><img src="${p.img}" alt=""><span>🪙 ${p.coins}</span><small>${esc(tipPrices[p.id])}</small></button>`).join('')}` : '';
   $('slots').innerHTML = SLOTS.filter(s => ITEMS.filter(x => x.slot === s).length > 1).map(s => `<button class="chip ${shopSlot === s ? 'on' : ''}" data-s="${s}" type="button">${L(SLOT_NAMES[s])}</button>`).join('');
   $('shopList').innerHTML = ITEMS.filter(x => x.slot === shopSlot).map(x => {
     const owned = isOwned(x, state.titles, state.bought), on = state.equip[x.slot] === x.id;
@@ -817,7 +817,7 @@ function renderTips() {
   box.innerHTML = available.map(tip => {
     const done = state.tips.includes(tip.id);
     return `<button class="tip" data-id="${tip.id}" type="button" ${done ? 'disabled' : ''}>
-      <span>${L(tip.name)}</span><span class="price">${done ? t('support.done') : esc(tipPrices[tip.id])}</span></button>`;
+      <img src="${tip.img}" alt=""><span class="name">${L(tip.name)}</span><span class="price">${done ? t('support.done') : esc(tipPrices[tip.id])}</span></button>`;
   }).join('');
 }
 
