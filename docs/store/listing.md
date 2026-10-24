@@ -110,6 +110,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   - 꾸미기에서 뿡코인 충전, 설정에서 응원하기
   - 사용설명 · 패치노트 · 새 버전 알림
   - 앱 안 볼륨 키는 미디어 볼륨 조절. 미디어 볼륨 0 이면 진동, 무음 모드면 조용
+  - 홈 볼륨 버튼 옆 ⓘ 에서 소리 규칙 확인
   이상한 거 보이면 설정 → 의견 보내기!
   </ko-KR>
   <en-US>
@@ -119,6 +120,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   - Top up toot coins in Style, support the app in Settings
   - How-to guide, patch notes and update alerts
   - Volume keys in the app now set media volume. Media volume 0 buzzes, silent mode stays quiet
+  - Sound rules at a glance from the ⓘ next to the volume button
   Spot something weird? Settings → Send feedback!
   </en-US>
   ```
