@@ -12,6 +12,7 @@ import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { celebrateTitle, celebrateItem } from './cele.js';
 import { CHANGELOG, APP_VERSION, older } from './changelog.js';
+import { LEGAL, UPDATED } from './legal.js';
 import { composeMeme, newsMeme, titleMeme, renderMeme, decorFont, setDecorFonts, setOwnedSkins } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
@@ -907,6 +908,15 @@ function showNotes(since = null) {
   $('notesList').innerHTML = list.map(x => `<section><h4>v${esc(x.v)} <small>${esc(x.date)}</small></h4><ul>${L({ ko: x.ko, en: x.en }).map(l => `<li>${esc(l)}</li>`).join('')}</ul></section>`).join('');
   $('notesSheet').showModal();
 }
+// ---------------------------------------------------------- 개인정보처리방침 · 출처 (웹사이트 없이 앱 안에서)
+function showLegal(kind) {
+  $('legalTitle').textContent = t(kind === 'privacy' ? 'settings.privacy' : 'settings.licenses');
+  $('legalBody').innerHTML = L(LEGAL[kind]) + (kind === 'privacy' ? `<p class="muted small">${esc(t('legal.updated', { d: UPDATED }))}</p>` : '');
+  $('settingsSheet').close();
+  $('legalSheet').showModal();
+}
+$('openPrivacy').addEventListener('click', () => showLegal('privacy'));
+$('openCredits').addEventListener('click', () => showLegal('credits'));
 $('openNotes').addEventListener('click', () => { $('settingsSheet').close(); showNotes(); });
 
 // ---------------------------------------------------------- 새 버전 (Google Play 인앱 업데이트, Play 에서 깐 앱만)

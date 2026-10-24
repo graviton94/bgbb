@@ -177,8 +177,8 @@
       <button class="btn wide" id="feedback" type="button" data-i18n="settings.feedback"></button>
       <button class="btn ghost wide danger" id="reset" type="button" data-i18n="settings.reset"></button>
       <p class="links">
-        <a href="https://graviton94.github.io/bgbb/privacy/" target="_blank" rel="noopener" data-i18n="settings.privacy"></a> ·
-        <a href="https://graviton94.github.io/bgbb/#credits" target="_blank" rel="noopener" data-i18n="settings.licenses"></a> ·
+        <button class="linkish" id="openPrivacy" type="button" data-i18n="settings.privacy"></button> ·
+        <button class="linkish" id="openCredits" type="button" data-i18n="settings.licenses"></button> ·
         <span id="version"></span>
       </p>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
@@ -218,6 +218,15 @@
     <div class="guide-actions">
       <button class="btn ghost" id="guideSkip" type="button" data-i18n="guide.skip"></button>
       <button class="btn primary" id="guideNext" type="button" data-i18n="guide.next"></button>
+    </div>
+  </dialog>
+
+  <!-- 개인정보처리방침 · 출처 (앱 안에서, src/legal.js) -->
+  <dialog class="sheet" id="legalSheet" aria-labelledby="legalTitle">
+    <div class="sheet-body">
+      <h3 id="legalTitle"></h3>
+      <div class="legal" id="legalBody"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="common.close"></button>
     </div>
   </dialog>
 
