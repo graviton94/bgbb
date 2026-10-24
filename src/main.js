@@ -12,7 +12,7 @@ import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
 import { celebrateTitle, celebrateItem } from './cele.js';
 import { CHANGELOG, APP_VERSION, older } from './changelog.js';
-import { composeMeme, newsMeme, titleMeme, renderMeme, decorFont, setDecorFonts } from './memes.js';
+import { composeMeme, newsMeme, titleMeme, renderMeme, decorFont, setDecorFonts, setOwnedSkins } from './memes.js';
 import { ITEMS, SLOTS, SLOT_NAMES, itemById, isOwned, inSeason, DEFAULT_EQUIP } from './items.js';
 
 const $ = id => document.getElementById(id);
@@ -32,6 +32,7 @@ addEventListener('unhandledrejection', e => keepError(`promise: ${e.reason?.mess
 // 짧은 손맛 진동 (앱에서만; 브라우저 미리보기는 조용히 무시)
 const haptic = ms => { if (native) navigator.vibrate?.(ms); };
 
+let sessionWear = null, sessionLook = null;   // 이번에 열었을 때 뽑힌 착용 · 모습 (shuffleStage)
 let tipPrices = null;   // { productId: '₩1,500' } — Play 가 알려준 가격 (응원하기 · 뿡코인 충전)
 
 // ---------------------------------------------------------- 토스트 (최신 3개까지 순서대로)
@@ -241,6 +242,8 @@ function showItem(x, slotLabel, from) {
 function equipItem(x) {
   state.equip[x.slot] = x.id;
   if (x.slot === 'bg') sessionBg = x;   // 방금 고른 건 바로 보이게
+  if (x.slot === 'wear') sessionWear = x;
+  if (x.slot === 'look') sessionLook = x;
   if (x.slot === 'bubble') renderBubbles();
   $('heroImg').dataset.mood = '';   // 모습이 바뀌었으면 홈 캐릭터 다시
   commit();
@@ -301,6 +304,8 @@ function shuffleStage() {
   const right = cx < 55;
   const talk = Math.round(roll([[0.4, 2, 2], [0.35, 3, 3], [0.25, 4, 4]]));   // 많아도 4개
   sessionBg = pickOwned('bg');
+  sessionWear = pickOwned('wear');
+  sessionLook = pickOwned('look');
   bubbleLayout = Array.from({ length: talk }, (_, i) => {
     const near = i < 2, k = (0.28 + i * 0.06).toFixed(2);
     const side = near ? right : Math.random() < 0.5;
@@ -523,8 +528,9 @@ $('mute').addEventListener('click', () => {
 window.bgbbOnSound = () => renderStatus();
 
 // ---------------------------------------------------------- 꾸미기: 홈에 입히기 + 상점
-const realLook = () => state.equip.look === 'look_real';
-// 홈은 '가진 것 중 랜덤'이 재미: 앱 열 때마다 배경 · 소품 · 말풍선을 가진 것 중에서 뽑는다 (장착한 건 자주 나오게)
+// 꾸미기는 전부 '가진 것 중 랜덤'이 재미: 앱 열 때마다 배경 · 소품 · 착용 · 말풍선 · 모습(원화/실사)을,
+// 터질 때마다 뿡 효과를, 공유할 때마다 프레임을 가진 것 중에서 뽑는다 (장착한 건 40% 로 자주)
+const realLook = () => (sessionLook || itemById(state.equip.look))?.id === 'look_real';
 const ownedOf = slot => ITEMS.filter(x => x.slot === slot && isOwned(x, state.titles, state.bought));
 /** 가진 것 중 하나: 장착한 것 40%, 나머지 고르게 */
 function pickOwned(slot) {
@@ -545,15 +551,16 @@ function applySkin() {
   app.classList.toggle('vivid', !!bg.vivid);
   app.classList.toggle('photo', bg.css.includes('url(assets/skin/'));
   app.style.boxShadow = bg.frame ? `inset 0 0 0 6px ${bg.frame}, inset 0 0 0 10px #FFFBEA, inset 0 0 0 12px ${bg.frame}` : '';
+  setOwnedSkins({ prop: ownedOf('prop').map(x => x.src).filter(Boolean), wear: ownedOf('wear').map(x => x.src).filter(Boolean) });
   renderProps();
-  const wear = itemById(state.equip.wear);
+  const wear = sessionWear && ownedOf('wear').includes(sessionWear) ? sessionWear : itemById(state.equip.wear);
   $('heroWear').hidden = !wear?.src;
   if (wear?.src) $('heroWear').src = wear.src;
 }
 /** 터질 때 날아갈 그림 (없으면 '뿡!' 글자) */
-const fxImage = () => itemById(state.equip.fx)?.src || null;
+const fxImage = () => pickOwned('fx')?.src || null;
 /** 공유 프레임 그림 (없으면 기본 검은 띠) */
-const frameImage = () => itemById(state.equip.frame)?.src || null;
+const frameImage = () => pickOwned('frame')?.src || null;
 
 let shopSlot = 'bg';
 function itemPreview(x) {

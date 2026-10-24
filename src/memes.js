@@ -111,6 +111,9 @@ const SKY = { day: ['sun', 'cloud', 'balloon'], night: ['moon', 'stars', 'balloo
 const SKIN_PROPS = ITEMS.filter(x => x.slot === 'prop' && x.src?.startsWith('assets/skin/')).map(x => x.src);
 const SKIN_WEAR = ITEMS.filter(x => x.slot === 'wear' && x.src).map(x => x.src);
 const GROUND = { day: ['sunflower', 'tree', 'carrot', 'box', ...SKIN_PROPS], night: ['campfire', 'box', ...SKIN_PROPS] };
+// 짤에 섞이는 소품 · 착용도 '가진 것' 만 (main.js 가 setOwnedSkins 로 알려 줌). 안 알려 주면 (미리보기 · 도구) 전부
+let OWNED = null;
+export const setOwnedSkins = owned => { OWNED = owned; };
 const DAY_BG = ['#FFFFFF', '#FFF3B0', '#CFEFFF', '#DCE9F5', '#E8FFD9', '#FFE1EC', '#B49E89', '#F2F2F2'];
 const NIGHT_BG = ['#1F2747', '#2B2140', '#FFFFFF', '#B49E89'];
 const DARK_BG = ['#1F2747', '#2B2140'];
@@ -263,15 +266,15 @@ function assemble({ id, mode, t, title, rarity, practice, real }) {
   // 결과에 붙는 것: 냄 = 방구 구름 (빈 쪽으로), 참음 = 가끔 선글라스
   const time = night ? 'night' : 'day';
   const spots = [
-    { x: free > 0 ? rnd(72, 78) : rnd(2, 8), y: rnd(66, 74), w: rnd(20, 26), pool: GROUND[time] },
+    { x: free > 0 ? rnd(72, 78) : rnd(2, 8), y: rnd(66, 74), w: rnd(20, 26), pool: OWNED ? OWNED.prop : GROUND[time] },
     { x: free > 0 ? rnd(78, 82) : rnd(0, 4), y: rnd(32, 40), w: rnd(16, 20), pool: SKY[time] }
   ];
   let decoCount = Math.floor(rnd(0, 2.6));
   if (mode === 'loud' && !practice) { items.push(fartFor(c, free)); spots.shift(); decoCount = Math.min(decoCount, 1); }
   if (mode === 'hold' && chance(0.55)) c.shades = true;
-  else if (SKIN_WEAR.length && chance(0.15)) c.wear = pick(SKIN_WEAR);
-  // 소품 0~2개: 캐릭터 반대쪽 빈 구석에, 캐릭터 뒤에 깐다
-  for (const s of spots.slice(0, decoCount)) { const n = pick(s.pool); items.unshift({ k: 'img', src: n.includes('/') ? n : deco(n), x: s.x, y: s.y, w: s.w, r: rnd(-12, 12) }); }
+  else if ((OWNED ? OWNED.wear : SKIN_WEAR).length && chance(0.15)) c.wear = pick(OWNED ? OWNED.wear : SKIN_WEAR);
+  // 소품 0~2개: 캐릭터 반대쪽 빈 구석에, 캐릭터 뒤에 깐다 (가진 소품이 없으면 그 자리는 비움)
+  for (const s of spots.slice(0, decoCount)) { if (!s.pool.length) continue; const n = pick(s.pool); items.unshift({ k: 'img', src: n.includes('/') ? n : deco(n), x: s.x, y: s.y, w: s.w, r: rnd(-12, 12) }); }
   return { bg, items, fx: { x: (c.x + c.w / 2) / 100, y: (c.y + c.w * 0.6) / 100 } };
 }
 
