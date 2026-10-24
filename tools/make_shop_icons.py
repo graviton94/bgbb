@@ -1,7 +1,8 @@
 """상점 · 응원하기 버튼 그림 6종: Microsoft Fluent Emoji 3D (MIT) 를 겹쳐 256px webp 로.
 
     npm pack @lobehub/fluent-emoji-3d@1.1.0 && tar xzf lobehub-fluent-emoji-3d-1.1.0.tgz
-    python3 tools/make_shop_icons.py package/assets assets/shop
+    python3 tools/make_shop_icons.py package/assets assets/shop               (앱 버튼: 256px webp, 투명)
+    python3 tools/make_shop_icons.py package/assets docs/store/products --play (Play Console 상품 아이콘: 512px PNG, 배경색)
 """
 import sys
 from PIL import Image
@@ -16,7 +17,16 @@ SETS = {
   "tip_churu": [("1f41f", 200, 10, 50), ("1f63b", 120, 136, 0)],
   "tip_feast": [("1f389", 110, 0, 0), ("1f382", 170, 60, 10), ("1f357", 130, 0, 126), ("1f35a", 130, 126, 126)],
 }
+PLAY = "--play" in sys.argv
+BG = {"coins": (255, 246, 200, 255), "tip": (255, 226, 236, 255)}
 for name, layers in SETS.items():
-    c = Image.new("RGBA", (256, 256))
-    for code, s, x, y in layers: c.alpha_composite(e(code, s), (x, y))
-    c.save(f"{OUT}/{name}.webp", quality=90, method=6)
+    if PLAY:
+        # 512 판 가운데 80% 칸에 같은 배치를 1.6배로 (원본이 256px 라 그 이상은 흐려짐)
+        k, pad = 1.6, 51
+        c = Image.new("RGBA", (512, 512), BG[name.split("_")[0]])
+        for code, s, x, y in layers: c.alpha_composite(e(code, round(s * k)), (pad + round(x * k), pad + round(y * k)))
+        c.save(f"{OUT}/{name}.png")
+    else:
+        c = Image.new("RGBA", (256, 256))
+        for code, s, x, y in layers: c.alpha_composite(e(code, s), (x, y))
+        c.save(f"{OUT}/{name}.webp", quality=90, method=6)

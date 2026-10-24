@@ -127,6 +127,8 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 | `coins_m` | 뿡코인 한 봉지 / A bag of coins | 500 | 3,300원 |
 | `coins_l` | 뿡코인 한 자루 / A sack of coins | 1,500 | 8,800원 |
 
+상품 아이콘: `docs/store/products/<제품 ID>.png` (512×512, 32비트 PNG).
+
 코인 수는 앱(`src/data.js` COIN_PACKS)이 정하고, Play 에는 ID · 이름 · 가격만 만든다. 만들어 두지 않으면 상점에 충전 칸이 안 보인다.
 
 ## 인앱 상품 (Play Console → 수익 창출 → 일회성 제품)
@@ -136,6 +138,8 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 | `tip_seeds` | 해바라기씨 한 줌 / A handful of seeds | 1,500원 |
 | `tip_churu` | 츄르 한 봉지 / A bag of cat treats | 4,400원 |
 | `tip_feast` | 세 친구 잔칫상 / A feast for all three | 9,800원 |
+
+상품 아이콘: `docs/store/products/<제품 ID>.png`.
 
 설명 예: "방구뿡을 응원해요. 잠긴 기능은 없어요." · 앱은 ID 만 보고, 가격·이름은 Play 가 보여 준 그대로 쓴다.
 ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 으로 보인다 (앱은 정상 동작).
