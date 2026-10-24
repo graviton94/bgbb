@@ -30,8 +30,8 @@ def sign = { String key, String env -> System.getenv(env) ?: signing.getProperty
 
 // ---- 광고 (AdMob 보상형 하나). 실제 ID 를 받으면 아래 두 값만 바꾼다. 비어 있으면 Google 공식 테스트 광고.
 // 앱 ID 는 ~ 가 들어간 것, 광고 단위 ID 는 / 가 들어간 것. 둘 다 비밀 값이 아니다 (APK 안에 그대로 들어감).
-def ADMOB_APP_ID = ''        // 예: ca-app-pub-1234567890123456~1234567890
-def ADMOB_REWARDED_ID = ''   // 예: ca-app-pub-1234567890123456/1234567890
+def ADMOB_APP_ID = 'ca-app-pub-5574169833640769~6428202110'
+def ADMOB_REWARDED_ID = 'ca-app-pub-5574169833640769/2184870629'   // 보상형 '짤 뽑기 +3'
 def TEST_APP_ID = 'ca-app-pub-3940256099942544~3347511713'
 def TEST_REWARDED_ID = 'ca-app-pub-3940256099942544/5224354917'
 
