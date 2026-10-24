@@ -1,9 +1,0 @@
-{
-  "appId": "com.bgbb.tamagotchi",
-  "appName": "방구뿡",
-  "webDir": ".",
-  "bundledWebRuntime": false,
-  "server": {
-    "androidScheme": "https"
-  }
-}
