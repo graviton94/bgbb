@@ -108,7 +108,7 @@ const SCENES = {
         <div style="display:flex;justify-content:space-between"><span>방구에너지</span><span style="color:#3B7BFF">-8.1%</span></div>
         <div style="display:flex;justify-content:space-between"><span>탈취제홀딩스</span><span style="color:#FF3B3B">+30.0% 상한가</span></div></div>`;
   },
-  // 야식 타임: 밤 방, 창문 달, 상 위 라면 · 치킨 · 맥주, 네온 문구
+  // 야식 타임: 밤 방, 창문 달, 상 위 라면 · 치킨 · 콜라, 네온 문구
   bg_night: () => `<div style="position:absolute;inset:0;background:linear-gradient(180deg,#1F2747,#2B2140)"></div>
     <div class="a" style="right:30px;top:370px;width:130px;height:150px;background:#0E1430;border:6px solid #4A3A60;box-shadow:inset 0 0 0 3px #4A3A60"><img src="${deco('moon')}" style="width:70px;margin:20px 0 0 30px"></div>
     <div class="a" style="left:20px;top:400px;font:400 34px Wadang;color:#FF6FB5;text-shadow:0 0 8px #FF6FB5,0 0 18px #FF2EA6">야식은<br>0칼로리</div>
@@ -116,7 +116,7 @@ const SCENES = {
     <div class="a" style="left:0;right:0;bottom:196px;height:10px;background:#8A6440"></div>
     <div class="a emoji" style="left:30px;bottom:150px;font-size:70px">🍜</div>
     <div class="a emoji" style="left:140px;bottom:156px;font-size:64px">🍗</div>
-    <div class="a emoji" style="right:30px;bottom:154px;font-size:62px">🍺</div>
+    <div class="a emoji" style="right:30px;bottom:154px;font-size:62px">🥤</div>
     <div class="a" style="left:0;right:0;bottom:40px;text-align:center;font:700 13px system-ui;color:rgba(255,255,255,.5)">오후 11:58 · 내일의 나에게 미안</div>`,
   // 돈 비: 연두 바탕, 지폐 · 동전이 막 쏟아짐
   bg_money: () => `<div style="position:absolute;inset:0;background:radial-gradient(circle at 50% 70%,#FFF7B0,#9BE36A 70%,#5FBF4A)"></div>
@@ -143,7 +143,7 @@ const SCENES = {
     <div class="a" style="left:50%;bottom:0;translate:-50% 0;width:360px;height:250px;background:#C8102E;clip-path:polygon(40% 0,60% 0,100% 100%,0 100%)"></div>
     <div class="a" style="left:50%;top:470px;translate:-50% 0;background:#fff;border:2px solid #C9A227;padding:6px 18px;font:400 36px Gungseo;color:#C8102E">祝 결혼</div>
     <div class="a" style="left:0;right:0;bottom:24px;text-align:center"><span style="background:#fff;border:2px solid #C9A227;padding:2px 12px;font:400 26px Brush;color:#8A0A20">신랑 방구 ♥ 신부 참음</span></div>`,
-  // 새벽 치킨: 어두운 방, 치킨 상자 + 다리, 맥주, 시계 02:13, 네온
+  // 새벽 치킨: 어두운 방, 치킨 상자 + 다리, 콜라, 시계 02:13, 네온
   bg_chicken: () => `<div style="position:absolute;inset:0;background:linear-gradient(180deg,#1A1410,#2B1E14)"></div>
     <div class="a" style="right:24px;top:360px;font:700 34px 'Courier New',monospace;color:#FF3B3B;text-shadow:0 0 10px #FF3B3B">02:13</div>
     <div class="a" style="left:22px;top:380px;font:400 30px Wadang;color:#FFD400;text-shadow:0 0 8px #FFB000,0 0 20px #FF8A00">치킨은<br>살 안 쪄요</div>
@@ -151,7 +151,7 @@ const SCENES = {
     <div class="a" style="left:40px;bottom:120px;width:200px;height:130px;background:#fff;border:3px solid #111;border-radius:6px;transform:rotate(-4deg)">
       <div style="background:#E0262B;color:#fff;font:400 26px BHS;text-align:center;padding:4px">뿡뿡 치킨</div>
       <div class="emoji" style="font-size:56px;text-align:center;margin-top:6px">🍗🍗</div></div>
-    <div class="a emoji" style="right:40px;bottom:124px;font-size:76px">🍺</div>
+    <div class="a emoji" style="right:40px;bottom:124px;font-size:76px">🥤</div>
     <div class="a emoji" style="right:120px;bottom:118px;font-size:40px">🧂</div>
     <div class="a" style="left:0;right:0;bottom:40px;text-align:center;font:700 13px system-ui;color:rgba(255,255,255,.45)">내일 아침의 나: ?</div>`,
   // 한옥 마루: 기와 처마, 창호지 문살, 나무 마루, 청사초롱, 복 글씨
