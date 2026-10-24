@@ -31,7 +31,8 @@ addEventListener('error', e => keepError(`${e.message} @${e.filename?.split('/')
 addEventListener('unhandledrejection', e => keepError(`promise: ${e.reason?.message || e.reason}`));
 
 // 짧은 손맛 진동 (앱에서만; 브라우저 미리보기는 조용히 무시)
-const haptic = ms => { if (native) navigator.vibrate?.(ms); };
+// 손끝 진동은 폰이 '진동' 상태일 때만 (소리가 나는 중이거나 무음 · 방해금지면 안 떨림, 방구 소리와 같은 규칙)
+const haptic = ms => { if (native?.deviceMode?.() === 'soft') navigator.vibrate?.(ms); };
 
 let sessionWear = null, sessionLook = null;   // 이번에 열었을 때 뽑힌 착용 · 모습 (shuffleStage)
 let tipPrices = null;   // { productId: '₩1,500' } — Play 가 알려준 가격 (응원하기 · 뿡코인 충전)
@@ -167,7 +168,7 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
   dlg.classList.add('play');
   if (!dlg.open) dlg.showModal();
   dlg.focus();
-  haptic([18, 40, 30]);
+  if (result) haptic([18, 40, 30]);   // 짤 뽑기는 방금 낸 방구 진동을 덮지 않게
   // 효과는 짤 칸 안의 자리에서: 냄 = 뿡 글자, 진동 = 거품, 잭팟 = 머니건에서 지폐
   fxKinds = (jackpot ? ['rain'] : result ? [{ loud: 'puff', soft: 'bubble', hold: null }[ev.mode]] : kind === 'gacha' ? ['puff'] : []).filter(Boolean);
   runFx(meme);
@@ -410,7 +411,6 @@ $('hero').addEventListener('click', () => {
   void $('hero').offsetWidth;
   $('hero').classList.add('wiggle');
   newBubbles();
-  haptic(12);
 });
 
 $('practice').addEventListener('click', () => {

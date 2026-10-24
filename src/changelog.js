@@ -7,13 +7,15 @@ export const CHANGELOG = [
       '시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나옴',
       '짤 뽑기 다 썼으면 광고 보고 +3 (하루 2번, 원할 때만)',
       '꾸미기에 뿡코인 충전 생김',
-      '사용설명 · 패치노트 · 새 버전 알림 생김'
+      '사용설명 · 패치노트 · 새 버전 알림 생김',
+      '앱 안 볼륨 키는 미디어 볼륨 조절. 앱 안 방구도 미디어 볼륨 0 이면 진동, 무음이면 조용'
     ],
     en: [
       '11 seasonal titles: Lunar New Year, Christmas, Halloween… one day a year only',
       'Out of meme draws? Watch an ad for +3 (twice a day, only if you want)',
       'Toot coins can now be topped up in Style',
-      'New: how-to guide, patch notes, update alerts'
+      'New: how-to guide, patch notes, update alerts',
+      'Volume keys in the app now set media volume. In-app toots buzz at media volume 0 and stay quiet on silent'
     ]
   },
   {

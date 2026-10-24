@@ -110,9 +110,12 @@ final class PrankPlayer {
         }
     }
 
-    /** 앱 안에서 직접 누른 방구 소리 (짤 뽑기 · 연습 · 캐릭터 · 함정): 미디어 볼륨 그대로 (쫄 시간 · 비상탈출과 상관없음) */
+    /** 앱 안에서 직접 누른 방구 소리 (짤 뽑기 · 연습 · 캐릭터 · 함정): 작전과 같은 규칙 (쫄 시간 · 비상탈출과 상관없음)
+     *  미디어 볼륨 > 0 → 소리만 · 미디어 0 → 진동만 · 무음 모드 / 방해금지 → 아무것도 X */
     static void playToot(Context c, String charId, String sound) {
-        new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
+        String mode = deviceMode(c);
+        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
+        else if ("soft".equals(mode)) vibrate(c, charId, sound);
     }
 
     private static void play(Context c, String charId, String sound, Runnable done) {

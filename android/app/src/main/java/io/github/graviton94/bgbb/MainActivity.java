@@ -67,6 +67,8 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // 앱 안에서 볼륨 키 = 미디어 볼륨 (안 정하면 벨소리 볼륨이 움직이고, 끝까지 내리면 폰이 진동 모드가 된다)
+        setVolumeControlStream(android.media.AudioManager.STREAM_MUSIC);
 
         web = new WebView(this);
         web.setBackgroundColor(PAPER);
