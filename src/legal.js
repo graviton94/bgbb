@@ -1,5 +1,5 @@
 // 개인정보처리방침 · 출처: 웹사이트 없이 앱 안에서 띄운다 (설정 → 개인정보처리방침 / 출처).
-// Play Console 에는 공개 URL 이 따로 필요하다: 같은 글을 docs/store/privacy.md 로 두고 그 페이지 주소를 쓴다.
+// 공개 페이지는 https://bbangguppung.github.io/privacy/ (bbangguppung/bbangguppung.github.io 저장소, 이 글로 만든다). 고치면 둘 다.
 export const UPDATED = '2026-10-24';
 export const LEGAL = {
   privacy: {
