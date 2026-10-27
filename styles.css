@@ -742,3 +742,37 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .linkish { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; }
 .legal { max-height: 60vh; overflow-y: auto; font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
 .legal ul { padding-left: 18px; display: grid; gap: 6px; }
+
+/* ---------------------------------------------------------- 홈 둘째 줄: 최근 칭호 · 볼륨 · ⓘ (헤더 안) */
+.subhead { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CFCFC9; }
+.sub-latest { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; }
+.sub-latest small { flex: none; font-size: 12px; color: var(--muted); }
+.sub-latest b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 16px var(--display); }
+.sub-latest #dexCount { flex: none; margin-left: auto; font-size: 12px; font-weight: 700; color: var(--muted); }
+.subhead .mute { min-height: 30px; }
+
+/* 홈 아래: 기상 알람 · 쫄 시간 타일 */
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tile { display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 14px; border-radius: 16px; background: var(--card); }
+.tile-open { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; }
+.tile-open small { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.tile-open b { font: 400 18px/1.2 var(--display); white-space: nowrap; }
+.tile .switch { flex: none; transform: scale(0.85); transform-origin: right center; }
+.exact-warn { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 2px solid #B42318; border-radius: 14px; background: #FFF1EF; color: #7A1A10; font-size: 13px; line-height: 1.35; text-align: left; cursor: pointer; }
+.exact-warn > b { flex: none; padding: 4px 10px; border-radius: 999px; background: #B42318; color: #fff; font-size: 13px; }
+
+/* 짤 뽑기 다 씀 */
+.btn.spent { color: var(--muted); border-color: #BDBDB6; }
+
+/* 비상탈출: 진짜 비상 버튼처럼 빨간 그라데이션이 번쩍 + 흰 굵은 글씨. 풀 때(다시 시작!)는 검정 */
+#freeze {
+  border: 2px solid #7A0B0B; color: #fff; font-weight: 900; letter-spacing: 0.5px; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  background: linear-gradient(135deg, #FF3B30, #C30000 45%, #FF5A4F 70%, #A30000);
+  background-size: 220% 220%;
+  animation: siren 1.6s ease-in-out infinite;
+}
+#freeze.on { animation: none; background: var(--ink); border-color: var(--ink); color: var(--lime); text-shadow: none; }
+@keyframes siren {
+  0%, 100% { background-position: 0% 50%; box-shadow: 0 0 0 0 rgba(255, 40, 30, 0.55); }
+  50% { background-position: 100% 50%; box-shadow: 0 0 14px 3px rgba(255, 40, 30, 0.55); }
+}

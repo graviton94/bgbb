@@ -24,12 +24,16 @@
       </span>
       </div>
       <button class="status" id="status" type="button"><span class="dot" id="statusDot"></span><span id="statusText"></span></button>
+      <div class="subhead">
+        <button class="sub-latest" id="latest" type="button"><small data-i18n="home.latest"></small><b id="latestName"></b><span id="dexCount"></span></button>
+        <span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button><button class="rules-i" id="rulesInfo" type="button" aria-label="?">i</button></span>
+      </div>
     </header>
 
     <main>
       <!-- 홈: 무표정 -->
       <section class="screen active" id="screen-home">
-        <div class="label-row"><div class="label" id="bigLabel"></div><span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button><button class="rules-i" id="rulesInfo" type="button" aria-label="?">i</button></span></div>
+        <div class="label-row"><div class="label" id="bigLabel"></div></div>
         <h1 class="big" id="big"></h1>
         <p class="line" id="homeLine"></p>
         <p class="today-stats" id="todayStats"></p>
@@ -39,10 +43,11 @@
           <div class="bubbles" id="bubbles"></div>
         </div>
         <div class="home-bottom">
-          <button class="latest" id="latest" type="button">
-            <span class="latest-text"><small data-i18n="home.latest"></small><b id="latestName"></b></span>
-            <span id="dexCount"></span>
-          </button>
+          <button class="exact-warn" id="exactWarn" type="button" hidden><span data-i18n-html="exact.warn"></span><b data-i18n="exact.btn"></b></button>
+          <div class="tiles">
+            <div class="tile"><button class="tile-open" id="wakeOpen" type="button"><small data-i18n="home.wake"></small><b id="wakeInfo"></b></button><input type="checkbox" class="switch" id="wakeOn" aria-labelledby="wakeOpen"></div>
+            <div class="tile"><button class="tile-open" id="restOpen" type="button"><small data-i18n="home.rest"></small><b id="restInfo"></b></button><input type="checkbox" class="switch" id="restOn" aria-labelledby="restOpen"></div>
+          </div>
           <div class="row3">
             <button class="btn primary" id="cushionBtn" type="button" data-i18n="home.cushion"></button>
             <button class="btn" id="practice" type="button" data-i18n="home.practice"></button>
@@ -147,11 +152,6 @@
   <dialog class="sheet" id="settingsSheet">
     <div class="sheet-body">
       <h3 data-i18n="settings.title"></h3>
-      <p class="rules" data-i18n-html="settings.rules"></p>
-      <div class="row">
-        <button class="row-btn" id="restOpen" type="button"><span data-i18n="settings.rest"></span><small class="muted block" id="restInfo"></small></button>
-        <input type="checkbox" class="switch" id="restOn" aria-labelledby="restOpen">
-      </div>
       <div class="row-label" data-i18n="settings.freq"></div>
       <div class="chips" id="freqs"></div>
       <label class="row" id="notifyRow">
@@ -186,6 +186,19 @@
   </dialog>
 
   <!-- 응원하기 -->
+  <!-- 기상 알람: 이 시각에 방구로 깨우고, 이때부터 24시까지가 방구 시간 -->
+  <dialog class="sheet small" id="wakeSheet" aria-labelledby="wakeTitle">
+    <div class="sheet-body rest">
+      <h2 class="rest-title" id="wakeTitle" data-i18n="wake.title"></h2>
+      <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
+      <p class="rest-note" data-i18n="wake.note"></p>
+      <div class="rest-actions">
+        <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
+        <button class="btn primary" id="wakeSave" type="button" data-i18n="rest.save"></button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- 쫄? 매일 쉬는 시간 -->
   <dialog class="sheet small" id="restSheet" aria-labelledby="restTitle">
     <div class="sheet-body rest">

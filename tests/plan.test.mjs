@@ -24,6 +24,18 @@ test('작전일 시작: 아침 전이면 그날 9시, 자정 넘는 시간대는
   assert.ok(!inWindow(at('2026-10-21T03:00'), night));
 });
 
+test('기상 알람: 켜면 그 시각(분 단위)부터 24시까지, 끄면 06시부터', () => {
+  const s = { start: 6, end: 0, wake: { on: true, at: 7 * 60 + 30 } };
+  assert.equal(windowLength(s), 16.5 * H);
+  assert.equal(windowStart(at('2026-10-20T12:00'), s), at('2026-10-20T07:30'));
+  assert.ok(!inWindow(at('2026-10-20T07:10'), s));
+  assert.ok(inWindow(at('2026-10-20T07:31'), s));
+  assert.ok(!inWindow(at('2026-10-21T00:10'), s));
+  s.wake.on = false;
+  assert.equal(windowLength(s), 18 * H);
+  assert.ok(inWindow(at('2026-10-20T07:10'), s));
+});
+
 test('하루 일정: 시간대 안, 서로 1시간 이상, 지난 시각은 빼고', () => {
   const s = { start: 7, end: 22 };
   const day = at('2026-10-20T07:00'), end = at('2026-10-20T22:00');

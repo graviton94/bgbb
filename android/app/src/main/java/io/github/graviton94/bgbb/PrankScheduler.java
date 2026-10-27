@@ -129,11 +129,15 @@ final class PrankScheduler {
         am.cancel(pi);
 
         JSONObject cfg = config(c);
+        WakeAlarm.schedule(c);
         scheduleNag(c, am, cfg, System.currentTimeMillis());
         if (!isActive(cfg)) return;
         long next = nextTrigger(c, cfg, System.currentTimeMillis());
-        // 정확한 시각일 필요가 없으므로(불시니까!) 권한이 필요 없는 inexact + Doze 허용 알람을 쓴다.
-        if (next > 0) am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi);
+        if (next <= 0) return;
+        // 정확한 알람: inexact 는 화면이 꺼져 있으면 (Doze) 한참 밀렸다가 화면 켤 때 몰려 터진다.
+        // '알람 및 리마인더' 를 허용 안 했으면 어쩔 수 없이 inexact (앱이 홈에서 허용하라고 알려 줌)
+        if (WakeAlarm.exactAllowed(c)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi);
+        else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi);
     }
 
     private static void scheduleNag(Context c, AlarmManager am, JSONObject cfg, long now) {
@@ -326,8 +330,9 @@ final class PrankScheduler {
     static long windowStart(JSONObject cfg, long now) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(now);
-        cal.set(Calendar.HOUR_OF_DAY, cfg.optInt("start", 6));
-        cal.set(Calendar.MINUTE, 0);
+        int startMin = startMin(cfg);
+        cal.set(Calendar.HOUR_OF_DAY, startMin / 60);
+        cal.set(Calendar.MINUTE, startMin % 60);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         long start = cal.getTimeInMillis();
@@ -338,9 +343,14 @@ final class PrankScheduler {
         return start;
     }
 
+    /** 방구 시간 시작 (하루 중 분): 기상 알람을 켰으면 그 시각, 아니면 06:00. src/plan.js 와 같다 */
+    static int startMin(JSONObject cfg) {
+        return cfg.has("startMin") ? cfg.optInt("startMin") : cfg.optInt("start", 6) * 60;
+    }
+
     static long windowLength(JSONObject cfg) {
-        int hours = ((cfg.optInt("end", 0) - cfg.optInt("start", 6)) % 24 + 24) % 24;
-        return (hours == 0 ? 24 : hours) * HOUR;
+        int minutes = ((cfg.optInt("end", 0) * 60 - startMin(cfg)) % 1440 + 1440) % 1440;
+        return (minutes == 0 ? 1440 : minutes) * 60_000L;
     }
 
     private static long addDays(long t, int days) {

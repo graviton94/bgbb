@@ -3,22 +3,22 @@
 //  - 브라우저: 같은 규칙(plan.js)으로 탭이 열려 있는 동안만 setTimeout 으로 흉내 낸다.
 import { CHARACTERS, FREQUENCIES } from './data.js';
 import { state, commit, flush, dayKey } from './store.js';
-import { windowLength, windowStart, inWindow as inWin, inRest, advancePlan } from './plan.js';
+import { windowLength, windowStart, inWindow as inWin, inRest, advancePlan, startMin } from './plan.js';
 
 export const native = window.BgbbNative || null;
 const HOUR = 3600e3;
 
-export function windowLabel({ start, end } = state.schedule) {
-  if (start === end) return '24h';
-  const f = h => `${String(h || 24).padStart(2, '0')}:00`;
-  return `${f(start)}~${f(end)}`;
+export const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+/** 방구 시간 시작 '07:30' (기상 알람 시각 또는 06:00) */
+export const startLabel = (schedule = state.schedule) => hm(startMin(schedule));
+export function windowLabel(schedule = state.schedule) {
+  return `${startLabel(schedule)}~${hm((schedule.end || 24) * 60)}`;
 }
 
 export const anyFriendOn = () => CHARACTERS.some(c => state.friends[c.id].on);
 export const isActive = () => state.schedule.on && !state.frozen && anyFriendOn();
 export const inWindow = (now = Date.now()) => inWin(now, state.schedule);
 export const resting = (now = Date.now()) => inRest(now, state.schedule.rest);
-const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 export const restLabel = (rest = state.schedule.rest) => `${hm(rest.from)}~${hm(rest.to)}`;
 
 export function remainingToday() {
@@ -39,6 +39,8 @@ function configJson() {
     frozen: state.frozen,
     start: state.schedule.start,
     end: state.schedule.end,
+    startMin: startMin(state.schedule),
+    wake: state.schedule.wake,
     freq: state.schedule.freq,
     rest: state.schedule.rest,
     sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, diy: !!state.friends[c.id].diy }))

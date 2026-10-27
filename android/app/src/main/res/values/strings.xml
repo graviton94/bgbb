@@ -3,6 +3,11 @@
     <string name="app_name">Pocket Toot</string>
     <string name="channel_news">Toot news</string>
     <string name="channel_news_desc">One silent line after each surprise toot</string>
+    <string name="channel_wake">Wake-up toot</string>
+    <string name="wake_title">Rise and toot!</string>
+    <string name="wake_text">Your pals are tooting you awake. Toot time starts now.</string>
+    <string name="wake_stop">Stop</string>
+    <string name="wake_snooze">5 more min</string>
     <string-array name="news_sub">
         <item>Tap to see your title</item>
         <item>Tap to see your title</item>

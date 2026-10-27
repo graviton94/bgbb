@@ -155,6 +155,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        WakeAlarm.stop(getApplicationContext());   // 기상 알람이 울리는 중에 앱을 열면 멈춤
         if (updater != null) updater.check();
         android.content.IntentFilter f = new android.content.IntentFilter();
         f.addAction("android.media.VOLUME_CHANGED_ACTION");
@@ -331,6 +332,27 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setNotify(boolean on) {
             PrankNotifier.setEnabled(getApplicationContext(), on);
+        }
+
+        /** 정확한 시각 알람 허용 ('알람 및 리마인더'). 꺼져 있으면 방구가 화면 켤 때까지 밀릴 수 있음 */
+        @JavascriptInterface
+        public boolean exactAllowed() {
+            return WakeAlarm.exactAllowed(getApplicationContext());
+        }
+
+        /** '알람 및 리마인더' 허용 화면 열기 (Android 12+). 돌아오면 리시버가 일정을 다시 건다 */
+        @JavascriptInterface
+        public void openExactSettings() {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return;
+            runOnUiThread(() -> {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                            android.net.Uri.parse("package:" + getPackageName())));
+                } catch (Exception e) {
+                    startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                            android.net.Uri.parse("package:" + getPackageName())));
+                }
+            });
         }
 
         @JavascriptInterface

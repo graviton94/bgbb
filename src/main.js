@@ -5,7 +5,7 @@ import { t, L, LANG, applyI18n } from './i18n.js';
 import {
   state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy
 } from './store.js';
-import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, inWindow, resting, restLabel } from './schedule.js';
+import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
 import { play, playFriend, forget } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
@@ -183,14 +183,16 @@ function runFx(meme) {
   });
 }
 
-// ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 '연습 한 방' (속보 짤)
+// ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 광고 보고 +3
 const GACHA = 3;
 /** 오늘 짤 뽑기 기록 (날이 바뀌면 새로) */
 const gachaToday = () => (state.gacha.day === dayKey() ? state.gacha : (state.gacha = { day: dayKey(), n: 0, ads: 0 }));
 const gachaLeft = () => { const g = gachaToday(); return Math.max(0, GACHA + (g.ads || 0) * AD_BONUS - g.n); };
 // 보상형 광고: 네이티브가 볼 광고를 받아 두면 true (브라우저 미리보기는 늘 false)
-let adReady = false;
-const canWatchAd = () => adReady && (gachaToday().ads || 0) < AD_PER_DAY;
+let adReady = !!native?.adReady?.();   // 앱을 다시 켰을 때 이미 받아 둔 광고가 있으면 바로
+// 광고로 더 받을 수 있는 횟수 (앱 · 광고 SDK 가 있을 때만)
+const adsLeft = () => (native?.showRewardedAd ? Math.max(0, AD_PER_DAY - (gachaToday().ads || 0)) : 0);
+const canWatchAd = () => adReady && adsLeft() > 0;
 window.bgbbOnAdReady = v => { adReady = v === 'true' || v === true; renderHome(); };
 window.bgbbOnAdReward = () => {
   const g = gachaToday();
@@ -393,9 +395,17 @@ function renderHome() {
   const latest = state.recent[0];
   $('latestName').textContent = latest ? L(titleById(latest.title).name) : t('home.noTitle');
   $('dexCount').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
+  // 기상 알람 · 쫄 시간 타일 + '알람 및 리마인더' 꺼져 있으면 경고 (방구가 화면 켤 때까지 밀림)
+  const { wake, rest } = state.schedule;
+  $('wakeOn').checked = wake.on;
+  $('wakeInfo').textContent = wake.on ? hm(wake.at) : t('home.off');
+  $('restOn').checked = rest.on;
+  $('restInfo').textContent = rest.on ? restLabel() : t('home.off');
+  $('exactWarn').hidden = !(native?.exactAllowed && !native.exactAllowed());
   $('freeze').textContent = t(state.frozen ? 'home.unfreeze' : 'home.freeze');
   const left = gachaLeft();
-  $('practice').textContent = left ? t('home.gacha', { n: left }) : canWatchAd() ? t('gacha.ad') : t('home.practice');
+  $('practice').textContent = left ? t('home.gacha', { n: left }) : canWatchAd() ? t('gacha.ad') : adsLeft() ? t('gacha.adLoading') : t('gacha.none');
+  $('practice').classList.toggle('spent', !left && !canWatchAd());
   $('freeze').classList.toggle('on', state.frozen);
 }
 
@@ -413,17 +423,18 @@ $('hero').addEventListener('click', () => {
   newBubbles();
 });
 
+// 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +3 (하루 2번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
 $('practice').addEventListener('click', () => {
-  if (!gachaLeft() && canWatchAd()) { native.showRewardedAd(); return; }
+  if (!gachaLeft()) {
+    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +3
+    else toast(t(adsLeft() ? 'gacha.adWait' : 'gacha.done'));
+    return;
+  }
   const id = heroId();
   playFriend(id, styleOf(id), getDiy());
-  const ev = { t: Date.now(), char: id, mode: 'loud' };
-  if (gachaLeft() > 0) {
-    gachaToday().n++;
-    commit();
-    showBurst(ev, { kind: 'gacha' });
-  } else if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +3
-  else showBurst(ev);
+  gachaToday().n++;
+  commit();
+  showBurst({ t: Date.now(), char: id, mode: 'loud' }, { kind: 'gacha' });
 });
 
 $('cushionBtn').addEventListener('click', openCushion);
@@ -513,7 +524,7 @@ function renderStatus() {
   $('statusDot').className = `dot ${state.frozen ? 'frozen' : quiet ? '' : s.mode === 'loud' ? 'on' : s.mode}`;
   $('statusText').innerHTML = state.frozen ? esc(t('status.frozen'))
     : !anyFriendOn() ? esc(t('status.nobody'))
-      : `${esc(t('status.window'))}${rest.on && rest.from !== rest.to ? `<small>${esc(t('status.except', { window: restLabel().replace('~', ' ~ ') }))}</small>` : ''}`;
+      : `${esc(t('status.window', { from: startLabel() }))}${rest.on && rest.from !== rest.to ? `<small>${esc(t('status.except', { window: restLabel().replace('~', ' ~ ') }))}</small>` : ''}`;
   $('mute').hidden = false;
   $('mute').classList.toggle('off', !s.web && !s.dnd && !s.vol);
   $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
@@ -528,6 +539,7 @@ $('rulesInfo').addEventListener('click', () => {
   const quiet = state.frozen || resting() || !inWindow();
   $('rulesBody').innerHTML = soundRules(s.dnd ? 'hold' : s.mode)
     + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
+    + `<p class="rules-note">${t('rules.wake')}</p>`
     + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
   $('rulesSheet').showModal();
 });
@@ -669,8 +681,6 @@ function renderSettings() {
   $('previewBox').hidden = !!native;
   $('previewModes').innerHTML = ['loud', 'soft', 'hold'].map(m =>
     `<button class="chip ${state.previewMode === m ? 'on' : ''}" data-m="${m}" type="button">${t(`settings.mode.${m}`)}</button>`).join('');
-  $('restOn').checked = state.schedule.rest.on;
-  $('restInfo').textContent = state.schedule.rest.on ? t('settings.restOn', { window: restLabel() }) : t('settings.restOff');
   $('scheduleInfo').textContent = isActive() ? t('settings.left', { n: remainingToday() }) : t('settings.paused');
   $('friends').innerHTML = CHARACTERS.map(c => {
     const f = state.friends[c.id];
@@ -708,6 +718,32 @@ function openRest() {
   wheelSet($('rToH'), Math.floor(to / 60)); wheelSet($('rToM'), to % 60 - (to % STEP));
 }
 $('restOpen').addEventListener('click', openRest);
+
+// ---------------------------------------------------------- 기상 알람 (04~12시, 5분 단위)
+fillWheel($('wH'), [...Array(9).keys()].map(i => i + 4));
+fillWheel($('wM'), minutes);
+function openWake() {
+  const at = state.schedule.wake.at;
+  $('wakeSheet').showModal();
+  wheelSet($('wH'), Math.floor(at / 60)); wheelSet($('wM'), at % 60 - (at % STEP));
+}
+$('wakeOpen').addEventListener('click', openWake);
+$('wakeOn').addEventListener('change', e => {
+  if (e.target.checked) { e.target.checked = state.schedule.wake.on; openWake(); return; }
+  state.schedule.wake.on = false;
+  toast(t('wake.off'));
+  syncSchedule(previewOperation);
+});
+$('wakeSave').addEventListener('click', () => {
+  const at = wheelGet($('wH')) * 60 + wheelGet($('wM'));
+  state.schedule.wake = { on: true, at };
+  $('wakeSheet').close();
+  play('ui_pop', 0.5);
+  toast(t('wake.saved', { at: hm(at) }));
+  syncSchedule(previewOperation);
+  if (native?.exactAllowed && !native.exactAllowed()) native.openExactSettings?.();   // 알람은 정확해야 함
+});
+$('exactWarn').addEventListener('click', () => native?.openExactSettings?.());
 $('restOn').addEventListener('change', e => {
   if (e.target.checked) { e.target.checked = state.schedule.rest.on; openRest(); return; }
   state.schedule.rest.on = false;

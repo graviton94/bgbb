@@ -13,7 +13,8 @@ function initial() {
     seenVersion: '',      // 패치노트를 마지막으로 본 버전
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
-    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 } },   // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음)
+    // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음) · wake = 기상 알람 (분). 켜면 그 시각부터 24시까지가 방구 시간
+    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 }, wake: { on: false, at: 7 * 60 } },
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
     notify: true,         // 터진 뒤 알림 문구 (앱)
@@ -45,9 +46,9 @@ function load() {
       if (!(k in saved)) continue;
       const b = base[k];
       base[k] = b && typeof b === 'object' && !Array.isArray(b) ? { ...b, ...saved[k] } : saved[k];
-      // 작전 시간은 06~24시 고정 (유저가 못 바꾼다), 끄는 건 비상탈출로만
+      // 작전 시간은 06~24시 (기상 알람을 켜면 그 시각~24시), 끄는 건 비상탈출로만
       if (k === 'equip') base.equip = { ...DEFAULT_EQUIP, ...saved.equip };
-      if (k === 'schedule') Object.assign(base.schedule, { on: true, start: 6, end: 0, rest: { ...initial().schedule.rest, ...saved.schedule?.rest } });
+      if (k === 'schedule') Object.assign(base.schedule, { on: true, start: 6, end: 0, rest: { ...initial().schedule.rest, ...saved.schedule?.rest }, wake: { ...initial().schedule.wake, ...saved.schedule?.wake } });
     }
     for (const c of CHARACTERS) {
       const f = base.friends[c.id] || {};

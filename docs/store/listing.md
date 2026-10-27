@@ -104,24 +104,22 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 - 출시 노트 (Play Console 에 그대로 붙여 넣기, 언어별 500자 이내):
   ```
   <ko-KR>
-  비공개 테스트 v2.2.0
-  - 시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나와요
-  - 짤 뽑기를 다 쓰면 광고 보고 +3 (하루 2번, 원할 때만)
-  - 꾸미기에서 뿡코인 충전, 설정에서 응원하기
-  - 사용설명 · 패치노트 · 새 버전 알림
-  - 앱 안 볼륨 키는 미디어 볼륨 조절. 미디어 볼륨 0 이면 진동, 무음 모드면 조용
-  - 홈 볼륨 버튼 옆 ⓘ 에서 소리 규칙 확인
-  이상한 거 보이면 설정 → 의견 보내기!
+비공개 테스트 v2.3.0
+- 기상 알람: 정한 시각에 친구들이 방구로 깨워 줌. 그 시각부터 24시까지가 방구 시간
+- 방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람)
+- 홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로
+- 연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3
+- 비상탈출 버튼이 진짜 비상 버튼처럼
+'알람 및 리마인더' 허용을 물어보면 꼭 허용해 주세요!
   </ko-KR>
   <en-US>
-  Closed test v2.2.0
-  - 11 seasonal titles: Lunar New Year, Christmas, Halloween… one day a year only
-  - Out of meme draws? Watch an ad for +3 (twice a day, only if you want)
-  - Top up toot coins in Style, support the app in Settings
-  - How-to guide, patch notes and update alerts
-  - Volume keys in the app now set media volume. Media volume 0 buzzes, silent mode stays quiet
-  - Sound rules at a glance from the ⓘ next to the volume button
-  Spot something weird? Settings → Send feedback!
+Closed test v2.3.0
+- Wake-up alarm: your pals toot you awake. Toot hours run from then until midnight
+- Fixed toots piling up until you turned the screen on (exact alarms)
+- Cleaner home: latest title and volume up top, wake-up and chicken hours right on home
+- Practice toot removed. Out of draws? Watch an ad for +3
+- The bail-out button now looks like a real emergency button
+If asked, please allow "Alarms & reminders"!
   </en-US>
   ```
 - 테스터에게 보낼 안내: Play 의 테스트 참여 링크 → '테스터 되기' → Play 스토어에서 설치. 하루 이상 켜 두고 소리 · 진동 · 무음 각각에서 한 번씩 터지는지 봐 달라고 하기.

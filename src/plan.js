@@ -1,20 +1,23 @@
 // 작전 일정 계산 (순수 함수, 테스트 대상). PrankScheduler.java 와 같은 규칙:
-//  - 작전 시간대(06~24시 고정)에서 쉬는 시간(rest)을 뺀 '열린 시간'에만 터진다.
+//  - 작전 시간대(06~24시, 기상 알람을 켜면 그 시각~24시)에서 쉬는 시간(rest)을 뺀 '열린 시간'에만 터진다.
 //  - 하루 횟수만큼 열린 시간 아무 데나 뽑되, 서로 최소 1시간(GAP)은 떨어지게 한다 (의외성 · 시끄러운 앱 방지).
 //    방법: 열린 시간에서 (n-1)×GAP 만큼 접은 구간에 n개를 고르게 뿌리고 정렬한 뒤, i번째에 i×GAP 을 더해 편다.
 //  - 열린 시간이 짧으면 GAP 을 지킬 수 있는 만큼만.
 const HOUR = 3600e3;
 export const GAP = HOUR;
 
-export function windowLength({ start, end }) {
-  const h = ((end - start) % 24 + 24) % 24;
-  return (h === 0 ? 24 : h) * HOUR;
+/** 방구 시간 시작 (하루 중 분): 기상 알람을 켰으면 그 시각, 아니면 start 시 (06:00). PrankScheduler.startMin 과 같다 */
+export const startMin = schedule => (schedule.wake?.on ? schedule.wake.at : schedule.start * 60);
+
+export function windowLength(schedule) {
+  const m = ((schedule.end * 60 - startMin(schedule)) % 1440 + 1440) % 1440;
+  return (m === 0 ? 1440 : m) * 60e3;
 }
 
 /** now 가 속한 작전일의 시작 시각 (22~02시처럼 자정을 넘는 시간대 포함) */
 export function windowStart(now, schedule) {
   const d = new Date(now);
-  d.setHours(schedule.start, 0, 0, 0);
+  d.setHours(0, startMin(schedule), 0, 0);
   const start = d.getTime();
   if (start > now) {
     d.setDate(d.getDate() - 1);

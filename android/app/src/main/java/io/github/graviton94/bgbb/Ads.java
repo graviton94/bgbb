@@ -30,6 +30,8 @@ final class Ads {
     private final Sink sink;
     private RewardedAd ad;
     private boolean loading = false, started = false;
+    private long retryMs = 0;
+    private final android.os.Handler retry = new android.os.Handler(android.os.Looper.getMainLooper());
 
     Ads(Activity activity, Sink sink) {
         this.activity = activity;
@@ -61,6 +63,7 @@ final class Ads {
             public void onAdLoaded(RewardedAd rewarded) {
                 ad = rewarded;
                 loading = false;
+                retryMs = 0;
                 sink.ready(true);
             }
 
@@ -68,6 +71,9 @@ final class Ads {
             public void onAdFailedToLoad(LoadAdError error) {
                 loading = false;
                 sink.ready(false);
+                // 채울 광고가 없거나 망이 끊겼으면 30초 · 1분 · 2분 … (최대 5분) 뒤 다시
+                retryMs = Math.min(retryMs == 0 ? 30_000 : retryMs * 2, 300_000);
+                retry.postDelayed(Ads.this::load, retryMs);
             }
         });
     }

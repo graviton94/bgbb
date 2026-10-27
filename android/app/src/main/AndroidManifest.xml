@@ -9,6 +9,10 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 재부팅 후 작전 알람 다시 걸기 -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 정한 시각에 정확히 (기상 알람 · 불시 방구가 화면 켤 때까지 밀리지 않게). Android 12+ 는 '알람 및 리마인더' 허용 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- 방구 · 기상 알람 소리가 끝날 때까지만 잠깐 깨어 있기 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -36,7 +40,7 @@
             </intent-filter>
         </activity>
 
-        <!-- AlarmManager 가 깨울 때만 잠깐 실행된다. 상주 서비스·WakeLock 없음. -->
+        <!-- AlarmManager 가 깨울 때만 잠깐 실행된다. 상주 서비스 없음 (소리 나는 동안만 잠깐 WakeLock). -->
         <receiver
             android:name=".PrankReceiver"
             android:exported="false">
@@ -45,6 +49,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 

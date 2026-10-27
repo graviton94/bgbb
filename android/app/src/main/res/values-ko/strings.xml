@@ -3,6 +3,11 @@
     <string name="app_name">방구뿡</string>
     <string name="channel_news">뿡 속보</string>
     <string name="channel_news_desc">터질 때마다 소리 없이 한 줄</string>
+    <string name="channel_wake">기상 방구</string>
+    <string name="wake_title">기상! 뿡!</string>
+    <string name="wake_text">친구들이 방구로 깨우는 중. 오늘 방구 시간 시작.</string>
+    <string name="wake_stop">그만</string>
+    <string name="wake_snooze">5분 뒤</string>
     <string-array name="news_sub">
         <item>눌러서 칭호 확인</item>
         <item>눌러서 칭호 확인</item>

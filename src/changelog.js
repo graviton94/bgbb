@@ -2,6 +2,23 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.3.0', date: '2026-10-27',
+    ko: [
+      '기상 알람: 정한 시각에 친구들이 방구로 깨워 줌. 그 시각부터 24시까지가 방구 시간',
+      '방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람)',
+      '홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로',
+      '연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3, 그다음은 내일',
+      '비상탈출 버튼이 진짜 비상 버튼처럼'
+    ],
+    en: [
+      'Wake-up alarm: your pals toot you awake. Toot hours run from then until midnight',
+      'Fixed toots piling up until you turned the screen on (exact alarms)',
+      'Cleaner home: latest title and volume up top, wake-up and chicken hours right on home',
+      'Practice toot removed. Out of draws? Watch an ad for +3, then wait for tomorrow',
+      'The bail-out button now looks like a real emergency button'
+    ]
+  },
+  {
     v: '2.2.0', date: '2026-10-24',
     ko: [
       '시즌 칭호 11개: 설날 · 수능 · 크리스마스… 1년에 그날만 나옴',

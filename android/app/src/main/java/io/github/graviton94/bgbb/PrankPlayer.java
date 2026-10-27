@@ -36,7 +36,15 @@ final class PrankPlayer {
     private PrankPlayer() {}
 
     /** done 은 끝났을 때 메인 스레드에서 정확히 한 번 불린다. */
-    static void fire(Context c, Runnable done) {
+    static void fire(Context c, Runnable outer) {
+        // 화면이 꺼져 있어도 소리 · 진동이 끝날 때까지 CPU 를 깨워 둔다 (안 그러면 기록만 남고 소리가 안 날 수 있음)
+        android.os.PowerManager pm = c.getSystemService(android.os.PowerManager.class);
+        android.os.PowerManager.WakeLock lock = pm == null ? null : pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bgbb:toot");
+        if (lock != null) lock.acquire(9_000);
+        Runnable done = () -> {
+            if (lock != null && lock.isHeld()) lock.release();
+            outer.run();
+        };
         JSONArray sounds = PrankScheduler.config(c).optJSONArray("sounds");
         if (sounds == null || sounds.length() == 0) {
             done.run();

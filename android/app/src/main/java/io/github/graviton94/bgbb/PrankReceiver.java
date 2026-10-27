@@ -17,6 +17,10 @@ public class PrankReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Context c = context.getApplicationContext();
         JSONObject cfg = PrankScheduler.config(c);
+        String action = intent.getAction();
+        if (WakeAlarm.ACTION_RING.equals(action)) { WakeAlarm.ring(c, goAsync()); return; }
+        if (WakeAlarm.ACTION_STOP.equals(action)) { WakeAlarm.stop(c); return; }
+        if (WakeAlarm.ACTION_SNOOZE.equals(action)) { WakeAlarm.snooze(c); return; }
         if (ACTION_RESUME.equals(intent.getAction())) {   // 도발 알림의 "다시 시작!"
             PrankScheduler.resumeFromNotification(c);
             PrankNotifier.resumed(c);
