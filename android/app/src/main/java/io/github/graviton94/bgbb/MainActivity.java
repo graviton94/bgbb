@@ -64,7 +64,6 @@ public class MainActivity extends Activity {
     private Ads ads;
     private Updater updater;
 
-    @Override
     /** 기상 알람이 띄우는 인텐트: 잠금화면 위로 앱을 열고 알람 팝업 */
     static Intent wakeIntent(android.content.Context c) {
         return new Intent(c, MainActivity.class).putExtra("wake", true)
