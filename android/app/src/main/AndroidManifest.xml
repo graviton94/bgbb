@@ -3,42 +3,64 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- '내 목소리 녹음' 버튼을 누를 때만 요청. 녹음은 폰 안에만 저장된다. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-
-    <!-- 주머니 속 화면 꺼짐(슬립) 상태에서도 불시 작전 타이머가 작동하도록 포그라운드 서비스 & WakeLock 설정 -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- 터진 뒤 소리 없는 알림 한 줄 (설정에서 끌 수 있음) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- 재부팅 후 작전 알람 다시 걸기 -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 정한 시각에 정확히 (기상 알람 · 불시 방구가 화면 켤 때까지 밀리지 않게). Android 12+ 는 '알람 및 리마인더' 허용 -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- 방구 · 기상 알람 소리가 끝날 때까지만 잠깐 깨어 있기 -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- 기상 알람: 끌 때까지 알람 음악을 반복하는 동안만 포그라운드 서비스 + 잠금화면 위로 알람 화면 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_launcher_hamster"
+        android:enableOnBackInvokedCallback="true"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:usesCleartextTraffic="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.Bgbb">
+
+        <!-- AdMob 앱 ID (build.gradle 의 ADMOB_APP_ID, 비어 있으면 테스트 ID) -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|screenLayout|uiMode|density"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- 주머니 속 다마고치 비밀 작전 포그라운드 서비스 -->
         <service
-            android:name=".PocketSecretService"
-            android:enabled="true"
+            android:name=".AlarmService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
 
-    </application>
+        <!-- AlarmManager 가 깨울 때만 잠깐 실행된다. 상주 서비스 없음 (소리 나는 동안만 잠깐 WakeLock). -->
+        <receiver
+            android:name=".PrankReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
+    </application>
 </manifest>

@@ -1,719 +1,291 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>방구뿡 - 주머니 속 다마고치 비밀 다이어리</title>
-  <meta name="description" content="주머니 속 귀여운 낙서 친구들이 뛰노는 다마고치 아지트 & B급 힐링 오락 앱">
-  <!-- Google Fonts: Gaegu, Jua, Noto Sans KR -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Jua&family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="index.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F2F2F0">
+  <title>방구뿡</title>
+  <meta name="description" content="주머니에 셋이 숨어 있음. 하루 몇 번, 아무 때나 뿡. 터질 때마다 칭호 하나.">
+  <link rel="preload" href="assets/fonts/blackhansans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="src/main.js"></script>
 </head>
 <body>
-  <div class="app-shell" id="appShell">
-    
-    <!-- 모바일 프레임 컨테이너 -->
-    <main class="mobile-device" id="mobileDevice">
-      
-      <!-- 1. 상단 위장 바 (Stealth Header) -->
-      <header class="top-camouflage-bar" id="topCamouflageBar">
-        <div class="stealth-indicator">
-          <span class="status-dot pulsing" id="statusDot"></span>
-          <span class="stealth-text" id="stealthText">햄찌와 친구들이 주머니 속 낮잠 중 💤</span>
-        </div>
-        <div class="top-nav-actions">
-          <button class="nav-icon-btn" id="btnOpenDecor" title="아지트 꾸미기" aria-label="아지트 꾸미기">
-            🎨
-          </button>
-          <button class="nav-icon-btn" id="btnOpenSettings" title="작전 설정" aria-label="작전 설정">
-            ⚙️
-          </button>
-        </div>
-      </header>
-
-      <!-- 2. 네비게이션 탭 -->
-      <nav class="sub-nav-tabs" id="subTabs">
-        <button class="tab-btn active" data-tab="tab-home" id="tabHomeBtn">
-          <span>🏡</span> 미니 아지트
+  <div class="app">
+    <header class="top">
+      <div class="top-row">
+      <span class="logo" data-i18n="appName"></span>
+      <span class="top-right">
+        <span class="muted" id="streak"></span>
+        <button class="top-coins" id="topCoins" type="button"></button>
+        <button class="icon-btn" id="openSettings" type="button" data-i18n-attr="aria-label:settings.title">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>
         </button>
-        <button class="tab-btn" data-tab="tab-diary" id="tabDiaryBtn">
-          <span>📖</span> 저녁 일기장
-        </button>
-        <button class="tab-btn" data-tab="tab-sound" id="tabSoundBtn">
-          <span>🎵</span> 소리 보관함
-        </button>
-        <button class="tab-btn" data-tab="tab-rank" id="tabRankBtn">
-          <span>🏅</span> 참음왕
-        </button>
-      </nav>
+      </span>
+      </div>
+      <button class="status" id="status" type="button"><span class="dot" id="statusDot"></span><span id="statusText"></span></button>
+      <div class="subhead">
+        <button class="sub-latest" id="latest" type="button"><small data-i18n="home.latest"></small><b id="latestName"></b><span id="dexCount"></span></button>
+        <span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button><button class="rules-i" id="rulesInfo" type="button" aria-label="?">i</button></span>
+      </div>
+    </header>
 
-      <!-- TAB 1: 메인 화면 - 살아 숨쉬는 다마고치 미니홈피 아지트 -->
-      <section class="tab-content active" id="tab-home">
-        
-        <!-- 대형 다마고치 미니홈피 아지트 (Hero Living World) -->
-        <div class="tamagotchi-world meadow" id="tamagotchiWorld">
-          
-          <!-- 월드 상단 상태 HUD (테마/시간대 뱃지 & 도토리 카운터) -->
-          <div class="minihompy-hud-header">
-            <button class="world-theme-badge" id="worldThemeBadge" title="터치하면 시간대별 배경(낮/노을/밤/실시간 자동)이 전환돼요!">🌿 산들바람 초원 (낮)</button>
-            <span class="world-acorn-badge" id="worldAcornBadge" title="보유 도토리">🌰 185</span>
-          </div>
-
-          <!-- 월드 상단 보조 터치 가이드 팁 -->
-          <div class="world-hint-tip">
-            <span>👆 캐릭터나 아지트 소품을 콕 찌르면 리액션 &amp; 도토리!</span>
-          </div>
-
-          <!-- 하늘 & 벽면 배경 레이어 (테마별 동적 전환) -->
-          <div class="world-sky" id="worldSky">
-            <div class="sky-sun" id="skySun"><img src="assets/props/sun.png" alt="태양" class="sky-prop-img"></div>
-            <div class="sky-moon" id="skyMoon"><img src="assets/props/moon.png" alt="달" class="sky-prop-img"></div>
-            <div class="sky-cloud cloud-1"><img src="assets/props/cloud.png" alt="구름" class="sky-prop-img"></div>
-            <div class="sky-cloud cloud-2"><img src="assets/props/cloud.png" alt="구름" class="sky-prop-img"></div>
-            <div class="sky-stars" id="skyStars"><img src="assets/props/stars.png" alt="별빛" class="sky-prop-img"></div>
-            <div class="room-window" id="roomWindow">🪟</div>
-            <div class="room-clock" id="roomClock">🕰️</div>
-            <div class="city-skyline" id="citySkyline"></div>
-          </div>
-
-          <!-- 바닥 & 지형 레이어 (초원 잔디 / 미니룸 마룻바닥 / 아스팔트 거리) -->
-          <div class="world-ground" id="worldGround">
-            <div class="grass-tuft t-1">🌱</div>
-            <div class="grass-tuft t-2">🌼</div>
-            <div class="grass-tuft t-3">🌷</div>
-            <div class="grass-tuft t-4">🌱</div>
-          </div>
-
-          <!-- 미니홈피 배치 아이템 레이어 (10종 크레용 수제 소품) -->
-          <div class="decor-items-layer" id="decorLayer">
-            <div class="decor-prop prop-carrot" id="propCarrot" title="당근 텃밭"><img src="assets/props/carrot.png" alt="당근" class="decor-prop-img"></div>
-            <div class="decor-prop prop-sunflower" id="propSunflower" title="황금 해바라기"><img src="assets/props/sunflower.png" alt="해바라기" class="decor-prop-img"></div>
-            <div class="decor-prop prop-box" id="propBox" title="뚱냥이 전용 상자"><img src="assets/props/box.png" alt="상자" class="decor-prop-img"></div>
-            <div class="decor-prop prop-tent" id="propTent" title="꼬마 인디언 텐트"><img src="assets/props/tent.png" alt="텐트" class="decor-prop-img"></div>
-            <div class="decor-prop prop-balloon" id="propBalloon" title="뽀옹 방구 풍선"><img src="assets/props/balloon.png" alt="풍선" class="decor-prop-img"></div>
-            <div class="decor-prop prop-bench" id="propBench" title="통나무 미니 벤치"><img src="assets/props/bench.png" alt="벤치" class="decor-prop-img"></div>
-            <div class="decor-prop prop-campfire" id="propCampfire" title="타닥타닥 모닥불">
-              <span class="campfire-aura aura-outer"></span>
-              <span class="campfire-aura aura-mid"></span>
-              <span class="campfire-aura aura-core"></span>
-              <img src="assets/props/campfire.png" alt="모닥불" class="decor-prop-img">
-            </div>
-            <div class="decor-prop prop-churu" id="propChuru" title="황금 츄르 그릇"><img src="assets/props/churu.png" alt="츄르" class="decor-prop-img"></div>
-            <div class="decor-prop prop-mat hidden" id="propMat" title="피크닉 돗자리"><img src="assets/props/mat.png" alt="돗자리" class="decor-prop-img"></div>
-            <div class="decor-prop prop-tree hidden" id="propTree" title="크레용 큰 나무"><img src="assets/props/tree.png" alt="큰나무" class="decor-prop-img"></div>
-          </div>
-
-          <!-- 살아 움직이는 다마고치 캐릭터들 (자율 2.5D 이동 & 투명 스프라이트) -->
-          <div class="pets-actors-layer" id="petsLayer">
-            
-            <!-- 1. 방구 햄찌 -->
-            <div class="pet-actor" id="petHamster" data-char="0" title="방구 햄찌를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleHamster">뽀옹! 💨</div>
-              <img src="assets/hamster.png" alt="방구 햄찌" class="pet-sprite">
-              <span class="pet-nametag">방구 햄찌</span>
-            </div>
-
-            <!-- 2. 솜뭉치 오목눈이 -->
-            <div class="pet-actor" id="petTit" data-char="1" title="오목눈이를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleTit">짹짹! 🐤</div>
-              <img src="assets/tit.png" alt="솜뭉치 오목눈이" class="pet-sprite">
-              <span class="pet-nametag">오목눈이</span>
-            </div>
-
-            <!-- 3. 시크 뚱냥이 -->
-            <div class="pet-actor" id="petCat" data-char="2" title="시크 뚱냥이를 터치해보세요!">
-              <div class="pet-bubble" id="bubbleCat">냐옹~ 🐱</div>
-              <img src="assets/cat.png" alt="시크 뚱냥이" class="pet-sprite">
-              <span class="pet-nametag">시크 뚱냥</span>
-            </div>
-
-          </div>
-
-          <!-- 월드 하단 플로팅 카운터 바 (대담 / 소심 / 꾹참 요약) -->
-          <div class="world-floating-hud">
-            <div class="hud-count-chip loud" title="소리 모드에서 방구 발사">
-              <span class="chip-label">💥 대담</span>
-              <strong id="countLoud">2회</strong>
-            </div>
-            <div class="hud-count-chip soft" title="진동 모드에서 방구 발사">
-              <span class="chip-label">🫧 소심</span>
-              <strong id="countSoft">3회</strong>
-            </div>
-            <div class="hud-count-chip hold" title="무음 모드에서 꾹 참음">
-              <span class="chip-label">🤫 꾹참</span>
-              <strong id="countHold">4회</strong>
-            </div>
-          </div>
-
+    <main>
+      <!-- 홈: 무표정 -->
+      <section class="screen active" id="screen-home">
+        <div class="label-row"><div class="label" id="bigLabel"></div></div>
+        <h1 class="big" id="big"></h1>
+        <p class="line" id="homeLine"></p>
+        <p class="today-stats" id="todayStats"></p>
+        <div class="stage">
+          <div class="home-props" id="homeProps" aria-hidden="true"></div>
+          <button class="hero" id="hero" type="button"><img id="heroImg" alt=""><img class="hero-wear" id="heroWear" alt="" hidden></button>
+          <div class="bubbles" id="bubbles"></div>
         </div>
-
-        <!-- 최하단 원터치 긴급탈출 버튼 (Thumb-Zone) -->
-        <div class="emergency-dock" id="emergencyDock">
-          <button class="btn-emergency" id="btnEmergency">
-            <span class="icon">🚨</span>
-            <span class="text" id="emergencyText">긴급탈출! (원터치 소리 동결)</span>
-          </button>
-          <p class="emergency-hint">※ 조용한 회의나 시험 시 즉시 모든 소리가 멈춥니다.</p>
-        </div>
-
-      </section>
-
-      <!-- TAB 2: 저녁 21:00 그림일기장 & 9:16 인스타 스토리 카드 렌더러 -->
-      <section class="tab-content" id="tab-diary">
-        <div class="diary-header">
-          <h2>📖 오늘의 비밀 방귀 일기장</h2>
-          <p class="diary-subtitle">오늘의 한줄 일기와 날씨를 고르면 그림일기가 완성돼요 🎨</p>
-        </div>
-
-        <div class="diary-custom-controls">
-          <div class="diary-weather-row">
-            <span class="diary-ctrl-label">날씨:</span>
-            <button class="weather-chip active" data-weather="💨 뿡뿡">💨 뿡뿡</button>
-            <button class="weather-chip" data-weather="☀️ 맑음">☀️ 맑음</button>
-            <button class="weather-chip" data-weather="🌩️ 꾸르륵">🌩️ 꾸르륵</button>
-            <button class="weather-chip" data-weather="🌈 평화">🌈 평화</button>
+        <div class="home-bottom">
+          <button class="exact-warn" id="exactWarn" type="button" hidden><span data-i18n-html="exact.warn"></span><b data-i18n="exact.btn"></b></button>
+          <div class="tiles">
+            <div class="tile"><button class="tile-open" id="wakeOpen" type="button"><small data-i18n="home.wake"></small><b id="wakeInfo"></b></button><input type="checkbox" class="switch" id="wakeOn" aria-labelledby="wakeOpen"></div>
+            <div class="tile"><button class="tile-open" id="restOpen" type="button"><small data-i18n="home.rest"></small><b id="restInfo"></b></button><input type="checkbox" class="switch" id="restOn" aria-labelledby="restOpen"></div>
           </div>
-          <div class="diary-input-row">
-            <input type="text" id="diaryCustomNote" class="diary-note-input" maxlength="28" placeholder="오늘의 비밀 한줄 일기를 적어보세요! (최대 28자)" value="주머니 속에서 완벽하게 위장 성공! 아무도 몰랐다 헤헤">
-          </div>
-        </div>
-
-        <div class="story-canvas-wrapper" id="storyCanvasWrapper">
-          <canvas id="storyCanvas" width="1080" height="1920"></canvas>
-        </div>
-
-        <div class="story-actions-dock">
-          <button class="btn-share instagram" id="btnShareStory">
-            <span>📸</span> 9:16 스토리 저장/공유
-          </button>
-          <button class="btn-share refresh" id="btnRedrawCanvas">
-            <span>🔄</span> 손글씨 다시 쓰기
-          </button>
-        </div>
-      </section>
-
-      <!-- TAB 3: 소리 연구소 & 3초 DIY 녹음기 -->
-      <section class="tab-content" id="tab-sound">
-        <div class="sound-lab-header">
-          <h2>🎙️ 소리 보관함 & DIY 녹음</h2>
-          <p class="sound-lab-subtitle">캐릭터별 9종 리얼 합성음을 들어보거나 3초 목소리를 녹음해 장착하세요!</p>
-        </div>
-
-        <div class="sound-pack-list" id="soundPackList">
-          <!-- 햄찌 3종 -->
-          <div class="sound-card" data-char-id="hamster" data-style="main">
-            <span class="sound-icon">💨</span>
-            <div class="sound-info">
-              <span class="sound-title">시원한 오리지널 뿡!</span>
-              <span class="sound-char">방구 햄찌 · 기본음 (저음 진동+버블)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="hamster" data-style="soft">
-            <span class="sound-icon">🫧</span>
-            <div class="sound-info">
-              <span class="sound-title">소심한 삐용 피식~</span>
-              <span class="sound-char">방구 햄찌 · 소심음 (고주파 바람새는 소리)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="hamster" data-style="loud">
-            <span class="sound-icon">💥</span>
-            <div class="sound-info">
-              <span class="sound-title">우렁찬 대폭발 부르르릉!</span>
-              <span class="sound-char">방구 햄찌 · 우렁찬음 (2단 중저음 리플)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <!-- 오목눈이 3종 -->
-          <div class="sound-card" data-char-id="tit" data-style="main">
-            <span class="sound-icon">🐤</span>
-            <div class="sound-info">
-              <span class="sound-title">포로롱 짹짹! (2연타)</span>
-              <span class="sound-char">오목눈이 · 기본음 (맑은 휘파람 지저귐)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="tit" data-style="soft">
-            <span class="sound-icon">🪶</span>
-            <div class="sound-info">
-              <span class="sound-title">파닥파닥 깃털 날개짓</span>
-              <span class="sound-char">오목눈이 · 소심음 (부드러운 공기 마찰음)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="tit" data-style="loud">
-            <span class="sound-icon">🔊</span>
-            <div class="sound-info">
-              <span class="sound-title">비명 째애액! (호출음)</span>
-              <span class="sound-char">오목눈이 · 우렁찬음 (고음 트릴 비명)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <!-- 뚱냥이 3종 -->
-          <div class="sound-card" data-char-id="cat" data-style="main">
-            <span class="sound-icon">🐱</span>
-            <div class="sound-info">
-              <span class="sound-title">시크한 냐아옹~</span>
-              <span class="sound-char">시크 뚱냥 · 기본음 (포먼트 억양 울음)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="cat" data-style="soft">
-            <span class="sound-icon">💤</span>
-            <div class="sound-info">
-              <span class="sound-title">그르릉 골골송</span>
-              <span class="sound-char">시크 뚱냥 · 소심음 (25Hz 저음 진동)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-
-          <div class="sound-card" data-char-id="cat" data-style="loud">
-            <span class="sound-icon">💢</span>
-            <div class="sound-info">
-              <span class="sound-title">캬아악! 매운 하악질</span>
-              <span class="sound-char">시크 뚱냥 · 우렁찬음 (화이트노이즈 하악)</span>
-            </div>
-            <div class="sound-card-btns">
-              <button class="btn-play-sound">▶ 재생</button>
-              <button class="btn-equip-sound">장착</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="crayon-card diy-recorder-card">
-          <div class="card-header">
-            <span class="crayon-title">🔴 나만의 3초 비밀 소리 녹음</span>
-          </div>
-          <p class="recorder-desc">내 목소리나 진짜 방구/웃음소리를 녹음해 캐릭터 불시 소리로 장착하세요!</p>
-          
-          <div class="recorder-controls">
-            <button class="btn-record" id="btnRecord">
-              <span class="rec-icon">🎙️</span>
-              <span class="rec-text" id="recText">꾹 눌러 3초 녹음</span>
-            </button>
-            <div class="waveform-doodle" id="waveformDoodle">
-              <span>〰️</span><span>〰️</span><span>〰️</span>
-            </div>
-          </div>
-          <div class="recorded-preview" id="recordedPreview" style="display:none;">
-            <span class="recorded-label" id="recordedLabel">내 녹음: "비밀 녹음 완료"</span>
-            <div class="recorded-actions">
-              <button class="btn-micro" id="btnPlayRecorded">▶ 들어보기</button>
-              <button class="btn-micro equip-diy" id="btnEquipRecorded">🎯 현재 캐릭터에 장착</button>
-            </div>
+          <div class="row3">
+            <button class="btn primary" id="cushionBtn" type="button" data-i18n="home.cushion"></button>
+            <button class="btn" id="practice" type="button" data-i18n="home.practice"></button>
+            <button class="btn" id="freeze" type="button"></button>
           </div>
         </div>
       </section>
 
-      <!-- TAB 4: 전국 참음왕 리더보드 -->
-      <section class="tab-content" id="tab-rank">
-        <div class="ranking-header">
-          <h2>🏆 오늘 전국 참음왕 TOP 100</h2>
-          <p class="ranking-subtitle">주머니 속에서 소리를 꾹 참아낸 전국의 영웅들이에요 👑</p>
+      <!-- 꾸미기: 배경 · 소품 · 말풍선 · 모습 (칭호로 해금하거나 뿡코인으로 사기) -->
+      <section class="screen" id="screen-shop">
+        <div class="dex-head">
+          <h2 data-i18n="shop.title"></h2>
+          <span class="coins" id="coins"></span>
         </div>
-
-        <div class="my-rank-banner" id="myRankBanner">
-          <div class="my-rank-pos">내 순위: <strong>14등</strong> (상위 3%)</div>
-          <div class="my-rank-detail">소심한 옥수수 햄찌 #402 · 오늘 참음 11회 💮</div>
-        </div>
-
-        <div class="rank-list" id="rankList">
-          <div class="rank-item gold">
-            <span class="rank-num">1</span>
-            <span class="rank-avatar">🐹</span>
-            <div class="rank-user">
-              <strong>불굴의 의지 햄찌</strong>
-              <small>서울 강남구 · 참음 23회</small>
-            </div>
-            <span class="rank-badge">참음왕 👑</span>
-          </div>
-
-          <div class="rank-item silver">
-            <span class="rank-num">2</span>
-            <span class="rank-avatar">🐱</span>
-            <div class="rank-user">
-              <strong>무표정 식빵 뚱냥</strong>
-              <small>부산 해운대구 · 참음 19회</small>
-            </div>
-            <span class="rank-badge">인내신 🥈</span>
-          </div>
-
-          <div class="rank-item bronze">
-            <span class="rank-num">3</span>
-            <span class="rank-avatar">🐤</span>
-            <div class="rank-user">
-              <strong>솜뭉치 참기장인</strong>
-              <small>대전 유성구 · 참음 18회</small>
-            </div>
-            <span class="rank-badge">평정심 🥉</span>
-          </div>
-        </div>
+        <p class="muted small shop-how" data-i18n="shop.how"></p>
+        <div class="packs" id="coinPacks" hidden></div>
+        <div class="filters" id="slots"></div>
+        <ul class="shop" id="shopList"></ul>
       </section>
 
-      <!-- MODAL 1: 개별 마스코트 다마고치 팝업 (클릭 시 등장) -->
-      <div class="tamagotchi-modal-overlay" id="mascotModalOverlay">
-        <div class="tamagotchi-modal-card" id="mascotModalCard">
-          <button class="modal-close-btn" id="btnCloseMascotModal" aria-label="닫기">✕</button>
-          
-          <div class="modal-header-profile">
-            <div class="modal-avatar-frame" id="modalAvatarFrame">
-              <img src="assets/hamster.png" alt="캐릭터" id="modalMascotImg" class="modal-pet-img">
-            </div>
-            <div class="modal-title-group">
-              <div class="modal-badge-row">
-                <span class="modal-char-badge" id="modalCharBadge">절친 레벨 3 💖</span>
-              </div>
-              <h3 id="modalMascotName">방구 햄찌</h3>
-              <p id="modalMascotDesc">소리: 뽀옹, 삐용, 뿡!</p>
-            </div>
-          </div>
-
-          <div class="modal-body-content">
-            <!-- 1. 개별 소리 ON/OFF 토글 스위치 -->
-            <div class="modal-toggle-row">
-              <div class="toggle-info">
-                <span class="row-label">이 친구 불시 소리 켜기</span>
-                <small class="row-sub">OFF로 두면 이 친구는 소리 작전에서 제외돼요</small>
-              </div>
-              <label class="toggle-switch">
-                <input type="checkbox" id="modalSoundToggle" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <!-- 2. 소리 종류 선택 칩 -->
-            <div class="sound-select-section">
-              <span class="section-micro-label">소리 스타일 선택:</span>
-              <div class="sound-variation-chips" id="soundVariationChips">
-                <button class="sound-chip active" data-sound="main">기본 소리 💨</button>
-                <button class="sound-chip" data-sound="soft">소심한 소리 🫧</button>
-                <button class="sound-chip" data-sound="loud">우렁찬 소리 💥</button>
-              </div>
-            </div>
-
-            <!-- 3. 다마고치 인터랙션 (간식, 쓰다듬기, 소리듣기) -->
-            <div class="modal-actions-grid">
-              <button class="btn-pet-action" id="btnFeedMascot">
-                <span class="action-icon" id="modalFeedIcon">🌻</span>
-                <span class="action-label" id="modalFeedLabel">간식 주기</span>
-              </button>
-              <button class="btn-pet-action" id="btnPetMascot">
-                <span class="action-icon">💖</span>
-                <span class="action-label">쓰다듬기</span>
-              </button>
-              <button class="btn-pet-action test-sound-btn" id="btnTestSoundMascot">
-                <span class="action-icon">🔊</span>
-                <span class="action-label">소리 테스트</span>
-              </button>
-            </div>
-
-            <!-- 4. 오늘의 활약 & 미니홈피 한 줄 일촌평 -->
-            <div class="modal-stat-box">
-              <div class="stat-line">
-                <span>오늘의 비밀 활약:</span>
-                <strong id="modalStatCount">방구 2회 발사 💨</strong>
-              </div>
-              <div class="modal-hompy-speech" id="modalHompySpeech">
-                "헤헤.. 배에서 꾸르륵 소리 나면 친구들이 쳐다본다구!"
-              </div>
-            </div>
-          </div>
+      <!-- 칭호 도감 -->
+      <section class="screen" id="screen-dex">
+        <div class="dex-head">
+          <h2 data-i18n="dex.title"></h2>
+          <span class="dex-count" id="dexBig"></span>
         </div>
-      </div>
-
-      <!-- MODAL 2: 미니홈피 꾸미기 & 업적 보상 바텀시트 -->
-      <div class="bottom-sheet-overlay" id="decorSheetOverlay">
-        <div class="bottom-sheet-content">
-          <div class="sheet-handle-bar"></div>
-          <div class="sheet-header">
-            <div>
-              <h3>🎨 아지트 꾸미기 & 미니홈피</h3>
-              <p class="sheet-subtitle">도토리 🌰 <strong id="userAcorns">185</strong>개 · 달성 업적 <strong id="userAchievements">6/10</strong></p>
-            </div>
-            <button class="sheet-close-btn" id="btnCloseDecorSheet" aria-label="닫기">✕</button>
-          </div>
-          <div class="sheet-body">
-            
-            <!-- 테마 선택 섹션 -->
-            <div class="decor-section">
-              <span class="section-label">배경 테마 &amp; 시간대 연동 (상단 뱃지 터치로도 전환 가능):</span>
-              <div class="theme-selector-chips">
-                <button class="theme-chip active" data-theme="auto">⏰ 실시간 자동</button>
-                <button class="theme-chip" data-theme="meadow">☀️ 낮 (초원)</button>
-                <button class="theme-chip" data-theme="sunset">🌇 저녁 (노을)</button>
-                <button class="theme-chip" data-theme="night">🌙 밤 (별빛)</button>
-                <button class="theme-chip" data-theme="room">🏠 아늑한 미니룸</button>
-                <button class="theme-chip locked" data-theme="city" title="참음왕 15회 달성 시 해금">🏙️ 네온빛 도시 🔒</button>
-              </div>
-            </div>
-
-            <!-- 소품 가구 배치 섹션 -->
-            <div class="decor-section">
-              <span class="section-label">미니룸 꾸밈 소품 (클릭 시 아지트 배치/해제):</span>
-              <div class="decor-props-grid">
-                <button class="prop-toggle-btn active" data-prop="propCarrot">
-                  <img src="assets/props/carrot.png" alt="당근" class="prop-btn-icon">
-                  <span class="prop-txt">당근 밭</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propSunflower">
-                  <img src="assets/props/sunflower.png" alt="해바라기" class="prop-btn-icon">
-                  <span class="prop-txt">해바라기</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propBox">
-                  <img src="assets/props/box.png" alt="상자" class="prop-btn-icon">
-                  <span class="prop-txt">냥이상자</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propTent">
-                  <img src="assets/props/tent.png" alt="텐트" class="prop-btn-icon">
-                  <span class="prop-txt">꼬마텐트</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propBalloon">
-                  <img src="assets/props/balloon.png" alt="풍선" class="prop-btn-icon">
-                  <span class="prop-txt">방구풍선</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propBench">
-                  <img src="assets/props/bench.png" alt="벤치" class="prop-btn-icon">
-                  <span class="prop-txt">통나무</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propCampfire">
-                  <img src="assets/props/campfire.png" alt="모닥불" class="prop-btn-icon">
-                  <span class="prop-txt">모닥불</span>
-                </button>
-                <button class="prop-toggle-btn active" data-prop="propChuru">
-                  <img src="assets/props/churu.png" alt="츄르" class="prop-btn-icon">
-                  <span class="prop-txt">황금츄르</span>
-                </button>
-                <button class="prop-toggle-btn" data-prop="propMat">
-                  <img src="assets/props/mat.png" alt="돗자리" class="prop-btn-icon">
-                  <span class="prop-txt">돗자리</span>
-                </button>
-                <button class="prop-toggle-btn" data-prop="propTree">
-                  <img src="assets/props/tree.png" alt="큰나무" class="prop-btn-icon">
-                  <span class="prop-txt">큰나무</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- 비밀 수집품 & 업적 보물함 섹션 -->
-            <div class="decor-section collectibles-section">
-              <div class="section-title-row">
-                <span class="section-label">🎒 나의 비밀 수집품 (총 9종 보물):</span>
-                <span class="collect-count-badge">획득 <strong>8</strong> / 9</span>
-              </div>
-              <div class="collectibles-shelf-grid" id="collectiblesGrid">
-                <!-- 1. 황금 도토리 -->
-                <div class="collectible-slot unlocked" data-item="acorn" title="황금 도토리: 간식 먹이기 보상">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/acorn.png" alt="황금 도토리" class="collect-img">
-                  </div>
-                  <span class="collect-name">황금 도토리</span>
-                  <span class="collect-status">획득 완료 ✨</span>
-                </div>
-
-                <!-- 2. 참음왕 황금 트로피 -->
-                <div class="collectible-slot unlocked" data-item="trophy" title="참음왕 황금 트로피: 소리 10회 참음 보상">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/trophy.png" alt="황금 트로피" class="collect-img">
-                  </div>
-                  <span class="collect-name">황금 트로피</span>
-                  <span class="collect-status">영웅의 증표 👑</span>
-                </div>
-
-                <!-- 3. 군고구마 -->
-                <div class="collectible-slot unlocked" data-item="sweet_potato" title="노릇노릇 군고구마: 천연 방구 유발 간식">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/sweet_potato.png" alt="군고구마" class="collect-img">
-                  </div>
-                  <span class="collect-name">노릇 군고구마</span>
-                  <span class="collect-status">향기 솔솔 🍠</span>
-                </div>
-
-                <!-- 4. 탈취 스프레이 -->
-                <div class="collectible-slot unlocked" data-item="spray" title="피치향 탈취제: 에티켓 필수품">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/spray.png" alt="탈취 스프레이" class="collect-img">
-                  </div>
-                  <span class="collect-name">피치 탈취제</span>
-                  <span class="collect-status">매너 상쾌 🍑</span>
-                </div>
-
-                <!-- 5. 비밀 일기 열쇠 -->
-                <div class="collectible-slot unlocked" data-item="key" title="비밀 다이어리 열쇠: 부끄러운 기록 봉인">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/key.png" alt="비밀 열쇠" class="collect-img">
-                  </div>
-                  <span class="collect-name">비밀 열쇠</span>
-                  <span class="collect-status">일기 봉인 🗝️</span>
-                </div>
-
-                <!-- 6. 방구 쿠션 -->
-                <div class="collectible-slot unlocked" data-item="whoopee" title="무지개 방구 방석: 앉으면 뽀옹 소리 남">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/whoopee.png" alt="방구 방석" class="collect-img">
-                  </div>
-                  <span class="collect-name">방구 방석</span>
-                  <span class="collect-status">장난감 💨</span>
-                </div>
-
-                <!-- 7. 벚꽃 돗자리 -->
-                <div class="collectible-slot unlocked" data-item="mat" title="벚꽃 돗자리: 아지트 배치 가능">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/mat.png" alt="벚꽃 돗자리" class="collect-img">
-                  </div>
-                  <span class="collect-name">벚꽃 돗자리</span>
-                  <span class="collect-status">배치 가능 🌸</span>
-                </div>
-
-                <!-- 8. 크레용 큰 나무 -->
-                <div class="collectible-slot unlocked" data-item="tree" title="크레용 큰 나무: 아지트 랜드마크">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/tree.png" alt="크레용 큰 나무" class="collect-img">
-                  </div>
-                  <span class="collect-name">크레용 수호목</span>
-                  <span class="collect-status">배치 가능 🌳</span>
-                </div>
-
-                <!-- 9. 참 잘했어요 도장 -->
-                <div class="collectible-slot locked" data-item="stamp" title="참 잘했어요 도장: 전국 1위 달성 시 해금">
-                  <div class="slot-icon-box">
-                    <img src="assets/collectibles/stamp.png" alt="참 잘했어요 도장" class="collect-img locked-filter">
-                  </div>
-                  <span class="collect-name">참 잘했어요</span>
-                  <span class="collect-status lock-text">1위 도전중 🔒</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- 업적 뱃지 미니 리스트 -->
-            <div class="decor-section achievements-preview">
-              <span class="section-label">🏆 최근 달성한 업적:</span>
-              <div class="achievement-pills">
-                <span class="achieve-pill unlocked">💮 첫 소심방구 성공</span>
-                <span class="achieve-pill unlocked">💮 세 친구 모두 쓰다듬기</span>
-                <span class="achieve-pill unlocked">💮 주머니 속 10회 참음</span>
-                <span class="achieve-pill locked">🔒 전국 참음왕 TOP 10 (진행중)</span>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <!-- MODAL 3: 작전 설정 & 시뮬레이터 바텀시트 -->
-      <div class="bottom-sheet-overlay" id="settingsSheetOverlay">
-        <div class="bottom-sheet-content">
-          <div class="sheet-handle-bar"></div>
-          <div class="sheet-header">
-            <h3>⚙️ 작전 설정 & 시뮬레이터</h3>
-            <button class="sheet-close-btn" id="btnCloseSettingsSheet">✕</button>
-          </div>
-          <div class="sheet-body">
-            <div class="setting-row">
-              <span class="row-label">불시 작전 가동:</span>
-              <label class="toggle-switch">
-                <input type="checkbox" id="operationToggle" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row">
-              <span class="row-label">작전 시간대:</span>
-              <div class="time-range-badges">
-                <span class="badge time-badge" id="timeRangeBadge">09:00 ~ 18:00</span>
-                <button class="btn-micro" id="btnChangeTime">변경</button>
-              </div>
-            </div>
-
-            <div class="setting-row">
-              <span class="row-label">오늘의 긴장감:</span>
-              <div class="frequency-chips">
-                <button class="chip active" data-freq="normal">은밀함 (3~5회)</button>
-                <button class="chip" data-freq="thrill">쫄깃함 (6~9회)</button>
-                <button class="chip" data-freq="quiet">인내 (1~2회)</button>
-              </div>
-            </div>
-
-            <div class="setting-row manner-row">
-              <span class="row-label">기기 상태 (테스트):</span>
-              <div class="manner-buttons">
-                <button class="manner-btn active" data-mode="sound" id="modeSound">🔊 소리</button>
-                <button class="manner-btn" data-mode="vibrate" id="modeVibrate">📳 진동</button>
-                <button class="manner-btn" data-mode="silent" id="modeSilent">🤫 무음</button>
-              </div>
-            </div>
-
-            <div class="test-trigger-dock">
-              <div class="next-trigger-info" id="nextTriggerStatus">⏱️ 다음 불시 신호 대기 중...</div>
-              <button class="btn-doodle" id="btnSimulateTrigger">🎲 불시 타이머 1회 즉시 발생시키기</button>
-              <button class="btn-micro reset-data-btn" id="btnResetData">🗑️ 저장된 데이터 초기화</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 토스트 알림 배너 -->
-      <div class="crayon-toast" id="crayonToast">🎉 업적 달성!</div>
-
-      <!-- MODAL 4: 수집품 상세 정보 팝업 -->
-      <div class="tamagotchi-modal-overlay" id="collectibleModalOverlay">
-        <div class="tamagotchi-modal-card collectible-detail-card" id="collectibleDetailCard">
-          <button class="modal-close-btn" id="btnCloseCollectibleModal" aria-label="닫기">✕</button>
-          <div class="collectible-modal-body">
-            <div class="collect-detail-icon-frame">
-              <img src="assets/collectibles/acorn.png" alt="수집품" id="collectibleModalImg" class="collect-detail-big-img">
-            </div>
-            <div class="collect-detail-meta">
-              <span class="collect-rarity-badge" id="collectibleModalRarity">🌟 전설의 보물</span>
-              <h3 id="collectibleModalTitle">황금 도토리</h3>
-              <p class="collect-detail-lore" id="collectibleModalLore">햄찌가 주머니 깊숙한 곳에서 방구 참기 성공 후 발견한 황금빛 도토리!</p>
-              <div class="collect-detail-condition-box">
-                <span class="cond-label">획득 조건:</span>
-                <span class="cond-val" id="collectibleModalCond">첫 간식 먹이기 완료 ✨</span>
-              </div>
-            </div>
-            <button class="btn-doodle btn-collect-confirm" id="btnConfirmCollectible">확인 완료 💖</button>
-          </div>
-        </div>
-      </div>
-
+        <p class="muted small" id="dexStats"></p>
+        <div class="filters" id="filters"></div>
+        <ul class="dex" id="dexList"></ul>
+      </section>
     </main>
 
+    <nav class="nav">
+      <button class="tab active" data-screen="home" type="button" data-i18n="tab.home"></button>
+      <button class="tab" data-screen="dex" type="button" data-i18n="tab.dex"></button>
+      <button class="tab" data-screen="shop" type="button" data-i18n="tab.shop"></button>
+      <button class="tab" id="tabSettings" type="button" data-i18n="tab.settings"></button>
+    </nav>
   </div>
 
-  <script src="app.js"></script>
+  <!-- 터지는 순간 · 짤 뽑기: 정사각형 짤 한 칸 (칭호 짤 · 속보 짤 · 랜덤 짤, src/memes.js) -->
+  <dialog class="burst" id="burst" tabindex="-1" aria-labelledby="burstTitle">
+    <div class="meme" id="meme" role="img"></div>
+    <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+    <div class="unlock">
+      <div class="u-row"><span class="r-chip" id="burstChip"></span><span class="meta" id="burstWhen"></span></div>
+      <strong id="burstTitle"></strong>
+      <div class="u-bar" aria-hidden="true"><i id="burstBar"></i></div>
+      <span class="meta" id="burstMeta"></span>
+    </div>
+    <div class="burst-actions">
+      <button class="btn dark" id="shareCard" type="button" data-i18n="burst.share"></button>
+      <button class="btn" data-close type="button" data-i18n="burst.ok"></button>
+    </div>
+  </dialog>
+
+  <!-- 획득 팝업 (src/cele.js): 칭호 · 잭팟 · 아이템 -->
+  <dialog class="cele" id="cele" tabindex="-1" aria-label="획득">
+    <div class="cele-stage"></div>
+    <div class="cele-actions"><button type="button"></button><button type="button"></button></div>
+  </dialog>
+
+  <!-- 함정설치: 내려놓고 설치 → 누가 들거나 만지면 뿡 -->
+  <dialog class="cushion" id="cushion" tabindex="-1" aria-labelledby="cushionTitle">
+    <section class="c-setup" id="cSetup">
+      <div class="c-face-wrap"><img class="c-face" id="cFace" alt=""><img class="c-shades" src="assets/faces/sunglasses.png" alt=""></div>
+      <h2 id="cushionTitle" data-i18n="cushion.title"></h2>
+      <p class="c-count" id="cCount"></p>
+      <button class="btn primary wide c-arm" id="cArm" type="button" data-i18n="cushion.arm"></button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </section>
+    <section class="c-countdown" id="cCountdown" hidden>
+      <p data-i18n="cushion.putDown"></p>
+      <strong id="cSec">5</strong>
+    </section>
+    <section class="c-armed" id="cArmed" hidden aria-label="armed"><span data-i18n="cushion.armed"></span></section>
+    <section class="c-caught" id="cCaught" hidden>
+      <img class="c-face big" id="cCaughtFace" alt="">
+      <h2 data-i18n="cushion.caught"></h2>
+      <p class="muted" id="cCaughtCount"></p>
+      <div class="row2">
+        <button class="btn primary" id="cAgain" type="button" data-i18n="cushion.again"></button>
+        <button class="btn" data-close type="button" data-i18n="cushion.done"></button>
+      </div>
+    </section>
+  </dialog>
+
+  <!-- 칭호 상세 -->
+  <dialog class="sheet small" id="titleSheet">
+    <div class="sheet-body">
+      <div class="meme ts-meme" id="tsMeme" role="img"></div>
+      <span class="rarity" id="tsRarity"></span>
+      <h3 class="ts-name" id="tsName"></h3>
+      <p id="tsHow"></p>
+      <p class="muted small" id="tsMeta"></p>
+      <button class="btn dark wide" id="tsShare" type="button" data-i18n="burst.share"></button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 설정 -->
+  <dialog class="sheet" id="settingsSheet">
+    <div class="sheet-body">
+      <h3 data-i18n="settings.title"></h3>
+      <div class="row-label" data-i18n="settings.freq"></div>
+      <div class="chips" id="freqs"></div>
+      <label class="row" id="notifyRow">
+        <span><span data-i18n="settings.notify"></span><small class="muted block" data-i18n="settings.notifyHint"></small></span>
+        <input type="checkbox" class="switch" id="notifyOn">
+      </label>
+      <div id="previewBox">
+        <div class="row-label"><span data-i18n="settings.preview"></span> <span class="muted" data-i18n="settings.previewHint"></span></div>
+        <div class="chips" id="previewModes"></div>
+      </div>
+      <p class="muted small" id="scheduleInfo"></p>
+
+      <div class="row-label" data-i18n="settings.friends"></div>
+      <div class="friends" id="friends"></div>
+      <div class="diy">
+        <button class="btn" id="record" type="button" data-i18n="friend.record"></button>
+        <span class="muted small" id="recordState"></span>
+      </div>
+
+      <button class="btn primary wide" id="openSupport" type="button" data-i18n="settings.support"></button>
+      <button class="btn wide" id="openGuide" type="button" data-i18n="settings.guide"></button>
+      <button class="btn wide" id="openNotes" type="button" data-i18n="settings.notes"></button>
+      <button class="btn wide" id="feedback" type="button" data-i18n="settings.feedback"></button>
+      <button class="btn ghost wide danger" id="reset" type="button" data-i18n="settings.reset"></button>
+      <p class="links">
+        <button class="linkish" id="openPrivacy" type="button" data-i18n="settings.privacy"></button> ·
+        <button class="linkish" id="openCredits" type="button" data-i18n="settings.licenses"></button> ·
+        <span id="version"></span>
+      </p>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 응원하기 -->
+  <!-- 기상 알람이 울릴 때: 잠금화면 위로 뜨는 알람 화면. [확인] 을 눌러야 꺼짐 -->
+  <dialog class="wake-alarm" id="wakeAlarm" aria-labelledby="waTime">
+    <div class="wa-stripes" aria-hidden="true"></div>
+    <div class="wa-body">
+      <strong class="wa-time" id="waTime"></strong>
+      <div class="wa-shout" id="waShout"></div>
+      <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
+      <p class="wa-line" id="waLine"></p>
+      <button class="wa-ok" id="waOk" type="button" data-i18n="alarm.ok"></button>
+      <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
+    </div>
+  </dialog>
+
+  <!-- 기상 알람: 이 시각에 방구로 깨우고, 이때부터 24시까지가 방구 시간 -->
+  <dialog class="sheet small" id="wakeSheet" aria-labelledby="wakeTitle">
+    <div class="sheet-body rest">
+      <h2 class="rest-title" id="wakeTitle" data-i18n="wake.title"></h2>
+      <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
+      <p class="rest-note" data-i18n="wake.note"></p>
+      <button class="btn wide" id="wakePreview" type="button" data-i18n="wake.preview"></button>
+      <div class="rest-actions">
+        <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
+        <button class="btn primary" id="wakeSave" type="button" data-i18n="rest.save"></button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- 쫄? 매일 쉬는 시간 -->
+  <dialog class="sheet small" id="restSheet" aria-labelledby="restTitle">
+    <div class="sheet-body rest">
+      <h2 class="rest-title" id="restTitle" data-i18n="rest.title"></h2>
+      <div class="rest-row"><div class="wheel" id="rFromH" aria-label="hour"></div><b>:</b><div class="wheel" id="rFromM" aria-label="minute"></div><span data-i18n="rest.from"></span></div>
+      <div class="rest-row"><div class="wheel" id="rToH" aria-label="hour"></div><b>:</b><div class="wheel" id="rToM" aria-label="minute"></div><span data-i18n="rest.to"></span></div>
+      <p class="rest-note" data-i18n="rest.note"></p>
+      <div class="rest-actions">
+        <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
+        <button class="btn primary" id="restSave" type="button" data-i18n="rest.save"></button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog class="sheet small" id="supportSheet">
+    <div class="sheet-body">
+      <h3 data-i18n="support.title"></h3>
+      <p data-i18n="support.body"></p>
+      <div class="tips" id="tips"></div>
+      <p class="muted small" data-i18n="support.note"></p>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 첫 실행 -->
+  <!-- 사용설명 (처음 한 번 · 설정에서 다시 보기): 옆으로 넘기는 5장 -->
+  <dialog class="guide" id="guide" aria-label="사용설명">
+    <div class="guide-pages" id="guidePages"></div>
+    <div class="guide-dots" id="guideDots" aria-hidden="true"></div>
+    <div class="guide-actions">
+      <button class="btn ghost" id="guideSkip" type="button" data-i18n="guide.skip"></button>
+      <button class="btn primary" id="guideNext" type="button" data-i18n="guide.next"></button>
+    </div>
+  </dialog>
+
+  <!-- 개인정보처리방침 · 출처 (앱 안에서, src/legal.js) -->
+  <dialog class="sheet" id="legalSheet" aria-labelledby="legalTitle">
+    <div class="sheet-body">
+      <h3 id="legalTitle"></h3>
+      <div class="legal" id="legalBody"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 패치노트: 업데이트하고 처음 열 때 한 번 -->
+  <!-- 소리 규칙: 미디어 볼륨 기준 (홈 볼륨 버튼 옆 ⓘ) -->
+  <dialog class="sheet" id="rulesSheet" aria-labelledby="rulesTitle">
+    <div class="sheet-body">
+      <h3 id="rulesTitle" data-i18n="rules.title"></h3>
+      <div id="rulesBody"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="rules.ok"></button>
+    </div>
+  </dialog>
+
+  <dialog class="sheet" id="notesSheet" aria-labelledby="notesTitle">
+    <div class="sheet-body">
+      <h3 id="notesTitle" data-i18n="notes.title"></h3>
+      <div class="notes" id="notesList"></div>
+      <button class="btn primary wide" data-close type="button" data-i18n="notes.ok"></button>
+    </div>
+  </dialog>
+
+  <!-- 새 버전 알림 (Google Play 인앱 업데이트) -->
+  <dialog class="sheet small" id="updateSheet" aria-labelledby="updTitle">
+    <div class="sheet-body">
+      <h3 id="updTitle"></h3>
+      <p id="updBody"></p>
+      <button class="btn primary wide" id="updGo" type="button"></button>
+      <button class="btn ghost wide" id="updLater" type="button" data-i18n="update.later"></button>
+    </div>
+  </dialog>
+
+  <canvas id="card" width="1080" height="1920" hidden></canvas>
+  <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>
 </body>
 </html>

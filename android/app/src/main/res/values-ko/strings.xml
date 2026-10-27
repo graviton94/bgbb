@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">방구뿡</string>
+    <string name="channel_news">뿡 속보</string>
+    <string name="channel_news_desc">터질 때마다 소리 없이 한 줄</string>
+    <string name="channel_wake">기상 방구</string>
+    <string name="wake_title">기상! 뿡!</string>
+    <string name="wake_text">눌러서 앱을 열고 [확인]을 눌러야 꺼짐</string>
+    <string-array name="news_sub">
+        <item>눌러서 칭호 확인</item>
+        <item>눌러서 칭호 확인</item>
+        <item>칭호 나왔음. 데단해</item>
+        <item>GRAET 칭호 확인 ㄱ</item>
+        <item>칭호 채고야. 눌러봐</item>
+    </string-array>
+    <string name="nick_hamster">햄찌</string>
+    <string name="nick_tit">오목이</string>
+    <string name="nick_cat">냥이</string>
+    <string-array name="news_loud">
+        <item>[속보] %1$s, 끝내 참지 못해</item>
+        <item>방금 그거 %1$s임. 나 아님.</item>
+        <item>%1$s: ㅇㅇ 크게 냄. 칭호 확인 ㄱ</item>
+        <item>[속보] %1$s, 회의실에서 데단한 한 방</item>
+        <item>%1$s: 정말굉\n장한걸? 방금 그거</item>
+        <item>방금 소리 채고야. 범인은 %1$s</item>
+    </string-array>
+    <string-array name="news_soft">
+        <item>%1$s: 진동으로 살짝 냄. 아무도 모름.</item>
+        <item>부르르… %1$s의 소심한 한 방</item>
+        <item>%1$s: 진동이라 아무도 모름. 멋저요</item>
+        <item>부르르… %1$s의 GRAET한 소심함</item>
+    </string-array>
+    <string name="action_resume">다시 시작!</string>
+    <string name="resumed">다시 시작! 언제 터질지는 모름.</string>
+    <!-- 비상탈출 중 도발. %1$s 친구 이름, %2$d 몇 시간째 -->
+    <string-array name="nag_frozen">
+        <item>아직도 참고 있어?</item>
+        <item>%1$s: 나 언제 나가? %2$d시간째 대기 중</item>
+        <item>비상탈출 %2$d시간째… 괄약근 괜찮음?</item>
+        <item>%1$s: 쫄았구나 ㅋ</item>
+        <item>참는 게 더 위험함. 다시 시작! 눌러</item>
+        <item>비상탈출 %2$d시간째. 참는 당신을 천제입니까?</item>
+        <item>%1$s: 데단해… 아직도 참네</item>
+    </string-array>
+    <!-- 쫄 시간 중 아주 가끔 -->
+    <string-array name="nag_rest">
+        <item>%1$s: 지금 쫄 시간이라 참는 중… 진짜 참는 중…</item>
+        <item>쫄 시간 끝나면 보자.</item>
+        <item>%1$s: 조용히 장전 중</item>
+        <item>지금 뀌면 안 되는 거 맞지?</item>
+        <item>%1$s: 쫄 시간 지키는 너 채고야</item>
+        <item>조용함. AWASOME한 평화</item>
+    </string-array>
+    <string-array name="news_hold">
+        <item>%1$s: 무음이라 참음. 다음엔 안 참음.</item>
+        <item>[단독] %1$s, 무음 모드에 막혀 꾹 참아</item>
+        <item>%1$s: 참은 당신을 천제입니까?</item>
+        <item>꾹 참음. 괄약근 훌룡해</item>
+    </string-array>
+</resources>

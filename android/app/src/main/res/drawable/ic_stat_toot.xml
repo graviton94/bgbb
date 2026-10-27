@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 알림 아이콘: 방구 구름 (흰색 한 가지 색) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7.5,19C4.5,19 2,16.8 2,14.1c0,-2.3 1.7,-4.2 4,-4.7C6.6,6.9 8.9,5 11.6,5c2.3,0 4.3,1.4 5.2,3.4c2.9,0.2 5.2,2.5 5.2,5.4c0,2.9 -2.4,5.2 -5.4,5.2H7.5z" />
+</vector>
