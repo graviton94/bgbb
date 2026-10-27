@@ -1,54 +1,26 @@
 package io.github.graviton94.bgbb;
 
 import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.AssetFileDescriptor;
-import android.media.AudioAttributes;
-import android.media.MediaPlayer;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.PowerManager;
-import android.os.VibrationEffect;
-import android.os.Vibrator;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Random;
 
 /**
- * 기상 알람: 정한 시각에 친구들 방구를 45초 동안 번갈아 (알람 볼륨 · 무음 모드여도 울림).
+ * 기상 알람 일정: 정한 시각에 AlarmService 가 알람 음악을 끌 때까지 반복 (실제 알람시계처럼).
  * 알람 시각부터 24시까지가 그날 방구 시간이 된다 (src/schedule.js startMin).
- * 알림의 [그만] · [5분 뒤] 또는 앱을 열면 멈춘다. 상주 서비스 없이 리시버 안에서만 (최대 45초, 백그라운드 리시버 제한 60초 안).
+ * 끄는 건 앱 알람 팝업의 [확인], [5분만 더] 는 5분 뒤 다시.
  */
 final class WakeAlarm {
 
     static final String ACTION_RING = "io.github.graviton94.bgbb.ACTION_WAKE";
-    static final String ACTION_STOP = "io.github.graviton94.bgbb.ACTION_WAKE_STOP";
-    static final String ACTION_SNOOZE = "io.github.graviton94.bgbb.ACTION_WAKE_SNOOZE";
-    private static final String CHANNEL = "wake";
     private static final String KEY_SNOOZE = "wakeSnooze";
-    private static final int NOTIF_ID = 7;
-    private static final long RING_MS = 45_000, SNOOZE_MS = 5 * 60_000L;
-    private static final Random RANDOM = new Random();
-
-    // 지금 울리는 중인 것 (같은 프로세스 안에서 [그만] 이 멈출 수 있게)
-    private static MediaPlayer player;
-    private static BroadcastReceiver.PendingResult pending;
-    private static PowerManager.WakeLock lock;
-    private static Handler main;
-    private static boolean ringing;
+    private static final long SNOOZE_MS = 5 * 60_000L;
 
     private WakeAlarm() {}
 
@@ -65,7 +37,7 @@ final class WakeAlarm {
     }
 
     private static PendingIntent openApp(Context c) {
-        return PendingIntent.getActivity(c, 3, new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+        return PendingIntent.getActivity(c, 3, MainActivity.wakeIntent(c),
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
@@ -107,128 +79,19 @@ final class WakeAlarm {
         schedule(c);
     }
 
-    /** 울린다. result 는 다 끝나면 finish (리시버 제한 시간 안에) */
-    static void ring(Context c, BroadcastReceiver.PendingResult result) {
-        stop(c);
+    /** 울린다: 알람 서비스 시작 (음악 반복 · 진동 · 잠금화면 위로 앱) + 내일 것 미리 */
+    static void ring(Context c) {
         c.getSharedPreferences("bgbb", Context.MODE_PRIVATE).edit().remove(KEY_SNOOZE).apply();
-        schedule(c);   // 내일 것 미리
-        pending = result;
-        main = new Handler(Looper.getMainLooper());
-        PowerManager pm = c.getSystemService(PowerManager.class);
-        if (pm != null) {
-            lock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "bgbb:wake");
-            lock.acquire(RING_MS + 5_000);
-        }
-        ringing = true;
-        showNotification(c);
-        long until = System.currentTimeMillis() + RING_MS;
-        playNext(c, sounds(c), until);
-        main.postDelayed(() -> stop(c), RING_MS);
+        schedule(c);
+        AlarmService.start(c);
     }
 
-    /** 참여 중인 친구들의 기본 · 우렁찬 녹음 전부 (아무도 없으면 햄찌) */
-    private static List<Integer> sounds(Context c) {
-        List<String> chars = new ArrayList<>();
-        JSONArray arr = PrankScheduler.config(c).optJSONArray("sounds");
-        if (arr != null) for (int i = 0; i < arr.length(); i++) chars.add(arr.optJSONObject(i).optString("char", "hamster"));
-        if (chars.isEmpty()) chars.add("hamster");
-        List<Integer> out = new ArrayList<>();
-        for (String ch : chars) {
-            for (String style : new String[]{"main", "loud"}) {
-                for (int n = 1; n <= 9; n++) {
-                    String name = ch + "_" + style + (n == 1 ? "" : "_" + n);
-                    int id = c.getResources().getIdentifier(name, "raw", c.getPackageName());
-                    if (id == 0) break;
-                    out.add(id);
-                }
-            }
-        }
-        return out;
-    }
-
-    private static void playNext(Context c, List<Integer> pool, long until) {
-        if (!ringing || pool.isEmpty() || System.currentTimeMillis() >= until) return;
-        MediaPlayer mp = new MediaPlayer();
-        player = mp;
-        try {
-            // 알람 소리: 알람 볼륨을 따르고 무음 · 진동 모드여도 울린다
-            mp.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build());
-            try (AssetFileDescriptor afd = c.getResources().openRawResourceFd(pool.get(RANDOM.nextInt(pool.size())))) {
-                mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-            }
-            mp.setOnPreparedListener(MediaPlayer::start);
-            mp.setOnCompletionListener(done -> {
-                done.release();
-                if (player == done) player = null;
-                if (ringing) main.postDelayed(() -> playNext(c, pool, until), 700 + RANDOM.nextInt(900));
-            });
-            mp.setOnErrorListener((bad, what, extra) -> {
-                bad.release();
-                if (player == bad) player = null;
-                if (ringing) main.postDelayed(() -> playNext(c, pool, until), 1000);
-                return true;
-            });
-            mp.prepareAsync();
-            buzz(c);
-        } catch (Exception e) {
-            mp.release();
-            player = null;
-        }
-    }
-
-    private static void buzz(Context c) {
-        Vibrator vib = c.getSystemService(Vibrator.class);
-        if (vib == null || !vib.hasVibrator()) return;
-        vib.vibrate(VibrationEffect.createWaveform(new long[]{0, 180, 80, 380}, -1),
-                new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ALARM).build());
-    }
-
-    /** 멈춤: 소리 · 알림 · 대기 중인 리시버 정리. 울리는 중이 아니면 아무 일 없음 */
+    /** 앱 알람 팝업의 [확인] */
     static void stop(Context c) {
-        ringing = false;
-        if (main != null) main.removeCallbacksAndMessages(null);
-        if (player != null) {
-            try { player.release(); } catch (Exception ignored) { }
-            player = null;
-        }
-        NotificationManager nm = c.getSystemService(NotificationManager.class);
-        if (nm != null) nm.cancel(NOTIF_ID);
-        if (lock != null && lock.isHeld()) lock.release();
-        lock = null;
-        if (pending != null) {
-            pending.finish();
-            pending = null;
-        }
+        AlarmService.stop(c);
     }
 
     static boolean isRinging() {
-        return ringing;
-    }
-
-    private static void showNotification(Context c) {
-        if (!PrankNotifier.allowed(c)) return;
-        NotificationManager nm = c.getSystemService(NotificationManager.class);
-        if (nm == null) return;
-        NotificationChannel ch = new NotificationChannel(CHANNEL, c.getString(R.string.channel_wake), NotificationManager.IMPORTANCE_HIGH);
-        ch.setSound(null, null);   // 소리는 방구가 낸다
-        ch.enableVibration(false);
-        nm.createNotificationChannel(ch);
-        Notification n = new Notification.Builder(c, CHANNEL)
-                .setSmallIcon(R.drawable.ic_stat_toot)
-                .setColor(0xFF111111)
-                .setContentTitle(c.getString(R.string.wake_title))
-                .setContentText(c.getString(R.string.wake_text))
-                .setCategory(Notification.CATEGORY_ALARM)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setContentIntent(openApp(c))
-                .setDeleteIntent(intent(c, ACTION_STOP, 5))
-                .addAction(new Notification.Action.Builder(null, c.getString(R.string.wake_stop), intent(c, ACTION_STOP, 5)).build())
-                .addAction(new Notification.Action.Builder(null, c.getString(R.string.wake_snooze), intent(c, ACTION_SNOOZE, 6)).build())
-                .setOngoing(true)
-                .build();
-        nm.notify(NOTIF_ID, n);
+        return AlarmService.ringing;
     }
 }

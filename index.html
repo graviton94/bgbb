@@ -186,12 +186,26 @@
   </dialog>
 
   <!-- 응원하기 -->
+  <!-- 기상 알람이 울릴 때: 잠금화면 위로 뜨는 알람 화면. [확인] 을 눌러야 꺼짐 -->
+  <dialog class="wake-alarm" id="wakeAlarm" aria-labelledby="waTime">
+    <div class="wa-stripes" aria-hidden="true"></div>
+    <div class="wa-body">
+      <strong class="wa-time" id="waTime"></strong>
+      <div class="wa-shout" id="waShout"></div>
+      <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
+      <p class="wa-line" id="waLine"></p>
+      <button class="wa-ok" id="waOk" type="button" data-i18n="alarm.ok"></button>
+      <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
+    </div>
+  </dialog>
+
   <!-- 기상 알람: 이 시각에 방구로 깨우고, 이때부터 24시까지가 방구 시간 -->
   <dialog class="sheet small" id="wakeSheet" aria-labelledby="wakeTitle">
     <div class="sheet-body rest">
       <h2 class="rest-title" id="wakeTitle" data-i18n="wake.title"></h2>
       <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
       <p class="rest-note" data-i18n="wake.note"></p>
+      <button class="btn wide" id="wakePreview" type="button" data-i18n="wake.preview"></button>
       <div class="rest-actions">
         <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
         <button class="btn primary" id="wakeSave" type="button" data-i18n="rest.save"></button>

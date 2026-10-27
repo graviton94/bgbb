@@ -744,6 +744,52 @@ $('wakeSave').addEventListener('click', () => {
   if (native?.exactAllowed && !native.exactAllowed()) native.openExactSettings?.();   // 알람은 정확해야 함
 });
 $('exactWarn').addEventListener('click', () => native?.openExactSettings?.());
+
+// 알람 음악 미리 듣기 (미디어 볼륨, 웹뷰에서). 실제 알람은 네이티브가 알람 볼륨으로
+let alarmAudio = null;
+function stopAlarmAudio() {
+  alarmAudio?.pause();
+  alarmAudio = null;
+  $('wakePreview').textContent = t('wake.preview');
+}
+$('wakePreview').addEventListener('click', () => {
+  if (alarmAudio) { stopAlarmAudio(); return; }
+  alarmAudio = new Audio('assets/sounds/alarm_wake.ogg');
+  alarmAudio.play().catch(() => {});
+  alarmAudio.onended = stopAlarmAudio;
+  $('wakePreview').textContent = t('wake.previewStop');
+});
+$('wakeSheet').addEventListener('close', stopAlarmAudio);
+
+// ---------------------------------------------------------- 기상 알람이 울릴 때 (실제 알람시계처럼 [확인] 을 눌러야 꺼짐)
+function showWakeAlarm() {
+  const d = new Date();
+  $('waTime').textContent = `${two(d.getHours())}:${two(d.getMinutes())}`;
+  $('waShout').textContent = pick(t('alarm.shout'));
+  const font = decorFont(1);
+  $('waShout').className = `wa-shout ${font ? `f-${font}` : ''}`;
+  $('waFaces').innerHTML = CHARACTERS.map((c, i) => `<img src="${face(c.id, 'burst', realLook())}" style="animation-delay:${i * 0.15}s" alt="">`).join('');
+  $('waLine').textContent = t('alarm.line', { from: startLabel() });
+  if (!native) {   // 브라우저 미리보기: 음악도 여기서
+    alarmAudio?.pause();
+    alarmAudio = new Audio('assets/sounds/alarm_wake.ogg');
+    alarmAudio.loop = true;
+    alarmAudio.play().catch(() => {});
+  }
+  if (!$('wakeAlarm').open) $('wakeAlarm').showModal();
+}
+function closeWakeAlarm(snooze) {
+  if (native) (snooze ? native.snoozeWake : native.stopWake)?.call(native);
+  alarmAudio?.pause();
+  alarmAudio = null;
+  $('wakeAlarm').close();
+  if (snooze) toast(t('alarm.snoozed'));
+}
+$('waOk').addEventListener('click', () => closeWakeAlarm(false));
+$('waSnooze').addEventListener('click', () => closeWakeAlarm(true));
+$('wakeAlarm').addEventListener('cancel', e => e.preventDefault());   // 뒤로가기로는 안 꺼짐
+window.bgbbOnWake = () => { if (native?.wakeRinging?.() ?? true) showWakeAlarm(); };
+const checkWake = () => { if (native?.wakeRinging?.() && !$('wakeAlarm').open) showWakeAlarm(); };
 $('restOn').addEventListener('change', e => {
   if (e.target.checked) { e.target.checked = state.schedule.rest.on; openRest(); return; }
   state.schedule.rest.on = false;
@@ -1016,10 +1062,12 @@ window.bgbbBack = () => {
 window.bgbbOnNativeResume = () => {
   drainNative();
   render();
+  checkWake();
 };
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
+  checkWake();
   shuffleStage();
   drainNative();
   armWebTimer();
@@ -1043,4 +1091,5 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   commit();
 }
 native?.checkUpdate?.();
+checkWake();   // 알람이 앱을 연 경우
 addEventListener('pagehide', flush);

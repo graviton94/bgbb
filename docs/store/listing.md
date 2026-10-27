@@ -105,7 +105,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   ```
   <ko-KR>
 비공개 테스트 v2.3.0
-- 기상 알람: 정한 시각에 친구들이 방구로 깨워 줌. 그 시각부터 24시까지가 방구 시간
+- 기상 알람: 방구 · 새 · 고양이 소리로 만든 알람 음악이 [확인] 누를 때까지 울림. 그 시각부터 24시까지가 방구 시간
 - 방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람)
 - 홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로
 - 연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3
@@ -114,7 +114,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   </ko-KR>
   <en-US>
 Closed test v2.3.0
-- Wake-up alarm: your pals toot you awake. Toot hours run from then until midnight
+- Wake-up alarm: an anthem of toots, birds and cats loops until you hit OK. Toot hours run from then until midnight
 - Fixed toots piling up until you turned the screen on (exact alarms)
 - Cleaner home: latest title and volume up top, wake-up and chicken hours right on home
 - Practice toot removed. Out of draws? Watch an ad for +3
@@ -185,3 +185,15 @@ ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 
 - 광고: **있음** (AdMob 보상형 광고, 짤 뽑기 +3 을 고를 때만) · 대상 연령: 13세 이상 (어린이 대상 아님)
 - 콘텐츠 등급(IARC): 폭력·성·약물·도박 없음, 사용자 간 소통 없음. 방귀 소리 같은 **가벼운 유머(crude humor)** 가 있다고 답한다.
 - 정부 앱 / 금융 / 건강: 해당 없음
+
+## 권한 선언 (Play Console → 앱 콘텐츠, v2.3.0 부터)
+
+AAB 를 올리면 아래 두 개를 물어본다. 둘 다 '기상 알람' 때문.
+
+- **포그라운드 서비스 권한** → 유형 `미디어 재생 (mediaPlayback)`
+  - 설명 (ko): 사용자가 정한 기상 알람 시각에 알람 음악을 재생합니다. 사용자가 앱의 알람 화면에서 [확인] 을 누르면 즉시 멈추고, 10분 뒤에는 자동으로 멈춥니다.
+  - 설명 (en): Plays the wake-up alarm music at the time the user set. It stops as soon as the user taps OK on the in-app alarm screen, or automatically after 10 minutes.
+  - 동영상: 알람 켜기 → 시각이 되어 알람 화면이 뜨고 음악이 나옴 → [확인] 으로 꺼지는 장면 (화면 녹화 20~30초, YouTube 일부공개 링크)
+- **전체 화면 인텐트** → `알람 기능` 선택
+  - 이유: 잠금화면에서도 기상 알람 화면을 바로 띄워 사용자가 끌 수 있게.
+- `SCHEDULE_EXACT_ALARM` (알람 및 리마인더) 은 선언 필요 없음. 앱 안에서 사용자가 허용한다.

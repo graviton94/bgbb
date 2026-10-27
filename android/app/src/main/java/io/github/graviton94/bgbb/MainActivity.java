@@ -65,6 +65,35 @@ public class MainActivity extends Activity {
     private Updater updater;
 
     @Override
+    /** 기상 알람이 띄우는 인텐트: 잠금화면 위로 앱을 열고 알람 팝업 */
+    static Intent wakeIntent(android.content.Context c) {
+        return new Intent(c, MainActivity.class).putExtra("wake", true)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+    }
+
+    /** 알람이 울리는 동안만 잠금화면 위에 보이고 화면을 켠다 */
+    private void showOverLock(boolean on) {
+        if (Build.VERSION.SDK_INT >= 27) {
+            setShowWhenLocked(on);
+            setTurnScreenOn(on);
+        } else if (on) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent.getBooleanExtra("wake", false)) {
+            showOverLock(WakeAlarm.isRinging());
+            if (web != null) web.evaluateJavascript("window.bgbbOnWake && window.bgbbOnWake()", null);
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         // 앱 안에서 볼륨 키 = 미디어 볼륨 (안 정하면 벨소리 볼륨이 움직이고, 끝까지 내리면 폰이 진동 모드가 된다)
@@ -155,7 +184,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        WakeAlarm.stop(getApplicationContext());   // 기상 알람이 울리는 중에 앱을 열면 멈춤
+        showOverLock(WakeAlarm.isRinging());
         if (updater != null) updater.check();
         android.content.IntentFilter f = new android.content.IntentFilter();
         f.addAction("android.media.VOLUME_CHANGED_ACTION");
@@ -332,6 +361,30 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void setNotify(boolean on) {
             PrankNotifier.setEnabled(getApplicationContext(), on);
+        }
+
+        /** 기상 알람이 울리는 중인지 (앱을 열면 알람 팝업) */
+        @JavascriptInterface
+        public boolean wakeRinging() {
+            return WakeAlarm.isRinging();
+        }
+
+        /** 알람 팝업 [확인]: 끄기 */
+        @JavascriptInterface
+        public void stopWake() {
+            runOnUiThread(() -> {
+                WakeAlarm.stop(getApplicationContext());
+                showOverLock(false);
+            });
+        }
+
+        /** 알람 팝업 [5분만 더] */
+        @JavascriptInterface
+        public void snoozeWake() {
+            runOnUiThread(() -> {
+                WakeAlarm.snooze(getApplicationContext());
+                showOverLock(false);
+            });
         }
 
         /** 정확한 시각 알람 허용 ('알람 및 리마인더'). 꺼져 있으면 방구가 화면 켤 때까지 밀릴 수 있음 */

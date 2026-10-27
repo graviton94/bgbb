@@ -776,3 +776,23 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
   0%, 100% { background-position: 0% 50%; box-shadow: 0 0 0 0 rgba(255, 40, 30, 0.55); }
   50% { background-position: 100% 50%; box-shadow: 0 0 14px 3px rgba(255, 40, 30, 0.55); }
 }
+
+/* ---------------------------------------------------------- 기상 알람 화면: 사이렌 줄무늬 + 시계 + 깨우는 셋 */
+.wake-alarm { width: 100%; max-width: 100%; height: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; background: #FF2E2E; color: #fff; overflow: hidden; }
+.wake-alarm::backdrop { background: #000; }
+.wa-stripes { position: absolute; inset: -50%; background: repeating-linear-gradient(45deg, #FF2E2E 0 40px, #FFD400 40px 80px); animation: wa-slide 0.8s linear infinite, wa-flash 0.5s steps(2) infinite; opacity: 0.9; }
+@keyframes wa-slide { to { transform: translate(113px, 0); } }
+@keyframes wa-flash { 50% { filter: invert(1) hue-rotate(180deg); } }
+.wa-body { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: calc(20px + var(--safe-top, 0px)) 20px 28px; box-sizing: border-box; text-align: center; }
+.wa-time { font: 400 clamp(84px, 30vw, 140px)/1 var(--display); color: #fff; -webkit-text-stroke: 4px #111; paint-order: stroke; text-shadow: 6px 6px 0 #111; animation: wa-shake 0.25s infinite; }
+@keyframes wa-shake { 25% { transform: translate(-3px, 2px) rotate(-1deg); } 75% { transform: translate(3px, -2px) rotate(1deg); } }
+.wa-shout { padding: 6px 16px; border: 4px solid #111; border-radius: 14px; background: #D7FF3D; color: #111; font: 400 clamp(30px, 10vw, 46px)/1.1 var(--display); transform: rotate(-4deg); box-shadow: 6px 6px 0 #111; animation: wa-pop 0.6s ease-in-out infinite alternate; }
+@keyframes wa-pop { to { transform: rotate(3deg) scale(1.08); } }
+.wa-faces { display: flex; justify-content: center; height: 24vh; }
+.wa-faces img { height: 100%; max-width: 34%; object-fit: contain; filter: drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff); animation: wa-jump 0.45s ease-in-out infinite alternate; }
+.wa-faces img + img { margin-left: -6%; }
+@keyframes wa-jump { to { transform: translateY(-18px) rotate(6deg); } }
+.wa-line { margin: 0; padding: 6px 12px; border-radius: 10px; background: rgba(0, 0, 0, 0.75); font-size: 15px; font-weight: 700; }
+.wa-ok { width: 100%; min-height: 76px; border: 4px solid #111; border-radius: 22px; background: #fff; color: #111; font: 400 30px var(--display); box-shadow: 0 7px 0 #111; cursor: pointer; }
+.wa-ok:active { transform: translateY(5px); box-shadow: 0 2px 0 #111; }
+.wa-snooze { border: 0; background: rgba(0, 0, 0, 0.6); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 15px; font-weight: 700; cursor: pointer; }

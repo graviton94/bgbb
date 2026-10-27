@@ -14,10 +14,10 @@ def syncWeb = tasks.register('syncWeb', Sync) {
     into generated.map { it.dir('assets/public') }
 }
 
-// 앱이 꺼져 있을 때 알람이 재생할 캐릭터 효과음 → res/raw
+// 앱이 꺼져 있을 때 알람이 재생할 캐릭터 효과음 · 기상 알람 음악 → res/raw
 def syncRaw = tasks.register('syncRaw', Sync) {
     from(new File(webRoot, 'assets/sounds')) {
-        include 'hamster_*.wav', 'tit_*.wav', 'cat_*.wav'
+        include 'hamster_*.wav', 'tit_*.wav', 'cat_*.wav', 'alarm_*.ogg'
     }
     into generated.map { it.dir('res/raw') }
 }
@@ -43,7 +43,7 @@ android {
         applicationId 'io.github.graviton94.bgbb'
         minSdk 26
         targetSdk 36
-        versionCode 7
+        versionCode 8
         versionName '2.3.0'
         manifestPlaceholders = [admobAppId: ADMOB_APP_ID ?: TEST_APP_ID]
         buildConfigField 'String', 'ADMOB_REWARDED', "\"${ADMOB_REWARDED_ID ?: TEST_REWARDED_ID}\""

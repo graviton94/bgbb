@@ -13,6 +13,10 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- 방구 · 기상 알람 소리가 끝날 때까지만 잠깐 깨어 있기 -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- 기상 알람: 끌 때까지 알람 음악을 반복하는 동안만 포그라운드 서비스 + 잠금화면 위로 알람 화면 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:allowBackup="true"
@@ -39,6 +43,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".AlarmService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
 
         <!-- AlarmManager 가 깨울 때만 잠깐 실행된다. 상주 서비스 없음 (소리 나는 동안만 잠깐 WakeLock). -->
         <receiver
