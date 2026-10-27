@@ -5,14 +5,14 @@ export const CHANGELOG = [
     v: '2.3.0', date: '2026-10-27',
     ko: [
       '기상 알람: 방구 · 새 · 고양이 소리로 만든 30초 알람 음악이 [확인] 누를 때까지 울림. 그 시각부터 24시까지가 방구 시간',
-      '방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람)',
+      '방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람). 절전 모드거나 5분 넘게 늦게 깨면 참음 처리 (칭호는 공정하게)',
       '홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로',
       '연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3, 그다음은 내일',
       '비상탈출 버튼이 진짜 비상 버튼처럼'
     ],
     en: [
       'Wake-up alarm: a 30-second anthem made of toots, birds and cats loops until you hit OK. Toot hours run from then until midnight',
-      'Fixed toots piling up until you turned the screen on (exact alarms)',
+      'Fixed toots piling up until you turned the screen on (exact alarms). Battery saver or over 5 minutes late counts as held in (fair titles only)',
       'Cleaner home: latest title and volume up top, wake-up and chicken hours right on home',
       'Practice toot removed. Out of draws? Watch an ad for +3, then wait for tomorrow',
       'The bail-out button now looks like a real emergency button'

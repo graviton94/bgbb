@@ -526,8 +526,8 @@ function renderStatus() {
     : !anyFriendOn() ? esc(t('status.nobody'))
       : `${esc(t('status.window', { from: startLabel() }))}${rest.on && rest.from !== rest.to ? `<small>${esc(t('status.except', { window: restLabel().replace('~', ' ~ ') }))}</small>` : ''}`;
   $('mute').hidden = false;
-  $('mute').classList.toggle('off', !s.web && !s.dnd && !s.vol);
-  $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
+  $('mute').classList.toggle('off', !s.web && (s.saver || (!s.dnd && !s.vol)));
+  $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.saver ? t('status.saver') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
 /** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트). now = 지금 폰 상태 줄을 형광으로 */
 function soundRules(now) {
@@ -539,7 +539,7 @@ $('rulesInfo').addEventListener('click', () => {
   const quiet = state.frozen || resting() || !inWindow();
   $('rulesBody').innerHTML = soundRules(s.dnd ? 'hold' : s.mode)
     + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
-    + `<p class="rules-note">${t('rules.wake')}</p>`
+    + `<p class="rules-note">${t('rules.late')}</p><p class="rules-note">${t('rules.wake')}</p>`
     + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
   $('rulesSheet').showModal();
 });

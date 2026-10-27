@@ -106,7 +106,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   <ko-KR>
 비공개 테스트 v2.3.0
 - 기상 알람: 방구 · 새 · 고양이 소리로 만든 알람 음악이 [확인] 누를 때까지 울림. 그 시각부터 24시까지가 방구 시간
-- 방구가 화면 켤 때까지 밀리던 문제 수정 (정확한 시각 알람)
+- 방구가 화면 켤 때까지 밀리던 문제 수정. 절전 모드거나 5분 넘게 늦으면 참음 처리 (칭호는 공정하게)
 - 홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로
 - 연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3
 - 비상탈출 버튼이 진짜 비상 버튼처럼
@@ -115,7 +115,7 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
   <en-US>
 Closed test v2.3.0
 - Wake-up alarm: an anthem of toots, birds and cats loops until you hit OK. Toot hours run from then until midnight
-- Fixed toots piling up until you turned the screen on (exact alarms)
+- Fixed toots piling up until the screen came on. Battery saver or 5+ min late counts as held in
 - Cleaner home: latest title and volume up top, wake-up and chicken hours right on home
 - Practice toot removed. Out of draws? Watch an ad for +3
 - The bail-out button now looks like a real emergency button

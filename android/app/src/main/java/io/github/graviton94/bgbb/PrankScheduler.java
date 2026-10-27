@@ -33,6 +33,7 @@ final class PrankScheduler {
     private static final String KEY_PLAN_DAY = "planDay";
     private static final String KEY_EVENTS = "events";
     private static final String KEY_LAST = "lastFire";
+    private static final String KEY_DUE = "due";   // 지금 걸린 작전 알람의 원래 시각 (늦게 왔는지 보려고)
     // 그날 정한 하루 횟수 · 오늘 터진 횟수 · 설정이 바뀌어 남은 만큼 다시 뿌려야 하는지 (src/plan.js advancePlan 과 같은 규칙)
     private static final String KEY_PLAN_COUNT = "planCount";
     private static final String KEY_FIRED_DAY = "firedDay";
@@ -78,6 +79,11 @@ final class PrankScheduler {
         prefs(c).edit().putString(KEY_CONFIG, cfg.toString()).remove(KEY_PLAN).putBoolean(KEY_RESET, true)
                 .remove(KEY_NAG).remove(KEY_FROZEN_AT).putBoolean(KEY_RESUMED, true).apply();
         reschedule(c);
+    }
+
+    /** 이번 알람이 원래 울려야 했던 시각 (모르면 0) */
+    static long due(Context c) {
+        return prefs(c).getLong(KEY_DUE, 0);
     }
 
     static boolean takeResumed(Context c) {
@@ -134,6 +140,7 @@ final class PrankScheduler {
         if (!isActive(cfg)) return;
         long next = nextTrigger(c, cfg, System.currentTimeMillis());
         if (next <= 0) return;
+        prefs(c).edit().putLong(KEY_DUE, next).apply();
         // 정확한 알람: inexact 는 화면이 꺼져 있으면 (Doze) 한참 밀렸다가 화면 켤 때 몰려 터진다.
         // '알람 및 리마인더' 를 허용 안 했으면 어쩔 수 없이 inexact (앱이 홈에서 허용하라고 알려 줌)
         if (WakeAlarm.exactAllowed(c)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next, pi);

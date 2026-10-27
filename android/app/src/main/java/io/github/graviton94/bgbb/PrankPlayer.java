@@ -25,6 +25,7 @@ import java.util.Random;
  *   미디어 볼륨 > 0              → 소리 (미디어 볼륨 크기, 이어폰이 꽂혀 있으면 이어폰으로) = 냄 (loud)
  *   미디어 볼륨 0 + 무음 모드     → 아무것도 X  = 참음 (hold)
  *   미디어 볼륨 0 (그 밖)         → 진동만      = 진동 (soft)
+ *   절전 모드 · 알람이 5분 넘게 늦게 옴 → 아무것도 X = 참음 (화면 켤 때 몰아 터져 칭호 받는 것 방지)
  * 06~24시 밖 · 쫄 시간 · 비상탈출이면 여기까지 오지도 않는다 (PrankReceiver).
  */
 final class PrankPlayer {
@@ -32,11 +33,17 @@ final class PrankPlayer {
     static final String DIY_FILE = "diy_sound";
     private static final Random RANDOM = new Random();
     private static final double EPIC_CHANCE = 0.02;
+    private static final long LATE_MS = 5 * 60_000L;
 
     private PrankPlayer() {}
 
     /** done 은 끝났을 때 메인 스레드에서 정확히 한 번 불린다. */
     static void fire(Context c, Runnable outer) {
+        fire(c, outer, false);
+    }
+
+    /** scheduled = 작전 알람이 깨운 것 (늦게 왔는지 본다) */
+    static void fire(Context c, Runnable outer, boolean scheduled) {
         // 화면이 꺼져 있어도 소리 · 진동이 끝날 때까지 CPU 를 깨워 둔다 (안 그러면 기록만 남고 소리가 안 날 수 있음)
         android.os.PowerManager pm = c.getSystemService(android.os.PowerManager.class);
         android.os.PowerManager.WakeLock lock = pm == null ? null : pm.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "bgbb:toot");
@@ -56,6 +63,9 @@ final class PrankPlayer {
         boolean diy = pick.optBoolean("diy") && new File(c.getFilesDir(), DIY_FILE).exists();
         String sound = pickStyle(diy);
         String mode = deviceMode(c);
+        // 공정하게: 폰이 깊이 잠들어 알람이 5분 넘게 늦게 왔으면 (화면 켤 때 몰아서 터지는 경우) 소리 없이 참음으로
+        long due = PrankScheduler.due(c);
+        if (scheduled && due > 0 && System.currentTimeMillis() - due > LATE_MS) mode = "hold";
         PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
         PrankNotifier.post(c, charId, mode);
 
@@ -80,10 +90,16 @@ final class PrankPlayer {
         if (nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL) {
             return "hold";
         }
+        if (powerSave(c)) return "hold";   // 절전 모드 = 참음 (알람이 밀릴 수 있으니 공정하게)
         AudioManager am = c.getSystemService(AudioManager.class);
         if (am == null) return "hold";
         if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) return "loud";
         return am.getRingerMode() == AudioManager.RINGER_MODE_SILENT ? "hold" : "soft";
+    }
+
+    static boolean powerSave(Context c) {
+        android.os.PowerManager pm = c.getSystemService(android.os.PowerManager.class);
+        return pm != null && pm.isPowerSaveMode();
     }
 
     /** 홈 상태 줄용: {"mode": loud|soft|hold, "vol": 지금 미디어 볼륨, "max": 최대, "dnd": 방해금지} */
@@ -92,7 +108,7 @@ final class PrankPlayer {
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         boolean dnd = nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL;
         try {
-            return new JSONObject().put("mode", deviceMode(c)).put("dnd", dnd)
+            return new JSONObject().put("mode", deviceMode(c)).put("dnd", dnd).put("saver", powerSave(c))
                     .put("vol", am != null ? am.getStreamVolume(AudioManager.STREAM_MUSIC) : 0)
                     .put("max", am != null ? am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) : 15).toString();
         } catch (org.json.JSONException e) {

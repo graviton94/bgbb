@@ -44,6 +44,6 @@ public class PrankReceiver extends BroadcastReceiver {
         PrankPlayer.fire(c, () -> {
             PrankScheduler.reschedule(c);
             result.finish();
-        });
+        }, true);
     }
 }
