@@ -2,6 +2,11 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.3.1', date: '2026-10-27',
+    ko: ['기상 알람을 켜거나 시각을 바꾸면 그날 방구가 "오늘은 끝" 으로 사라지던 문제 수정'],
+    en: ['Fixed today’s toots vanishing ("Done for today") after turning on or changing the wake-up alarm']
+  },
+  {
     v: '2.3.0', date: '2026-10-27',
     ko: [
       '기상 알람: 방구 · 새 · 고양이 소리로 만든 30초 알람 음악이 [확인] 누를 때까지 울림. 그 시각부터 24시까지가 방구 시간',
