@@ -70,12 +70,16 @@ final class PrankPlayer {
             mode = "hold";
             why = "late" + (late / 60_000);
         }
-        PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode, "hold".equals(mode) ? why : null);
-        PrankNotifier.post(c, charId, mode);
-
+        long t = System.currentTimeMillis();
         if ("loud".equals(mode)) {
-            play(c, charId, sound, done);
+            // '냄' 은 소리가 실제로 재생되기 시작했을 때만 기록 (재생 실패면 참음 · 소리 안 남)
+            play(c, charId, sound, done, ok -> {
+                PrankScheduler.logEvent(c, t, charId, ok ? "loud" : "hold", ok ? null : "nosound");
+                PrankNotifier.post(c, charId, ok ? "loud" : "hold");
+            });
         } else {
+            PrankScheduler.logEvent(c, t, charId, mode, "hold".equals(mode) ? why : null);
+            PrankNotifier.post(c, charId, mode);
             if ("soft".equals(mode)) vibrate(c, charId, sound);
             done.run();
         }
@@ -150,11 +154,18 @@ final class PrankPlayer {
      *  미디어 볼륨 > 0 → 소리만 · 미디어 0 → 진동만 · 무음 모드 / 방해금지 → 아무것도 X */
     static void playToot(Context c, String charId, String sound) {
         String mode = deviceMode(c);
-        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
+        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }, null));
         else if ("soft".equals(mode)) vibrate(c, charId, sound);
     }
 
-    private static void play(Context c, String charId, String sound, Runnable done) {
+    /** started: 재생이 실제로 시작됐으면 true, 준비 실패 · 6초 안에 시작 못 하면 false (정확히 한 번) */
+    private static void play(Context c, String charId, String sound, Runnable done, java.util.function.Consumer<Boolean> started) {
+        boolean[] told = {false};
+        java.util.function.Consumer<Boolean> tell = ok -> {
+            if (told[0] || started == null) return;
+            told[0] = true;
+            started.accept(ok);
+        };
         Handler main = new Handler(Looper.getMainLooper());
         MediaPlayer mp = new MediaPlayer();
         AudioAttributes attrs = new AudioAttributes.Builder()
@@ -198,13 +209,17 @@ final class PrankPlayer {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                 }
             }
-            mp.setOnPreparedListener(MediaPlayer::start);
+            mp.setOnPreparedListener(p -> {
+                p.start();
+                tell.accept(p.isPlaying());
+            });
             mp.setOnCompletionListener(p -> finish.run());
-            mp.setOnErrorListener((p, what, extra) -> { finish.run(); return true; });
+            mp.setOnErrorListener((p, what, extra) -> { tell.accept(false); finish.run(); return true; });
             mp.prepareAsync();
             // 콜백이 안 오더라도 브로드캐스트 제한 시간(10초) 안에 끝낸다.
-            main.postDelayed(finish, 6000);
+            main.postDelayed(() -> { tell.accept(false); finish.run(); }, 6000);
         } catch (Exception e) {
+            tell.accept(false);
             finish.run();
         }
     }

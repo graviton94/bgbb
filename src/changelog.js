@@ -5,11 +5,13 @@ export const CHANGELOG = [
     v: '2.3.2', date: '2026-10-29',
     ko: [
       '노래 듣는 중에 터지면 노래 소리를 잠깐 줄이고 뿡 (이어폰 속 노래에 묻히지 않게)',
-      '참음이면 왜 참았는지 표시 (방해금지 · 무음 · 절전 · 폰이 잠들어 늦게 옴)'
+      '참음이면 왜 참았는지 표시 (방해금지 · 무음 · 절전 · 폰이 잠들어 늦게 옴)',
+      '냄은 소리가 실제로 나기 시작했을 때만 기록 (재생 실패면 참음)'
     ],
     en: [
       'Music gets turned down for a moment when a toot goes off, so it isn’t lost in your earbuds',
-      'Held-in toots now say why (DND, silent, battery saver, phone asleep and late)'
+      'Held-in toots now say why (DND, silent, battery saver, phone asleep and late)',
+      'A toot only counts as out loud once the sound actually starts playing'
     ]
   },
   {
