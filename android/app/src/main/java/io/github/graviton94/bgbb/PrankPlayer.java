@@ -63,10 +63,14 @@ final class PrankPlayer {
         boolean diy = pick.optBoolean("diy") && new File(c.getFilesDir(), DIY_FILE).exists();
         String sound = pickStyle(diy);
         String mode = deviceMode(c);
+        String why = holdReason(c);   // 참음이면 왜 (앱 터지는 화면에 보여 줌)
         // 공정하게: 폰이 깊이 잠들어 알람이 5분 넘게 늦게 왔으면 (화면 켤 때 몰아서 터지는 경우) 소리 없이 참음으로
-        long due = PrankScheduler.due(c);
-        if (scheduled && due > 0 && System.currentTimeMillis() - due > LATE_MS) mode = "hold";
-        PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
+        long due = PrankScheduler.due(c), late = System.currentTimeMillis() - due;
+        if (scheduled && due > 0 && late > LATE_MS) {
+            mode = "hold";
+            why = "late" + (late / 60_000);
+        }
+        PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode, "hold".equals(mode) ? why : null);
         PrankNotifier.post(c, charId, mode);
 
         if ("loud".equals(mode)) {
@@ -83,6 +87,14 @@ final class PrankPlayer {
         if (r < 0.55) return "main";
         if (r < 0.85) return "soft";
         return "loud";
+    }
+
+    /** 참음인 이유: dnd · saver · silent (참음이 아니면 null) */
+    static String holdReason(Context c) {
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL) return "dnd";
+        if (powerSave(c)) return "saver";
+        return "hold".equals(deviceMode(c)) ? "silent" : null;
     }
 
     static String deviceMode(Context c) {
@@ -145,19 +157,26 @@ final class PrankPlayer {
     private static void play(Context c, String charId, String sound, Runnable done) {
         Handler main = new Handler(Looper.getMainLooper());
         MediaPlayer mp = new MediaPlayer();
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        // 노래를 듣고 있으면 그동안 노래 소리를 잠깐 줄인다 (안 그러면 이어폰 속 노래에 묻혀 안 들림)
+        AudioManager am = c.getSystemService(AudioManager.class);
+        android.media.AudioFocusRequest focus = new android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(attrs).build();
         boolean[] finished = {false};
         Runnable finish = () -> {
             if (finished[0]) return;
             finished[0] = true;
             mp.release();
+            if (am != null) am.abandonAudioFocusRequest(focus);
             done.run();
         };
         try {
             // 미디어 소리: 미디어 볼륨을 따르고, 이어폰 · 블루투스가 연결돼 있으면 그쪽으로 (나만 들음)
-            mp.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build());
+            mp.setAudioAttributes(attrs);
+            if (am != null) am.requestAudioFocus(focus);   // 거절돼도 (백그라운드 제한 등) 그냥 낸다
             File diy = new File(c.getFilesDir(), DIY_FILE);
             if ("diy".equals(sound) && diy.exists()) {
                 mp.setDataSource(diy.getAbsolutePath());

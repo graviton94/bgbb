@@ -2,6 +2,17 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.3.2', date: '2026-10-29',
+    ko: [
+      '노래 듣는 중에 터지면 노래 소리를 잠깐 줄이고 뿡 (이어폰 속 노래에 묻히지 않게)',
+      '참음이면 왜 참았는지 표시 (방해금지 · 무음 · 절전 · 폰이 잠들어 늦게 옴)'
+    ],
+    en: [
+      'Music gets turned down for a moment when a toot goes off, so it isn’t lost in your earbuds',
+      'Held-in toots now say why (DND, silent, battery saver, phone asleep and late)'
+    ]
+  },
+  {
     v: '2.3.1', date: '2026-10-27',
     ko: ['기상 알람을 켜거나 시각을 바꾸면 그날 방구가 "오늘은 끝" 으로 사라지던 문제 수정'],
     en: ['Fixed today’s toots vanishing ("Done for today") after turning on or changing the wake-up alarm']
