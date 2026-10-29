@@ -132,7 +132,7 @@ export const ownedCount = () => TITLES.filter(x => state.titles[x.id]).length;
  * 터진 것 1회 기록 + 칭호. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로.
  * 돌려주는 것: { t, char, mode, title(id), isNew, coins(이번에 번 뿡코인) }
  */
-export function recordOperation({ t, char, mode }) {
+export function recordOperation({ t, char, mode, why }) {
   const m = MODES[mode] ? mode : 'hold';
   const who = CHARACTERS.some(c => c.id === char) ? char : 'hamster';
   const d = (state.days[dayKey(t)] ||= emptyDay());
@@ -141,7 +141,7 @@ export function recordOperation({ t, char, mode }) {
   d[m]++;
   if (!d.chars.includes(who)) d.chars.push(who);
   d.last = m;
-  const ev = { t, char: who, mode: m };
+  const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}) };   // why = 참음 이유 (dnd · saver · silent · late7)
   const c = contextOf(ev, {
     today: { loud: d.loud, soft: d.soft, hold: d.hold }, prev, charsToday: d.chars.length,
     streak: streak(t), total: totals().all, nth: count(d)

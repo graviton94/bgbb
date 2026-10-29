@@ -119,6 +119,12 @@ function headliner(results) {
  * 터지는 화면 · 짤 뽑기 화면 (같은 화면).
  * kind: title = 새 칭호 (칭호 짤) · miss = 꽝 (이미 가진 칭호, 속보 짤) · gacha = 짤 뽑기 (랜덤 짤) · practice = 연습 (속보 짤)
  */
+/** 참음 이유 '(방해금지)' · '(7분 늦게 옴)' */
+function whyLabel(ev) {
+  if (!ev.why) return '';
+  const late = /^late(\d+)$/.exec(ev.why);
+  return ` (${late ? t('why.late', { n: late[1] }) : t(`why.${ev.why}`)})`;
+}
 function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew ? 'title' : 'miss') : 'practice' } = {}) {
   const c = charById(ev.char);
   const dlg = $('burst');
@@ -134,7 +140,7 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
   renderMeme(box, meme);
   const d = new Date(ev.t);
   const when = `${two(d.getHours())}:${two(d.getMinutes())}`;
-  const info = [when, L(MODES[ev.mode].name), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
+  const info = [when, L(MODES[ev.mode].name) + whyLabel(ev), L(c.nick), more ? t('burst.more', { n: more }) : ''].filter(Boolean).join(' · ');
   const box2 = dlg.querySelector('.unlock');
   $('burstBar').parentElement.hidden = !title;
   if (title) {

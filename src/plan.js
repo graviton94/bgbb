@@ -91,15 +91,20 @@ export function nextDay(t) {
  * (비상탈출 동안 못 터진 방구는 버리지 않고 뒤로 미룸).
  * last = 마지막으로 터진 시각: 새로 뽑아도 그때부터 GAP 은 지킨다. fired = 오늘 이미 터진 횟수.
  */
+/** 작전일 시작 시각 → 그 날짜 (20261027) */
+export const dateKey = t => { const d = new Date(t); return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); };
+
 export function advancePlan(plan, now, schedule, pickCount, random = Math.random, last = 0, fired = 0) {
   const today = windowStart(now, schedule);
   const times = plan && !plan.reset ? plan.times.filter(t => t > now) : [];
   if (times.length) return { ...plan, times };
   const notBefore = Math.max(now + 60e3, last + GAP);
-  // 오늘 다시 뿌리기: 설정 직후 (처음이거나 reset) 이고 아직 오늘이 남았으면
-  let day = !plan || plan.day < today || (plan.reset && plan.day === today) ? today : nextDay(plan.day);
+  // 오늘 다시 뿌리기: 설정 직후 (처음이거나 reset) 이고 아직 오늘이 남았으면.
+  // 날짜로 비교한다: 기상 알람으로 시작 시각이 바뀌면 같은 날도 시작 시각(ms)이 달라진다
+  const pd = plan ? dateKey(plan.day) : 0, td = dateKey(today);
+  let day = !plan || pd < td || (plan.reset && pd === td) ? today : nextDay(today);
   for (let i = 0; i < 3; i++, day = nextDay(day)) {
-    const count = day === plan?.day && plan.count ? plan.count : pickCount();
+    const count = dateKey(day) === pd && plan.count ? plan.count : pickCount();
     const left = day === today ? Math.max(0, count - fired) : count;
     const next = planDay(day, notBefore, schedule, left, random);
     if (next.length) return { day, times: next, count };

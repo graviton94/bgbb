@@ -218,10 +218,12 @@ final class PrankScheduler {
         if (plan.isEmpty()) {
             // 설정 직후 (처음 · reset) 엔 오늘 남은 시간에 아직 안 터진 만큼, 오늘 일정을 다 썼으면 내일부터. 마지막으로 터진 뒤 GAP 은 지킨다.
             long notBefore = Math.max(now + 60_000, p.getLong(KEY_LAST, 0) + GAP);
-            int fired = p.getLong(KEY_FIRED_DAY, 0) == today ? p.getInt(KEY_FIRED_N, 0) : 0;
-            long day = planDay < today || planDay == 0 || (reset && planDay == today) ? today : addDays(planDay, 1);
+            int fired = p.getLong(KEY_FIRED_DAY, 0) == dateKey(today) ? p.getInt(KEY_FIRED_N, 0) : 0;
+            // 날짜로 비교: 기상 알람으로 시작 시각이 바뀌면 같은 날도 시작 시각(ms)이 달라진다 (src/plan.js 와 같다)
+            long pd = planDay == 0 ? 0 : dateKey(planDay), td = dateKey(today);
+            long day = planDay == 0 || pd < td || (reset && pd == td) ? today : addDays(today, 1);
             for (int i = 0; plan.isEmpty() && i < 3; i++, day = addDays(day, 1)) {
-                int n = day == planDay && count > 0 ? count : dailyCount(cfg);
+                int n = dateKey(day) == pd && count > 0 ? count : dailyCount(cfg);
                 plan = planDay(cfg, day, notBefore, day == today ? Math.max(0, n - fired) : n);
                 planDay = day;
                 count = n;
@@ -360,6 +362,13 @@ final class PrankScheduler {
         return (minutes == 0 ? 1440 : minutes) * 60_000L;
     }
 
+    /** 작전일 시작 시각 → 그 날짜 (20261027) */
+    static long dateKey(long t) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        return cal.get(Calendar.YEAR) * 10000L + (cal.get(Calendar.MONTH) + 1) * 100L + cal.get(Calendar.DAY_OF_MONTH);
+    }
+
     private static long addDays(long t, int days) {
         Calendar cal = Calendar.getInstance();
         cal.setTimeInMillis(t);
@@ -381,14 +390,16 @@ final class PrankScheduler {
 
     // ---- 앱이 닫혀 있는 동안의 작전 기록. 앱을 열면 JS 가 가져가 집계한다. ----
 
-    static synchronized void logEvent(Context c, long t, String charId, String mode) {
+    static synchronized void logEvent(Context c, long t, String charId, String mode, String why) {
         SharedPreferences p = prefs(c);
-        long day = windowStart(config(c), t);
+        long day = dateKey(windowStart(config(c), t));
         int n = p.getLong(KEY_FIRED_DAY, 0) == day ? p.getInt(KEY_FIRED_N, 0) : 0;
         p.edit().putLong(KEY_LAST, t).putLong(KEY_FIRED_DAY, day).putInt(KEY_FIRED_N, n + 1).apply();
         try {
             JSONArray arr = new JSONArray(p.getString(KEY_EVENTS, "[]"));
-            arr.put(new JSONObject().put("t", t).put("char", charId).put("mode", mode));
+            JSONObject ev = new JSONObject().put("t", t).put("char", charId).put("mode", mode);
+            if (why != null) ev.put("why", why);
+            arr.put(ev);
             while (arr.length() > MAX_EVENTS) arr.remove(0);
             p.edit().putString(KEY_EVENTS, arr.toString()).apply();
         } catch (JSONException ignored) {

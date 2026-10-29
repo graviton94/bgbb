@@ -106,3 +106,17 @@ test('비상탈출에서 돌아오면: 그날 횟수 그대로, 아직 안 터�
     assert.ok(p.times.every(t => t > now && t < at('2026-10-21T00:00')));
   }
 });
+
+test('기상 알람으로 시작 시각이 바뀌어도 오늘 남은 방구는 오늘 (내일로 밀리면 "오늘은 끝")', () => {
+  const now = at('2026-10-27T10:00');
+  const base = { start: 6, end: 0, rest: { on: false } };
+  const p1 = advancePlan(null, now, base, () => 5, Math.random);
+  const end = at('2026-10-28T00:00');
+  for (const at5 of [5 * 60, 7 * 60, 9 * 60 + 30]) {
+    const s = { ...base, wake: { on: true, at: at5 } };
+    const p2 = advancePlan({ ...p1, times: [], reset: true }, now, s, () => 5, Math.random, 0, 1);
+    assert.ok(p2.times.length >= 3, `알람 ${at5}분: 오늘 ${p2.times.length}번`);
+    assert.ok(p2.times.every(t => t > now && t < end));
+    assert.equal(p2.count, 5);   // 그날 정한 횟수는 그대로
+  }
+});

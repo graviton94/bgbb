@@ -63,15 +63,23 @@ final class PrankPlayer {
         boolean diy = pick.optBoolean("diy") && new File(c.getFilesDir(), DIY_FILE).exists();
         String sound = pickStyle(diy);
         String mode = deviceMode(c);
+        String why = holdReason(c);   // 참음이면 왜 (앱 터지는 화면에 보여 줌)
         // 공정하게: 폰이 깊이 잠들어 알람이 5분 넘게 늦게 왔으면 (화면 켤 때 몰아서 터지는 경우) 소리 없이 참음으로
-        long due = PrankScheduler.due(c);
-        if (scheduled && due > 0 && System.currentTimeMillis() - due > LATE_MS) mode = "hold";
-        PrankScheduler.logEvent(c, System.currentTimeMillis(), charId, mode);
-        PrankNotifier.post(c, charId, mode);
-
+        long due = PrankScheduler.due(c), late = System.currentTimeMillis() - due;
+        if (scheduled && due > 0 && late > LATE_MS) {
+            mode = "hold";
+            why = "late" + (late / 60_000);
+        }
+        long t = System.currentTimeMillis();
         if ("loud".equals(mode)) {
-            play(c, charId, sound, done);
+            // '냄' 은 소리가 실제로 재생되기 시작했을 때만 기록 (재생 실패면 참음 · 소리 안 남)
+            play(c, charId, sound, done, ok -> {
+                PrankScheduler.logEvent(c, t, charId, ok ? "loud" : "hold", ok ? null : "nosound");
+                PrankNotifier.post(c, charId, ok ? "loud" : "hold");
+            });
         } else {
+            PrankScheduler.logEvent(c, t, charId, mode, "hold".equals(mode) ? why : null);
+            PrankNotifier.post(c, charId, mode);
             if ("soft".equals(mode)) vibrate(c, charId, sound);
             done.run();
         }
@@ -83,6 +91,14 @@ final class PrankPlayer {
         if (r < 0.55) return "main";
         if (r < 0.85) return "soft";
         return "loud";
+    }
+
+    /** 참음인 이유: dnd · saver · silent (참음이 아니면 null) */
+    static String holdReason(Context c) {
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL) return "dnd";
+        if (powerSave(c)) return "saver";
+        return "hold".equals(deviceMode(c)) ? "silent" : null;
     }
 
     static String deviceMode(Context c) {
@@ -138,26 +154,40 @@ final class PrankPlayer {
      *  미디어 볼륨 > 0 → 소리만 · 미디어 0 → 진동만 · 무음 모드 / 방해금지 → 아무것도 X */
     static void playToot(Context c, String charId, String sound) {
         String mode = deviceMode(c);
-        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }));
+        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }, null));
         else if ("soft".equals(mode)) vibrate(c, charId, sound);
     }
 
-    private static void play(Context c, String charId, String sound, Runnable done) {
+    /** started: 재생이 실제로 시작됐으면 true, 준비 실패 · 6초 안에 시작 못 하면 false (정확히 한 번) */
+    private static void play(Context c, String charId, String sound, Runnable done, java.util.function.Consumer<Boolean> started) {
+        boolean[] told = {false};
+        java.util.function.Consumer<Boolean> tell = ok -> {
+            if (told[0] || started == null) return;
+            told[0] = true;
+            started.accept(ok);
+        };
         Handler main = new Handler(Looper.getMainLooper());
         MediaPlayer mp = new MediaPlayer();
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build();
+        // 노래를 듣고 있으면 그동안 노래 소리를 잠깐 줄인다 (안 그러면 이어폰 속 노래에 묻혀 안 들림)
+        AudioManager am = c.getSystemService(AudioManager.class);
+        android.media.AudioFocusRequest focus = new android.media.AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK)
+                .setAudioAttributes(attrs).build();
         boolean[] finished = {false};
         Runnable finish = () -> {
             if (finished[0]) return;
             finished[0] = true;
             mp.release();
+            if (am != null) am.abandonAudioFocusRequest(focus);
             done.run();
         };
         try {
             // 미디어 소리: 미디어 볼륨을 따르고, 이어폰 · 블루투스가 연결돼 있으면 그쪽으로 (나만 들음)
-            mp.setAudioAttributes(new AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_MEDIA)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build());
+            mp.setAudioAttributes(attrs);
+            if (am != null) am.requestAudioFocus(focus);   // 거절돼도 (백그라운드 제한 등) 그냥 낸다
             File diy = new File(c.getFilesDir(), DIY_FILE);
             if ("diy".equals(sound) && diy.exists()) {
                 mp.setDataSource(diy.getAbsolutePath());
@@ -179,13 +209,17 @@ final class PrankPlayer {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                 }
             }
-            mp.setOnPreparedListener(MediaPlayer::start);
+            mp.setOnPreparedListener(p -> {
+                p.start();
+                tell.accept(p.isPlaying());
+            });
             mp.setOnCompletionListener(p -> finish.run());
-            mp.setOnErrorListener((p, what, extra) -> { finish.run(); return true; });
+            mp.setOnErrorListener((p, what, extra) -> { tell.accept(false); finish.run(); return true; });
             mp.prepareAsync();
             // 콜백이 안 오더라도 브로드캐스트 제한 시간(10초) 안에 끝낸다.
-            main.postDelayed(finish, 6000);
+            main.postDelayed(() -> { tell.accept(false); finish.run(); }, 6000);
         } catch (Exception e) {
+            tell.accept(false);
             finish.run();
         }
     }
