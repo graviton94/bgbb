@@ -166,6 +166,8 @@ public class MainActivity extends Activity {
         updater = new Updater(this, new Updater.Sink() {
             @Override public void available(int code) { callJs("bgbbOnUpdate", String.valueOf(code)); }
             @Override public void downloaded() { callJs("bgbbOnUpdateReady", "true"); }
+            @Override public void progress(int percent) { callJs("bgbbOnUpdateProgress", String.valueOf(percent)); }
+            @Override public void idle() { callJs("bgbbOnUpdateIdle", "true"); }
         });
 
         web.addJavascriptInterface(new Bridge(), "BgbbNative");
