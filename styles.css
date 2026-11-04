@@ -899,3 +899,6 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .rp-verdict { margin: 6px 0 0; padding: 10px 12px; border-radius: 12px; background: var(--ink); color: var(--lime); font-weight: 900; }
 .rp-fresh { margin: 4px 0 0; font-weight: 700; }
 @media (max-width: 380px) { #streak { display: none; } }
+.logo { cursor: pointer; display: inline-block; }
+.logo.poke { animation: logo-poke .35s var(--e-pop); }
+@keyframes logo-poke { 0% { transform: scale(1.25, .8) rotate(-4deg); } 100% { transform: none; } }

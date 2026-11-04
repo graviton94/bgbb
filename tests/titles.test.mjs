@@ -5,11 +5,12 @@ import { TITLES, RARITY, JACKPOT, pickTitle, contextOf, titleById } from '../src
 const base = { mode: 'loud', char: 'hamster', hour: 16, wd: 3, nth: 2, today: { loud: 1, soft: 0, hold: 0 }, prev: null, charsToday: 1, streak: 1, total: 2 };
 const seq = (...xs) => { let i = 0; return () => xs[i++ % xs.length]; };
 
-test('칭호는 56개 (잭팟 5 · 시즌 11), id 는 겹치지 않고 글은 두 언어 다 있다', () => {
-  assert.equal(TITLES.length, 56);
-  assert.equal(TITLES.filter(x => x.season).length, 11);
+test('칭호는 119개 (잭팟 5 · 시즌 17 · 숨김 업적 10), id 는 겹치지 않고 글은 두 언어 다 있다', () => {
+  assert.equal(TITLES.length, 119);
+  assert.equal(TITLES.filter(x => x.season).length, 17);
   assert.equal(TITLES.filter(x => x.rarity === 'jackpot').length, 5);
-  assert.equal(new Set(TITLES.map(x => x.id)).size, 56);
+  assert.equal(TITLES.filter(x => x.hidden).length, 10);
+  assert.equal(new Set(TITLES.map(x => x.id)).size, 119);
   for (const x of TITLES) {
     assert.ok(RARITY[x.rarity], x.id);
     for (const k of ['name', 'hint', 'how']) assert.ok(x[k].ko && x[k].en, `${x.id}.${k}`);
@@ -26,13 +27,24 @@ test('모든 칭호는 어떤 상황에서든 나올 수 있다', () => {
   contexts.push({ ...base, nth: 1 }, { ...base, nth: 1, hour: 7 }, { ...base, nth: 5 }, { ...base, streak: 60 }, { ...base, total: 300 }, { ...base, nth: 1, hour: 6 }, { ...base, hour: 23 },
     { ...base, charsToday: 3 }, { ...base, prev: 'loud' }, { ...base, prev: 'hold' },
     { ...base, mode: 'hold', today: { loud: 0, soft: 0, hold: 5 } }, { ...base, mode: 'soft', today: { loud: 0, soft: 3, hold: 0 } },
-    { ...base, today: { loud: 5, soft: 1, hold: 1 } });
+    { ...base, today: { loud: 5, soft: 1, hold: 1 } },
+    // v2.4: 분 · 이어폰 · 참음 이유 · 날짜 · 횟수
+    { ...base, mode: 'loud', min: 0 }, { ...base, hour: 15, min: 14 }, { ...base, hour: 7, min: 7 }, { ...base, min: 30 },
+    { ...base, mode: 'loud', hour: 23, min: 55 }, { ...base, wd: 5, day: 13 }, { ...base, mode: 'loud', day: 25 },
+    { ...base, mode: 'loud', today: { loud: 6, soft: 0, hold: 0 } }, { ...base, mode: 'soft', today: { loud: 0, soft: 5, hold: 0 } },
+    { ...base, today: { loud: 2, soft: 2, hold: 2 } }, { ...base, nth: 7 }, { ...base, nth: 2 }, { ...base, hour: 5 },
+    { ...base, mode: 'loud', ear: true, hour: 23 }, { ...base, mode: 'loud', ear: true },
+    { ...base, mode: 'hold', why: 'dnd' }, { ...base, mode: 'hold', why: 'saver' }, { ...base, mode: 'hold', why: 'late12' }, { ...base, mode: 'hold', why: 'silent' },
+    { ...base, mode: 'hold', prev: 'loud' }, { ...base, mode: 'soft', prev: 'hold' }, { ...base, mode: 'loud', prev: 'soft' },
+    { ...base, mode: 'loud', nth: 1 }, { ...base, mode: 'hold', nth: 1 },
+    { ...base, total: 10 }, { ...base, total: 25 }, { ...base, total: 500 }, { ...base, total: 1000 }, { ...base, streak: 2 }, { ...base, streak: 10 }, { ...base, streak: 100 });
   // 시즌 칭호: 그날 날짜를 넣은 상황
-  for (const ymd of ['2027-01-01', '2027-02-07', '2027-02-14', '2027-04-01', '2027-05-05', '2027-09-15', '2027-10-31', '2027-11-11', '2027-11-18', '2027-12-25', '2027-12-31']) {
+  for (const ymd of ['2027-01-01', '2027-02-07', '2027-02-14', '2027-04-01', '2027-05-05', '2027-09-15', '2027-10-31', '2027-11-11', '2027-11-18', '2027-12-25', '2027-12-31',
+    '2027-03-14', '2027-04-14', '2027-05-08', '2027-05-15', '2027-10-09', '2027-12-22']) {
     const [, m, d] = ymd.split('-').map(Number);
     contexts.push({ ...base, month: m, day: d, ymd });
   }
-  for (const x of TITLES.filter(x => x.rarity !== 'jackpot')) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
+  for (const x of TITLES.filter(x => x.rarity !== 'jackpot' && !x.hidden)) assert.ok(contexts.some(c => x.test(c)), `${x.id} 는 나올 수 없음`);
 });
 
 test('기념 칭호(연속 · 누적)는 넘긴 뒤 아직 없으면 무조건 주고, 있으면 다시 안 나온다', () => {

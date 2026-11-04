@@ -87,6 +87,7 @@ function caught() {
   playFriend(heroId, style, getDiy(), 1);
   state.cushion++;
   bump('trap');   // 오늘의 미션 (commit 포함)
+  if (state.cushion >= 10) setTimeout(() => window.bgbbHidden?.('hid_trap10'), 1200);   // 숨김 업적
   $('cCaughtFace').src = face(heroId, 'burst');
   $('cCaughtCount').textContent = t('cushion.count', { n: state.cushion });
   show('caught');

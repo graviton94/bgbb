@@ -3,7 +3,7 @@ import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, coinify, AD_BONUS, AD
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
-  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy, dailyToday, bump
+  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy, dailyToday, bump, grantHidden
 } from './store.js';
 import { pickMissions, missionProgress } from './missions.js';
 import { reportWeek, weekReport } from './report.js';
@@ -213,7 +213,7 @@ window.bgbbOnAdReward = () => {
 };
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
-$('shareCard').addEventListener('click', () => { if (!burstCard) return; bump('share'); shareCard(burstCard); });
+$('shareCard').addEventListener('click', () => { if (!burstCard) return; countShare(); shareCard(burstCard); });
 
 function celebrate(events) {
   if (!events.length) return;
@@ -238,6 +238,7 @@ function celebrate(events) {
       ? t('cele.more', { slot: L(SLOT_NAMES[unlocked[0].slot]), n: unlocked.length - 1 }) : L(SLOT_NAMES[unlocked[0].slot]),
     t('cele.from', { name: L(title.name) }));
     // 처음 레전드 · 잭팟을 받고 짤까지 본 직후 딱 한 번 Play 리뷰 창 (기분 제일 좋을 때)
+    else if (ownedCount() >= TITLES.length / 2 && !state.titles.hid_dex_half) afterBurst = () => celebrateHidden('hid_dex_half');
     else if ((title.rarity === 'legend' || title.rarity === 'jackpot') && !state.reviewAsked && native?.requestReview) {
       afterBurst = () => { state.reviewAsked = true; commit(); native.requestReview(); };
     }
@@ -249,9 +250,14 @@ let afterBurst = null;
 $('burst').addEventListener('close', () => { const f = afterBurst; afterBurst = null; f && setTimeout(f, 150); });
 
 /** 아이템 상자깡. ㅇㅋ/바로 장착 = 장착 */
+/** 상자깡 팝업이 닫힌 뒤 한 번 할 일 (숨김 업적 등) */
+let afterCele = null;
 function showItem(x, slotLabel, from) {
   play('ui_treasure', 0.5);
   celebrateItem({ name: L(x.name), slot: slotLabel, preview: itemPreview(x), from, equipped: state.equip[x.slot] === x.id }, equip => {
+    const next = afterCele;
+    afterCele = null;
+    if (next) setTimeout(next, 300);
     if (!equip || state.equip[x.slot] === x.id) return;
     equipItem(x);
     toast(t('shop.bought', { name: L(x.name) }));
@@ -428,8 +434,13 @@ function renderHome() {
 }
 
 let heroBusy = 0;
+let pokes = [];
 $('hero').addEventListener('click', () => {
   bump('tap');
+  // 숨김 업적: 20초 안에 50번
+  const now = Date.now();
+  pokes = [...pokes.filter(p => now - p < 20000), now];
+  if (pokes.length >= 50) { pokes = []; celebrateHidden('hid_poke50'); }
   const id = heroId();
   playFriend(id, styleOf(id), getDiy(), 0.7);
   // 누르면 잠깐 터지는 얼굴
@@ -530,13 +541,47 @@ async function drawReport(r) {
 }
 $('reportShare').addEventListener('click', async () => {
   if (!report) return;
-  bump('share');
+  countShare();
   const cv = await drawReport(report);
   const name = `bgbb_week_${report.monday}.png`;
   if (native) { toast(t(native.saveAndShareImage(cv.toDataURL('image/png').split(',')[1], name) ? 'card.saved' : 'card.cantSave')); return; }
   const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = name; a.click();
   toast(t('card.savedWeb'));
 });
+
+// ---------------------------------------------------------- 숨김 업적 (이스터에그): 방구가 아니라 행동으로 받는 칭호
+function celebrateHidden(id) {
+  const r = grantHidden(id);
+  if (!r) return;
+  const x = titleById(id), d = new Date(r.ev.t);
+  play(x.rarity === 'legend' ? 'ui_treasure' : 'ui_levelup', 0.6);
+  haptic([30, 50, 80]);
+  celebrateTitle({
+    tier: x.rarity, title: L(x.name), char: r.ev.char, expr: 'thumbs_up',
+    when: `${two(d.getHours())}:${two(d.getMinutes())}`, mode: t('hidden.tag'),
+    coins: r.coins, dex: ownedCount(), all: TITLES.length, unlocked: []
+  }, () => openTitle(id));
+  checkDexHalf();
+}
+window.bgbbHidden = celebrateHidden;   // cushion.js (함정 10번)
+const checkDexHalf = () => { if (ownedCount() >= TITLES.length / 2) setTimeout(() => celebrateHidden('hid_dex_half'), 1500); };
+function countShare() {
+  bump('share');
+  state.shares = (state.shares || 0) + 1;
+  commit();
+  if (state.shares >= 10) setTimeout(() => celebrateHidden('hid_share10'), 1500);
+}
+// 로고 7연타
+let logoTaps = [];
+document.querySelector('.logo').addEventListener('click', () => {
+  const now = Date.now();
+  logoTaps = [...logoTaps.filter(x => now - x < 3000), now];
+  const logo = document.querySelector('.logo');
+  logo.classList.remove('poke'); void logo.offsetWidth; logo.classList.add('poke');
+  if (logoTaps.length >= 7) { logoTaps = []; playFriend('hamster', 'loud'); celebrateHidden('hid_logo'); }
+});
+/** 새벽 3시대에 앱을 열면 */
+const checkNightOwl = () => { if (new Date().getHours() === 3) celebrateHidden('hid_night_owl'); };
 
 // ---------------------------------------------------------- 오늘의 미션 (날마다 세 개, 깨면 뿡코인)
 const todayMissions = () => missionProgress(pickMissions(dayKey()), day(), dailyToday().counts, dailyToday().claimed);
@@ -559,6 +604,7 @@ $('missionList').addEventListener('click', e => {
   const m = todayMissions().find(x => x.id === b.dataset.id);
   if (!m || !m.done || m.claimed) return;
   dailyToday().claimed.push(m.id);
+  if (dailyToday().claimed.length >= 3) setTimeout(() => celebrateHidden('hid_mission3'), 900);
   state.coins += m.coins;
   commit();
   play('ui_treasure', 0.6);
@@ -787,6 +833,7 @@ $('shopList').addEventListener('click', e => {
     state.coins -= x.price;
     state.bought[x.id] = true;
     commit();
+    if (Object.keys(state.bought).length >= 10) afterCele = () => celebrateHidden('hid_shopaholic');
     if (x.slot === 'sound') syncSchedule(previewOperation);   // 알람 방구도 이 팩을 씀
     showItem(x, L(SLOT_NAMES[x.slot]), t('cele.paid', { n: x.price }));
     return;
@@ -997,6 +1044,7 @@ function closeWakeAlarm(snooze) {
 
 // [확인] 20번 연타 미션: 누를 때마다 숫자가 펑 · 화면 흔들림 · 응원 글자 · 색 번쩍. 2초 손을 떼면 숫자가 다시 올라감
 const TAPS = 20;
+let firstTap = 0;
 let taps = 0, lastTap = 0, tapDecay = 0;
 function resetTaps() {
   taps = 0;
@@ -1031,6 +1079,7 @@ function drawTaps(hit) {
 $('waOk').addEventListener('click', () => {
   if (taps >= TAPS) return;
   taps++;
+  if (taps === 1) firstTap = Date.now();
   lastTap = Date.now();
   haptic(10 + taps);
   drawTaps(true);
@@ -1040,9 +1089,16 @@ $('waOk').addEventListener('click', () => {
   $('wakeAlarm').classList.add('done');
   $('waShout').textContent = t('alarm.tapDone');
   play('ui_treasure', 0.7);
-  setTimeout(() => closeWakeAlarm(false), 1100);
+  const fast = Date.now() - firstTap < 4000;
+  setTimeout(() => { closeWakeAlarm(false); if (fast) setTimeout(() => celebrateHidden('hid_alarm_fast'), 500); }, 1100);
 });
-$('waSnooze').addEventListener('click', () => closeWakeAlarm(true));
+$('waSnooze').addEventListener('click', () => {
+  const s = state.snooze.day === dayKey() ? state.snooze : (state.snooze = { day: dayKey(), n: 0 });
+  s.n++;
+  commit();
+  closeWakeAlarm(true);
+  if (s.n >= 3) setTimeout(() => celebrateHidden('hid_snooze3'), 600);
+});
 $('wakeAlarm').addEventListener('cancel', e => e.preventDefault());   // 뒤로가기로는 안 꺼짐
 window.bgbbOnWake = () => { if (native?.wakeRinging?.() ?? true) showWakeAlarm(); };
 const checkWake = () => { if (native?.wakeRinging?.() && !$('wakeAlarm').open) showWakeAlarm(); };
@@ -1340,6 +1396,7 @@ window.bgbbOnNativeResume = () => {
   checkWakeSettings();
   render();
   checkWake();
+  checkNightOwl();
   if (!document.querySelector('dialog[open]') && !giveGifts()) maybeReport();   // 시즌 선물 · 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
@@ -1374,4 +1431,5 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
 native?.checkUpdate?.();
 checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우
+checkNightOwl();
 addEventListener('pagehide', flush);

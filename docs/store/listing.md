@@ -104,21 +104,23 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 - 출시 노트 (Play Console 에 그대로 붙여 넣기, 언어별 500자 이내):
   ```
   <ko-KR>
-비공개 테스트 v2.3.0
-- 기상 알람: 방구 · 새 · 고양이 소리로 만든 알람 음악이 [확인] 누를 때까지 울림. 그 시각부터 24시까지가 방구 시간
-- 방구가 화면 켤 때까지 밀리던 문제 수정. 절전 모드거나 5분 넘게 늦으면 참음 처리 (칭호는 공정하게)
-- 홈 정리: 최근 칭호 · 볼륨은 위로, 기상 알람 · 쫄 시간은 홈에서 바로
-- 연습 한 방 없앰. 짤 뽑기를 다 쓰면 광고 보고 +3
-- 비상탈출 버튼이 진짜 비상 버튼처럼
+비공개 테스트 v2.4.0
+- 소리 규칙 정리: 미디어 볼륨이 제일 먼저 (앱 처음 열면 한 번 안내)
+- 기상 알람 요일 선택 · 20번 연타해야 꺼짐
+- 오늘의 미션 · 이번 주 방구 결산
+- 방구 소리 팩 6종 (시즌 팩은 그날 열면 공짜)
+- 홈 화면 위젯
+- 칭호 119개 (숨김 업적 10개)
 '알람 및 리마인더' 허용을 물어보면 꼭 허용해 주세요!
   </ko-KR>
   <en-US>
-Closed test v2.3.0
-- Wake-up alarm: an anthem of toots, birds and cats loops until you hit OK. Toot hours run from then until midnight
-- Fixed toots piling up until the screen came on. Battery saver or 5+ min late counts as held in
-- Cleaner home: latest title and volume up top, wake-up and chicken hours right on home
-- Practice toot removed. Out of draws? Watch an ad for +3
-- The bail-out button now looks like a real emergency button
+Closed test v2.4.0
+- Sound rules cleaned up: media volume comes first (shown once when you open the app)
+- Wake-up alarm days, and 20 taps to stop it
+- Daily missions and a weekly toot report
+- Six toot sound packs (seasonal ones free on their day)
+- Home-screen widget
+- 119 titles (10 hidden achievements)
 If asked, please allow "Alarms & reminders"!
   </en-US>
   ```
