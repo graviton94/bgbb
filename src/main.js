@@ -645,7 +645,7 @@ function renderDex() {
     .sort((a, b) => !!state.titles[b.id] - !!state.titles[a.id] || order[a.rarity] - order[b.rarity]);
   $('dexList').innerHTML = list.map(x => {
     const own = state.titles[x.id];
-    return `<li><button class="dex-row ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
+    return `<li><button class="dex-row r-${x.rarity} ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
       <span class="tag ${x.rarity}">${L(RARITY[x.rarity].name)}</span>
       <span class="dex-text"><b>${own ? esc(L(x.name)) : '???'}</b><small>${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></span>
       <span class="n">${own ? t('dex.count', { n: own.n }) : ''}</span></button></li>`;
@@ -707,27 +707,11 @@ function renderStatus() {
   $('mute').classList.toggle('off', !s.web && (s.saver || (!s.dnd && !s.vol)));
   $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.saver ? t('status.saver') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
-/** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트). now = 지금 폰 상태 줄을 형광으로 */
-/** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트 · 업데이트 후 1회): 위에서부터 먼저 맞는 줄. now = 지금 폰 상태 줄을 형광으로 */
+/** 소리 규칙 표 (온보딩 2쪽). now = 지금 폰 상태 줄을 형광으로 */
 function soundRules(now) {
   const row = (m, icon) => `<li class="${m === now ? 'now' : ''}"><span>${icon}</span><b>${t(`rules.${m}`)}</b><em>${t(`rules.${m}R`)}</em>${m === now ? `<i>${t('rules.now')}</i>` : ''}</li>`;
   return `<p class="rules-important">${t('rules.important')}</p><ol class="rules">${row('off', '🫥')}${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ol><p class="rules-note">${t('rules.note')}</p>`;
 }
-const rulesRow = s => (s.web ? s.mode : s.dnd || s.saver ? 'off' : s.mode);
-function openRules() {
-  const s = soundStatus();
-  const quiet = state.frozen || resting() || !inWindow();
-  $('rulesBody').innerHTML = soundRules(rulesRow(s))
-    + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
-    + `<p class="rules-note">${t('rules.late')}</p><p class="rules-note">${t('rules.wake')}</p>`
-    + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
-  if (!$('rulesSheet').open) $('rulesSheet').showModal();
-  // 작은 화면: 맨 아래 [알겠음] 에 초점이 가면서 아래로 스크롤돼 '중요!' 가 가려지던 것 → 맨 위부터
-  $('rulesSheet').querySelector('.sheet-body').focus?.({ preventScroll: true });
-  requestAnimationFrame(() => { $('rulesSheet').scrollTop = 0; $('rulesSheet').querySelector('.sheet-body').scrollTop = 0; });
-  if (!state.rulesSeen) { state.rulesSeen = true; commit(); }
-}
-$('rulesInfo').addEventListener('click', openRules);
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
   if (s.web) { openSettings(); return; }   // 브라우저는 폰 볼륨을 못 바꾼다: 미리보기 상태 고르는 설정으로
@@ -1286,7 +1270,6 @@ window.bgbbOnTipsOwned = json => {
 const openSettings = () => { renderSettings(); $('settingsSheet').showModal(); };
 $('openSettings').addEventListener('click', openSettings);
 $('status').addEventListener('click', openSettings);
-$('tabSettings').addEventListener('click', openSettings);
 
 // 시트: 바깥(배경) 누르거나 [data-close] 누르면 닫기
 document.querySelectorAll('dialog').forEach(d => {
@@ -1294,18 +1277,23 @@ document.querySelectorAll('dialog').forEach(d => {
     if (e.target === d || e.target.closest('[data-close]')) d.close();
   });
 });
-// ---------------------------------------------------------- 사용설명 (옆으로 넘기는 5장)
-// 첫 사용자 안내 (앱 처음 켤 때 · 큰 업데이트 뒤 한 번 · 설정 → 사용설명). 쪽마다 그림 또는 실제 화면을 줄인 모형
+// ---------------------------------------------------------- 사용설명 (옆으로 넘기는 10장)
+// 첫 사용자 안내 (앱 처음 켤 때 · 큰 업데이트 뒤 한 번 · 설정 → 사용설명 다시 보기 = 처음부터). 쪽마다 그림 또는 실제 화면을 줄인 모형.
+// 보이는 쪽에 .on 이 붙으면 그 쪽 애니메이션이 처음부터 다시 돈다. must: 진짜 중요한 쪽 (반짝이는 '중요!' 상자)
 const GUIDE = [
   { id: 'hello', face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
-  { id: 'rules', rules: true },
+  { id: 'rules', rules: true, must: true },
   { id: 'titles', mock: 'titles' },
   { id: 'home', mock: 'home' },
-  { id: 'time', mock: 'time', fresh: true },
-  { id: 'daily', mock: 'daily', fresh: true },
-  { id: 'style', mock: 'style', fresh: true },
+  { id: 'trap', mock: 'trap' },
+  { id: 'quiet', mock: 'quiet', must: true },
+  { id: 'alarm', mock: 'alarm' },
+  { id: 'daily', mock: 'daily' },
+  { id: 'style', mock: 'style' },
   { id: 'perm', face: ['hamster_eng', 'cat_eng'], perm: true }   // 마지막 쪽: 권한 두 개 (없으면 방구가 밀려서 참음만 나옴)
 ];
+/** 진짜 중요한 안내 상자: 반짝 · 빛 줄기 · 빨간 도장 */
+const mustBox = html => `<p class="rules-important must"><i class="sp s1">✦</i><i class="sp s2">✦</i><i class="sp s3">✦</i>${html}</p>`;
 /** 안내 쪽 그림: 실제 화면 조각을 줄인 모형 (누를 수 없음) */
 function guideMock(kind) {
   if (kind === 'titles') {
@@ -1313,28 +1301,39 @@ function guideMock(kind) {
     return `<div class="gm gm-titles"><img src="${face('cat', 'burst', true)}" alt=""><div class="gm-card"><span class="gm-chip">${esc(L(RARITY.legend.name))}</span><b>${esc(L(x.name))}</b><small>${coinify('🪙')} +43 · ${esc(t('home.dexCount', { n: 1, all: TITLES.length }))}</small></div></div>`;
   }
   if (kind === 'home') {
-    return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span><span class="rules-i">i</span></div>
+    return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span></div>
       <img class="gm-hero" src="${face('hamster', 'blank')}" alt="">
-      <div class="row3"><span class="btn primary">${esc(t('home.cushion'))}</span><span class="btn">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze">${esc(t('home.freeze'))}</span></div></div>`;
+      <div class="row3"><span class="btn primary gm-b1">${esc(t('home.cushion'))}</span><span class="btn gm-b2">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze gm-b3">${esc(t('home.freeze'))}</span></div></div>`;
   }
-  if (kind === 'time') {
+  if (kind === 'trap') {
+    return `<div class="gm gm-trap"><div class="gt-stage">
+      <img class="gt-cushion" src="assets/skin/prop/prop_whoopee.webp" alt="">
+      <span class="gt-phone"><i>5</i></span><span class="gt-hand">🫳</span><span class="gt-boom">${esc(t('guide.trapBoom'))}</span></div>
+      <ol class="gt-steps">${[1, 2, 3].map(n => `<li><b>${n}</b><span>${t(`guide.trap${n}`)}</span></li>`).join('')}</ol></div>`;
+  }
+  if (kind === 'quiet') {
+    return `<div class="gm gm-quiet">${mustBox(t('guide.quietMust'))}
+      <div class="gq-row"><div class="gm-feat gq-card"><div class="gm-feat-head"><span class="gm-ico">🫣</span><b>${esc(t('settings.rest'))}</b><span class="gm-switch on"></span></div>
+        <span class="gm-clock">14:00 ~ 15:00</span><span class="gm-cap">${esc(t('guide.timeRest'))}</span></div>
+      <div class="gm-feat gq-card"><span class="btn gm-freeze gq-btn">${esc(t('home.freeze'))}</span><span class="gm-cap">${t('guide.quietFreeze')}</span></div></div></div>`;
+  }
+  if (kind === 'alarm') {
     const days = t('wake.days').map((d, i) => `<span class="wday ${i > 0 && i < 6 ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</span>`).join('');
-    const head = (icon, name) => `<div class="gm-feat-head"><span class="gm-ico">${icon}</span><b>${esc(name)}</b><span class="gm-switch on"></span></div>`;
-    return `<div class="gm gm-time">
-      <div class="gm-feat">${head('🫣', t('settings.rest'))}<span class="gm-clock">14:00 ~ 15:00</span><span class="gm-cap">${esc(t('guide.timeRest'))}</span></div>
-      <div class="gm-feat">${head('⏰', t('wake.title'))}<span class="gm-clock">07:30</span><div class="wake-days">${days}</div>
-        <div class="gm-tap"><span>${t('alarm.tap')}</span><b>20</b></div><span class="gm-cap">${esc(t('guide.timeWake'))}</span></div></div>`;
+    const fly = ['assets/shop/coin.webp', 'assets/skin/fx/fx_sparkle.webp', 'assets/skin/prop/prop_megaphone.webp', 'assets/skin/fx/fx_hearts.webp', 'assets/shop/coin.webp']
+      .map((src, i) => `<img class="ga-fly f${i}" src="${src}" alt="">`).join('');
+    return `<div class="gm gm-alarm"><div class="ga-card">${fly}<span class="ga-ring r1"></span><span class="ga-ring r2"></span>
+      <span class="ga-clock">⏰ 07:30</span><div class="wake-days">${days}</div>
+      <div class="gm-tap ga-tap"><span>${t('alarm.tap')}</span><b>20</b></div></div></div>`;
   }
   if (kind === 'daily') {
-    const bars = [3, 1, 4, 2, 5, 1, 2].map((n, i) => `<span class="rp-day ${i === 4 ? 'best' : ''}"><i style="height:${n * 20}%"></i></span>`).join('');
+    const bars = [3, 1, 4, 2, 5, 1, 2].map((n, i) => `<span class="rp-day ${i === 4 ? 'best' : ''}"><i style="height:${n * 20}%;--d:${i * 0.07}s"></i></span>`).join('');
     return `<div class="gm gm-daily"><div class="mission done"><div class="m-text"><b>${esc(L(MISSION_SAMPLE))}</b><span class="m-bar"><i style="width:100%"></i></span><small>1/1</small></div><span class="m-claim">${coinify('🪙')} 30</span></div>
       <div class="gm-report"><b>${esc(t('report.title'))}</b><div class="rp-bars">${bars}</div></div></div>`;
   }
   if (kind === 'style') {
-    const pv = ['sound_xmas', 'sound_drum', 'bg_space', 'prop_trophy'].map(id => itemById(id)).filter(Boolean)
-      .map(x => `<span class="gm-item">${itemPreview(x)}</span>`).join('');
-    return `<div class="gm gm-style"><div class="gm-items">${pv}</div>
-      <div class="gm-widget"><img src="${face('hamster', 'blank')}" alt=""><span><b>${esc(t('widget.left', { n: 3 }))}</b><small>${esc(t('widget.latest', { name: L(titleById('lunch').name) }))}</small></span></div></div>`;
+    const pv = ['sound_xmas', 'bg_space', 'prop_trophy', 'sound_drum', 'prop_megaphone', 'sound_halloween', 'prop_medal', 'bg_office'].map(id => itemById(id)).filter(Boolean).slice(0, 8)
+      .map((x, i) => `<span class="gm-item" style="--d:${i * 0.06}s">${itemPreview(x)}</span>`).join('');
+    return `<div class="gm gm-style"><div class="gm-items">${pv}</div></div>`;
   }
   return '';
 }
@@ -1357,41 +1356,57 @@ $('guidePages').addEventListener('click', e => {
   if (e.target.closest('#permNotif') && native && !native.requestNotifications()) native.openAppSettings?.();
   setTimeout(refreshPerm, 600);
 });
+const permsMissing = () => !!native && (!native.notificationsAllowed?.() || !exactOk());
+/** 안내를 마치거나 벗어날 때: 빠진 권한을 실제로 요청 (알림 창 먼저 → 돌아오면 알람 및 리마인더 설정) */
+let permAfterResume = false;
+function askPerms() {
+  if (!permsMissing()) return;
+  if (!native.notificationsAllowed?.() && native.requestNotifications?.()) { permAfterResume = !exactOk(); return; }
+  if (!exactOk()) native.openExactSettings?.();
+}
 /** 안내 본문: 한 줄씩 끊어서 (줄줄이 이어 붙지 않게) */
-const guideLines = text => (text ? `<div class="g-lines">${text.split('\n').map(l => `<span>${l}</span>`).join('')}</div>` : '');
+const guideLines = text => (text ? `<div class="g-lines">${text.split('\n').map((l, i) => `<span style="--d:${0.25 + i * 0.09}s">${l}</span>`).join('')}</div>` : '');
 function openGuide() {
-  $('guidePages').innerHTML = GUIDE.map(g => `<section class="guide-page gp-${g.id}">
-    ${g.face ? `<div class="guide-art">${g.face.map(f => `<img src="assets/faces/${f}.webp" alt="">`).join('')}</div>` : ''}
+  $('guidePages').innerHTML = GUIDE.map(g => `<section class="guide-page gp-${g.id} ${g.must ? 'gp-must' : ''}">
+    ${g.face ? `<div class="guide-art">${g.face.map((f, i) => `<img src="assets/faces/${f}.webp" alt="" style="--d:${i * 0.12}s">`).join('')}</div>` : ''}
     ${g.mock ? `<div class="guide-mock" aria-hidden="true">${guideMock(g.mock)}</div>` : ''}
-    <h3>${g.fresh && state.onboarded ? `<span class="gp-new">${t('guide.newTag')}</span>` : ''}${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}${guideLines(t(`guide.${g.id}b`))}</section>`).join('');
+    <h3>${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules().replace('<p class="rules-important">', mustBox('').replace('</p>', '')) : ''}${g.perm ? permButtons() : ''}${guideLines(t(`guide.${g.id}b`))}</section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
+  guidePage = -1;
   guideAt(0);
   if (!$('guide').open) $('guide').showModal();
 }
 let guidePage = 0;
-const GUIDE_V = 2;   // 안내 내용이 크게 바뀌면 올림 → 이미 쓰던 사람에게도 한 번 더
+const GUIDE_V = 3;   // 안내 내용이 크게 바뀌면 올림 → 이미 쓰던 사람에게도 한 번 더
 function guideAt(i) {
+  if (i === guidePage) return;
   guidePage = i;
   [...$('guideDots').children].forEach((d, k) => d.classList.toggle('on', k === i));
-  $('guideNext').textContent = t(i === GUIDE.length - 1 ? 'guide.go' : 'guide.next');
+  [...$('guidePages').children].forEach((p, k) => p.classList.toggle('on', k === i));
+  const last = i === GUIDE.length - 1;
+  $('guideNext').textContent = t(last ? 'guide.go' : 'guide.next');
+  $('guideSkip').style.visibility = last ? 'hidden' : '';
+  if (last) refreshPerm();
 }
 $('guidePages').addEventListener('scroll', () => {
   const w = $('guidePages').clientWidth;
   if (w) guideAt(Math.round($('guidePages').scrollLeft / w));
 }, { passive: true });
+const guideTo = i => $('guidePages').scrollTo({ left: i * $('guidePages').clientWidth, behavior: 'smooth' });
 $('guideNext').addEventListener('click', () => {
   if (guidePage >= GUIDE.length - 1) { $('guide').close(); return; }
-  $('guidePages').scrollTo({ left: (guidePage + 1) * $('guidePages').clientWidth, behavior: 'smooth' });
+  guideTo(guidePage + 1);
 });
-$('guideSkip').addEventListener('click', () => $('guide').close());
+// 건너뛰기: 권한이 빠져 있으면 마지막 쪽(권한)으로, 다 있으면 바로 닫기
+$('guideSkip').addEventListener('click', () => (permsMissing() ? guideTo(GUIDE.length - 1) : $('guide').close()));
 $('guide').addEventListener('close', () => {
+  askPerms();   // ㄱㄱ · 뒤로가기 어느 쪽이든 빠진 권한은 실제 요청 화면으로
   if ((state.guideV || 0) < GUIDE_V) { state.guideV = GUIDE_V; state.rulesSeen = true; commit(); }
   if (state.onboarded) return;
   state.onboarded = true;
   state.rulesSeen = true;   // 2쪽에서 봤음
   state.seenVersion = APP_VERSION;   // 처음 깐 사람은 패치노트 안 띄움
-  if (native && state.notify && !native.notificationsAllowed()) native.requestNotifications();
   commit();
 });
 $('openGuide').addEventListener('click', () => { $('settingsSheet').close(); openGuide(); });
@@ -1478,6 +1493,8 @@ window.bgbbBack = () => {
 };
 
 window.bgbbOnNativeResume = () => {
+  // 안내 끝에 알림 허용 창을 띄웠으면, 닫히고 돌아온 지금 이어서 '알람 및 리마인더' 설정으로
+  if (permAfterResume) { permAfterResume = false; if (native && !exactOk()) setTimeout(() => native.openExactSettings?.(), 300); }
   drainNative();
   checkWakeSettings();
   render();

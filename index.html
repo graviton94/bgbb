@@ -26,7 +26,7 @@
       <button class="status" id="status" type="button"><span class="dot" id="statusDot"></span><span id="statusText"></span></button>
       <div class="subhead">
         <button class="sub-latest" id="latest" type="button"><small data-i18n="home.latest"></small><b id="latestName"></b><span id="dexCount"></span></button>
-        <span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button><button class="rules-i" id="rulesInfo" type="button" aria-label="?">i</button></span>
+        <span class="mute-wrap"><button class="mute" id="mute" type="button" hidden></button></span>
       </div>
     </header>
 
@@ -84,7 +84,6 @@
       <button class="tab active" data-screen="home" type="button" data-i18n="tab.home"></button>
       <button class="tab" data-screen="dex" type="button" data-i18n="tab.dex"></button>
       <button class="tab" data-screen="shop" type="button" data-i18n="tab.shop"></button>
-      <button class="tab" id="tabSettings" type="button" data-i18n="tab.settings"></button>
     </nav>
   </div>
 
@@ -280,15 +279,6 @@
       <p class="muted small" data-i18n="mission.sub"></p>
       <ul class="missions" id="missionList"></ul>
       <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
-    </div>
-  </dialog>
-
-  <!-- 소리 규칙: 미디어 볼륨 기준 (홈 볼륨 버튼 옆 ⓘ) -->
-  <dialog class="sheet" id="rulesSheet" aria-labelledby="rulesTitle">
-    <div class="sheet-body" tabindex="-1">
-      <h3 id="rulesTitle" data-i18n="rules.title"></h3>
-      <div id="rulesBody"></div>
-      <button class="btn primary wide" data-close type="button" data-i18n="rules.ok"></button>
     </div>
   </dialog>
 

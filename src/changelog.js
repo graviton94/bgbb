@@ -2,6 +2,25 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.4.1', date: '2026-11-05',
+    ko: [
+      '업데이트 받는 동안 화면 위에 진행률 표시 · \'지금 받기\' 창이 다시 뜨던 것 수정',
+      '첫 사용 안내 다시 정리: 함정설치 · 절대 조용(쫄 시간 · 비상탈출) · 기상 알람을 따로 설명하고 움직이는 그림으로',
+      '안내를 마치면 필요한 권한 두 개를 바로 물어봄',
+      '설정은 오른쪽 위 버튼 하나로 · 홈의 ⓘ 는 사용설명으로 합침',
+      '칭호 도감: 레어 · 레전드 · 잭팟 줄이 반짝임',
+      '꾸미기: 잠긴 물건은 흐리게 + 자물쇠'
+    ],
+    en: [
+      'Update download progress now shows at the top, and the "Get it now" prompt no longer pops up again',
+      'First-run guide reworked: traps, total silence (chicken hours and bail-out) and the wake-up alarm each get their own animated page',
+      'Finishing the guide asks for the two permissions right away',
+      'Settings live in the top-right button only; the ⓘ on home is now part of the guide',
+      'Titles: rare, legend and jackpot rows sparkle',
+      'Style: locked items are faded with a lock on top'
+    ]
+  },
+  {
     v: '2.4.0', date: '2026-11-04',
     ko: [
       '소리 규칙 정리: 미디어 볼륨이 제일 먼저. 방해금지 · 절전 · 비상탈출 · 쫄 시간엔 앱 안 효과음과 광고 소리도 꺼짐',
