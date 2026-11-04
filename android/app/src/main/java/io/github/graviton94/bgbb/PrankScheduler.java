@@ -137,6 +137,7 @@ final class PrankScheduler {
         JSONObject cfg = config(c);
         WakeAlarm.schedule(c);
         PrankNotifier.scheduleReport(c);
+        BgbbWidget.refresh(c);   // 남은 횟수가 바뀌었을 수 있음
         scheduleNag(c, am, cfg, System.currentTimeMillis());
         if (!isActive(cfg)) return;
         long next = nextTrigger(c, cfg, System.currentTimeMillis());

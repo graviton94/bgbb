@@ -378,6 +378,7 @@ function renderBubbles() {
 }
 const newBubbles = () => renderBubbles();
 
+let lastWidget = '';
 function renderHome() {
   const n = remainingToday();
   let big, line;
@@ -408,6 +409,9 @@ function renderHome() {
   $('hero').setAttribute('aria-label', t('home.heroLabel', { name: L(c.name) }));
   const latest = state.recent[0];
   $('latestName').textContent = latest ? L(titleById(latest.title).name) : t('home.noTitle');
+  // 홈 화면 위젯: 최근 칭호 · 홈 친구 (바뀌었을 때만)
+  const widget = JSON.stringify({ title: latest ? L(titleById(latest.title).name) : '', char: heroId() });
+  if (widget !== lastWidget) { lastWidget = widget; native?.setWidgetInfo?.(widget); }
   $('dexCount').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
   // 기상 알람 · 쫄 시간 타일 + '알람 및 리마인더' 꺼져 있으면 경고 (방구가 화면 켤 때까지 밀림)
   const { wake, rest } = state.schedule;

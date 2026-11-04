@@ -3,6 +3,12 @@
     <string name="app_name">방구뿡</string>
     <string name="channel_news">뿡 속보</string>
     <string name="channel_news_desc">터질 때마다 소리 없이 한 줄</string>
+    <string name="widget_label">방구뿡</string>
+    <string name="widget_desc">친구 얼굴을 누르면 뿡. 오늘 남은 방구를 한눈에.</string>
+    <string name="widget_left">오늘 %d번 장전</string>
+    <string name="widget_done">오늘은 끝</string>
+    <string name="widget_frozen">비상탈출 중</string>
+    <string name="widget_latest">최근: %s</string>
     <string name="report_title">이번 주 방구 결산 나옴!</string>
     <string name="report_text">누가 제일 많이 뀌었는지 눌러서 확인</string>
     <string name="channel_wake">기상 방구</string>

@@ -533,6 +533,12 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> updater.complete());
         }
 
+        /** 위젯에 보일 최근 칭호 · 홈 친구 */
+        @JavascriptInterface
+        public void setWidgetInfo(String json) {
+            BgbbWidget.setInfo(getApplicationContext(), json);
+        }
+
         /** 상점에서 방구 소리 팩 미리 듣기 (판정이 냄일 때만) */
         @JavascriptInterface
         public void previewPack(String pack) {
