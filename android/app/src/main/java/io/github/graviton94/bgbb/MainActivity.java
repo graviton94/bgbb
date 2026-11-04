@@ -533,6 +533,12 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> updater.complete());
         }
 
+        /** 상점에서 방구 소리 팩 미리 듣기 (판정이 냄일 때만) */
+        @JavascriptInterface
+        public void previewPack(String pack) {
+            PrankPlayer.previewPack(getApplicationContext(), pack);
+        }
+
         /** 앱 안 효과음을 내도 되는지 (소리 규칙 0 · 1 · 2 가 아니면 true) */
         @JavascriptInterface
         public boolean effectsAllowed() {

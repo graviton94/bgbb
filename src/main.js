@@ -721,7 +721,7 @@ const frameImage = () => pickOwned('frame')?.src || null;
 let shopSlot = 'bg';
 function itemPreview(x) {
   if (x.slot === 'bg') return `<span class="sw" style="background:${x.css}${x.frame ? `;box-shadow:inset 0 0 0 4px ${x.frame}` : ''}"></span>`;
-  if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
+  if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame' || x.slot === 'sound') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
   if (x.slot === 'bubble') return `<span class="bubble ${x.src ? 'img' : ''}" data-skin="${x.id}" style="--bubble-img:${x.src ? `url(${x.src})` : 'none'}">${t('shop.sample')}</span>`;
   if (x.slot === 'font') return `<span class="font-pv ${x.deco ? `f-${x.deco}` : ''}">${t('shop.fontSample')}</span>`;
   if (x.slot === 'wear') return `<span class="wear-pv"><img src="${face(heroId(), 'blank', realLook())}" alt="">${x.src ? `<img src="${x.src}" alt="">` : ''}</span>`;
@@ -738,6 +738,7 @@ function renderShop() {
     const hint = x.title && (state.titles[x.title] ? L(titleById(x.title).name) : L(titleById(x.title).hint));
     const season = x.season ? t('shop.season', { m: x.season.join('·') }) : '';
     const how = on ? t('shop.equipped') : owned ? t('shop.equip')
+      : x.gift ? t('shop.gift', { when: L(titleById(x.gift).hint), n: x.price })
       : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : `${season ? `${season} · ` : ''}${t('shop.buy', { n: x.price })}`;
     return `<li><button class="item ${owned ? '' : 'locked'} ${on ? 'on' : ''}" data-id="${x.id}" type="button">
       <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${coinify(esc(how))}</small></button></li>`;
@@ -774,6 +775,7 @@ $('shopList').addEventListener('click', e => {
   if (!b) return;
   const x = itemById(b.dataset.id);
   if (!isOwned(x, state.titles, state.bought)) {
+    if (x.slot === 'sound') previewSound(x);   // 사기 전에 들어 보기
     if (!x.price) { toast(t('shop.title_only', { hint: L(titleById(x.title).hint) })); return; }
     if (!inSeason(x)) { toast(t('shop.offSeason', { m: x.season.join('·') })); return; }
     if (state.coins < x.price) { toast(t('shop.poor')); return; }
@@ -781,12 +783,32 @@ $('shopList').addEventListener('click', e => {
     state.coins -= x.price;
     state.bought[x.id] = true;
     commit();
+    if (x.slot === 'sound') syncSchedule(previewOperation);   // 알람 방구도 이 팩을 씀
     showItem(x, L(SLOT_NAMES[x.slot]), t('cele.paid', { n: x.price }));
     return;
   }
   play('ui_pop', 0.4);
   equipItem(x);
+  if (x.slot === 'sound') { previewSound(x); syncSchedule(previewOperation); }
 });
+/** 방구 소리 팩 미리 듣기: 햄찌 방구 + 팩 (앱은 소리 규칙대로 네이티브가) */
+function previewSound(x) {
+  if (native?.previewPack) { native.previewPack(x.pack || ''); return; }
+  playFriend('hamster', 'main');
+  if (x.pack) new Audio(`assets/sounds/pack_${x.pack}.ogg`).play().catch(() => {});
+}
+/** 시즌 소리 팩: 그날 앱을 열면 공짜 (칭호의 날짜 조건을 그대로 씀) */
+function giveGifts() {
+  const d = new Date();
+  const ctx = { month: d.getMonth() + 1, day: d.getDate(), ymd: dayKey(), hour: d.getHours(), wd: d.getDay(), today: { loud: 0, soft: 0, hold: 0 } };
+  const gift = ITEMS.find(x => x.gift && !isOwned(x, state.titles, state.bought) && titleById(x.gift)?.test(ctx));
+  if (!gift) return false;
+  state.bought[gift.id] = true;
+  commit();
+  syncSchedule(previewOperation);
+  showItem(gift, L(SLOT_NAMES[gift.slot]), t('shop.giftGot', { when: L(titleById(gift.gift).hint) }));
+  return true;
+}
 
 // ---------------------------------------------------------- 렌더
 function render() {
@@ -1314,7 +1336,7 @@ window.bgbbOnNativeResume = () => {
   checkWakeSettings();
   render();
   checkWake();
-  if (!document.querySelector('dialog[open]')) maybeReport();   // 일요일 밤 결산 알림을 눌러 들어온 경우
+  if (!document.querySelector('dialog[open]') && !giveGifts()) maybeReport();   // 시즌 선물 · 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -1344,7 +1366,7 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
   commit();
-} else maybeReport();
+} else if (!giveGifts()) maybeReport();
 native?.checkUpdate?.();
 checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우

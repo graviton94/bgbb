@@ -79,7 +79,7 @@ final class PrankPlayer {
         if ("loud".equals(mode)) {
             // '냄' 은 소리가 실제로 재생되기 시작했을 때만 기록 (재생 실패면 참음 · 소리 안 남). 이어폰으로 냈으면 표시만 남긴다
             boolean ear = earbuds(c);
-            play(c, charId, sound, done, ok -> {
+            play(c, charId, sound, pickPack(PrankScheduler.config(c)), done, ok -> {
                 PrankScheduler.logEvent(c, t, charId, ok ? "loud" : "hold", ok ? null : "nosound", ok && ear);
                 PrankNotifier.post(c, charId, ok ? "loud" : "hold");
             });
@@ -226,12 +226,46 @@ final class PrankPlayer {
      *  미디어 볼륨 > 0 → 소리만 · 미디어 0 → 진동만 · 무음 모드 / 방해금지 → 아무것도 X */
     static void playToot(Context c, String charId, String sound) {
         String mode = deviceMode(c);
-        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, () -> { }, null));
+        if ("loud".equals(mode)) new Handler(Looper.getMainLooper()).post(() -> play(c, charId, sound, pickPack(PrankScheduler.config(c)), () -> { }, null));
         else if ("soft".equals(mode)) vibrate(c, charId, sound);
     }
 
+    /** 방구 소리 팩: 가진 것 중 랜덤, 장착한 건 40% (꾸미기의 '가진 것 중 랜덤' 과 같은 규칙). "" = 방구만 */
+    static String pickPack(JSONObject cfg) {
+        String equipped = cfg.optString("pack", "");
+        if (RANDOM.nextDouble() < 0.4) return equipped;
+        List<String> owned = new ArrayList<>();
+        owned.add("");
+        JSONArray packs = cfg.optJSONArray("packs");
+        if (packs != null) for (int i = 0; i < packs.length(); i++) owned.add(packs.optString(i));
+        return owned.get(RANDOM.nextInt(owned.size()));
+    }
+
+    /** 상점 미리 듣기: 햄찌 기본 방구 + 그 팩. 판정이 냄일 때만 */
+    static void previewPack(Context c, String pack) {
+        if ("loud".equals(deviceMode(c))) new Handler(Looper.getMainLooper()).post(() -> play(c, "hamster", "main", pack, () -> { }, null));
+    }
+
+    /** 팩 효과음을 방구와 같이 낸다 (같은 미디어 소리) */
+    private static void playPack(Context c, String pack, AudioAttributes attrs) {
+        if (pack == null || pack.isEmpty()) return;
+        int id = c.getResources().getIdentifier("pack_" + pack, "raw", c.getPackageName());
+        if (id == 0) return;
+        MediaPlayer sting = new MediaPlayer();
+        try (AssetFileDescriptor afd = c.getResources().openRawResourceFd(id)) {
+            sting.setAudioAttributes(attrs);
+            sting.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            sting.setOnPreparedListener(MediaPlayer::start);
+            sting.setOnCompletionListener(MediaPlayer::release);
+            sting.setOnErrorListener((p, what, extra) -> { p.release(); return true; });
+            sting.prepareAsync();
+        } catch (Exception e) {
+            sting.release();
+        }
+    }
+
     /** started: 재생이 실제로 시작됐으면 true, 준비 실패 · 6초 안에 시작 못 하면 false (정확히 한 번) */
-    private static void play(Context c, String charId, String sound, Runnable done, java.util.function.Consumer<Boolean> started) {
+    private static void play(Context c, String charId, String sound, String pack, Runnable done, java.util.function.Consumer<Boolean> started) {
         boolean[] told = {false};
         java.util.function.Consumer<Boolean> tell = ok -> {
             if (told[0] || started == null) return;
@@ -288,6 +322,7 @@ final class PrankPlayer {
                     if (finished[0]) return;
                     p.start();
                     tell.accept(p.isPlaying());
+                    playPack(c, pack, attrs);
                 };
                 if (bt) main.postDelayed(go, 250);   // 블루투스가 깨어난 뒤에 시작해야 '뿌' 로 잘리지 않음
                 else go.run();

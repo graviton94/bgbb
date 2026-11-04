@@ -7,12 +7,13 @@ const skin = (slot, id) => `assets/skin/${slot}/${id}.webp`;
 // 사진 배경: 위쪽(큰 글자 자리)은 바탕색으로 살짝 덮어 글자가 읽히게
 const photo = (id, dark) => `linear-gradient(180deg, ${dark ? 'rgba(12,12,16,.82), rgba(12,12,16,.5) 30%, rgba(12,12,16,0) 52%' : 'rgba(242,242,240,.9), rgba(242,242,240,.55) 30%, rgba(242,242,240,0) 52%'}), url(${skin('bg', id)}) center / cover`;
 
-export const SLOTS = ['bg', 'prop', 'wear', 'fx', 'bubble', 'font', 'frame', 'look'];
+export const SLOTS = ['bg', 'prop', 'wear', 'fx', 'sound', 'bubble', 'font', 'frame', 'look'];
 export const SLOT_NAMES = {
   bg: { ko: '배경', en: 'Background' },
   prop: { ko: '소품', en: 'Prop' },
   wear: { ko: '착용', en: 'Wear' },
   fx: { ko: '뿡 효과', en: 'Toot FX' },
+  sound: { ko: '방구 소리', en: 'Toot sound' },
   bubble: { ko: '말풍선', en: 'Bubble' },
   frame: { ko: '공유 프레임', en: 'Share frame' },
   font: { ko: '구린 글씨', en: 'Cringe font' },
@@ -166,10 +167,23 @@ const FONT = [
   { id: 'font_brush', name: { ko: '일필휘지 붓글씨', en: 'One-stroke brush' }, title: 'hold3', price: 70, deco: 'brush' }
 ];
 
-const BY_SLOT = { bg: BG, prop: PROP, wear: WEAR, fx: FX, bubble: BUBBLE, font: FONT, frame: FRAME, look: LOOK };
+// sound: 방구에 겹쳐 나오는 짧은 효과음 (assets/sounds/pack_<pack>.ogg, tools/make_packs.py). 앱 · 알람 방구 모두.
+// gift = 그 시즌 칭호의 날 앱을 열면 공짜로 줌 (그날이 아니면 시즌 달에 뿡코인으로)
+const shop = id => `assets/shop/${id}.webp`;
+const SOUND = [
+  { id: 'sound_none', name: { ko: '방구만 (기본)', en: 'Just the toot' }, free: true, src: shop('sound_none') },
+  { id: 'sound_drum', name: { ko: '바둠츠', en: 'Ba-dum-tss' }, price: 150, pack: 'drum', src: shop('sound_drum') },
+  { id: 'sound_xmas', name: { ko: '징글 방구', en: 'Jingle toot' }, gift: 'ss_christmas', price: 300, season: [12], pack: 'xmas', src: shop('sound_xmas') },
+  { id: 'sound_halloween', name: { ko: '유령 방구', en: 'Ghost toot' }, gift: 'ss_halloween', price: 300, season: [10], pack: 'halloween', src: shop('sound_halloween') },
+  { id: 'sound_seollal', name: { ko: '꽹과리 방구', en: 'Gong toot' }, gift: 'ss_seollal', price: 300, season: [1, 2], pack: 'seollal', src: shop('sound_seollal') },
+  { id: 'sound_chuseok', name: { ko: '보름달 피리 방구', en: 'Full-moon flute toot' }, gift: 'ss_chuseok', price: 300, season: [9, 10], pack: 'chuseok', src: shop('sound_chuseok') },
+  { id: 'sound_aprilfool', name: { ko: '띠용 방구', en: 'Boing toot' }, gift: 'ss_aprilfool', price: 300, season: [4], pack: 'aprilfool', src: shop('sound_aprilfool') }
+];
+
+const BY_SLOT = { bg: BG, prop: PROP, wear: WEAR, fx: FX, sound: SOUND, bubble: BUBBLE, font: FONT, frame: FRAME, look: LOOK };
 export const ITEMS = SLOTS.flatMap(slot => BY_SLOT[slot].filter(x => !PENDING.has(x.id)).map(x => ({ ...x, slot })));
 export const itemById = id => ITEMS.find(x => x.id === id);
-export const DEFAULT_EQUIP = { bg: 'bg_plain', prop: 'prop_none', wear: 'wear_none', fx: 'fx_toot', bubble: 'bubble_basic', font: 'font_basic', frame: 'frame_strip', look: 'look_art' };
+export const DEFAULT_EQUIP = { bg: 'bg_plain', prop: 'prop_none', wear: 'wear_none', fx: 'fx_toot', sound: 'sound_none', bubble: 'bubble_basic', font: 'font_basic', frame: 'frame_strip', look: 'look_art' };
 
 /** 시즌 한정: 지금이 그 달인지 (시즌 없는 건 늘 true) */
 export const inSeason = (x, now = Date.now()) => !x.season || x.season.includes(new Date(now).getMonth() + 1);
