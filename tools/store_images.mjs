@@ -1,7 +1,7 @@
 // Play 스토어 이미지 만들기: 진짜 앱 화면을 찍어 문구를 얹는다.
 //   npm i -D playwright && npx playwright install chromium   (처음 한 번)
 //   npm run store-images
-// 결과: docs/store/{ko,en}/screen-*.png (1080×1920), docs/store/{ko,en}/feature.png (1024×500)
+// 결과: docs/store/{ko,en}/screen-*.png (1080×1920, 8장 = Play 최대), docs/store/{ko,en}/feature.png (1024×500)
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -18,19 +18,21 @@ const CAPTIONS = {
     ['home', '언제 뿡할지<br>아무도 모름. 채고야'],
     ['legend', '칭호 따면<br>구린 PPT로 축하해줌'],
     ['burst', '터진 순간이<br>짤이 됨. 데단해'],
-    ['jackpot', '0.5% 잭팟 뚫으면<br>돈폭탄 GRAET'],
-    ['shop', '배경 · 소품 · 착용<br>가진 것 중 랜덤 난장판'],
-    ['rest', '회의 시간엔 쫄?<br>소리 · 진동 일체 없음'],
-    ['dex', '칭호 56개 다 모으면<br>당신을 천제입니까?']
+    ['alarm', '20번 연타해야<br>꺼지는 방구 알람'],
+    ['missions', '매일 미션 3개<br>깨면 뿡코인 GRAET'],
+    ['report', '이번 주 방구 결산<br>MVP는 누구?'],
+    ['shop', '방구 소리 팩까지<br>모으는 재미'],
+    ['dex', '칭호 119개<br>숨김 업적까지 채고야']
   ],
   en: [
     ['home', 'Nobody knows<br>when. AWASOME'],
     ['legend', 'Earn a title,<br>get a cringe PPT'],
     ['burst', 'Every toot<br>becomes a meme'],
-    ['jackpot', 'Hit the 0.5% jackpot.<br>Money bomb. GRAET'],
-    ['shop', 'Your stuff,<br>randomly shuffled'],
-    ['rest', 'Meeting? Chicken hours.<br>No sound, no buzz'],
-    ['dex', 'Collect all 56.<br>Are you genious?']
+    ['alarm', 'A toot alarm you<br>tap 20 times to stop'],
+    ['missions', 'Three missions a day.<br>Coins. GRAET'],
+    ['report', 'Your week in toots.<br>Who was MVP?'],
+    ['shop', 'Collect toot<br>sound packs too'],
+    ['dex', '119 titles,<br>hidden ones too']
   ]
 };
 const FEATURE = {
@@ -46,7 +48,7 @@ function demoState() {
     const d = new Date();
     d.setDate(d.getDate() - (6 - i));
     const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    days[k] = { loud, soft, hold, chars: ['hamster', 'cat'], last: 'hold' };
+    days[k] = { loud, soft, hold, chars: ['hamster', 'cat', 'tit'], last: 'hold', by: { cat: hold + 1, hamster: loud + 1, tit: soft }, loudH: loud ? [10, 20].slice(0, loud) : [], hours: [8, 12, 15, 19] };
   });
   const t = Date.now() - 86400e3;
   const ev = (char, mode) => ({ t, char, mode });
@@ -56,13 +58,14 @@ function demoState() {
     ['first_today', 'hamster', 'loud', 5], ['cat', 'cat', 'hold', 4], ['tit_soft', 'tit', 'soft', 2], ['morning', 'hamster', 'soft', 3]])
     titles[id] = { n, first: t - 6 * 86400e3, last: ev(char, mode) };
   return {
-    onboarded: true, hero: 'hamster', days, titles,
+    onboarded: true, guideV: 2, rulesSeen: true, seenVersion: '2.4.0', reportSeen: '', hero: 'hamster', days, titles,
     recent: [{ ...ev('hamster', 'loud'), title: 'broke' }],
     tips: [], sentConfig: 'demo', coins: 186,
-    bought: Object.fromEntries(['bg_office', 'bg_minihompy', 'bg_vapor', 'bg_error', 'prop_whoopee', 'prop_megaphone', 'prop_spray', 'prop_sweetpotato',
-      'prop_milk', 'bubble_katalk', 'bubble_shout', 'bubble_torn', 'wear_3d', 'fx_sparkle'].map(id => [id, true])),
-    schedule: { on: true, start: 6, end: 0, rest: { on: true, from: 14 * 60, to: 15 * 60 } },
-    equip: { bg: 'bg_minihompy', prop: 'prop_megaphone', bubble: 'bubble_shout' }
+    bought: Object.fromEntries(['bg_office', 'bg_minihompy', 'prop_whoopee', 'prop_megaphone', 'prop_spray', 'prop_sweetpotato',
+      'prop_milk', 'bubble_katalk', 'bubble_shout', 'bubble_torn', 'wear_3d', 'fx_sparkle', 'sound_drum', 'sound_halloween'].map(id => [id, true])),
+    equip: { bg: 'bg_minihompy', prop: 'prop_megaphone', bubble: 'bubble_shout', sound: 'sound_drum' },
+    daily: { day: new Date().toISOString().slice(0, 10), counts: { tap: 22, gacha: 1 }, claimed: [] },
+    schedule: { on: true, start: 6, end: 0, rest: { on: true, from: 14 * 60, to: 15 * 60 }, wake: { on: true, at: 7 * 60 + 30, days: [false, true, true, true, true, true, false], once: 0 } }
   };
 }
 
@@ -88,7 +91,9 @@ async function captureScreens(lang) {
     // 앱 안에서 보이는 모습으로 찍는다. 터지는 화면용 기록은 window.__events 로 넣는다.
     window.__events = [];
     window.BgbbNative = {
-      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.1.0',
+      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.4.0',
+      effectsAllowed: () => true, exactAllowed: () => true, wakeRinging: () => !!window.__ring, stopWake() {}, snoozeWake() {}, adReady: () => true,
+      setWidgetInfo() {}, playToot() {}, previewPack() {}, requestReview() {}, checkUpdate() {},
       soundStatus: () => JSON.stringify({ mode: 'loud', vol: 9, max: 15 }), deviceMode: () => 'loud', setMediaMuted() {}, setDim() {}, setKeepAwake() {}, takeResumed: () => false,
       setNotify() {}, notificationsAllowed: () => true, requestNotifications: () => true,
       loadTips() {}, buyTip() {}, fireNow() {}, saveCustomSound: () => true, openUrl() {}, sendFeedback() {}, resetAll() {},
@@ -111,6 +116,11 @@ async function captureScreens(lang) {
 
   const closeAll = () => page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
   const ko = lang === 'ko';
+  // 앱을 열면 지난주 결산이 먼저 뜬다 (reportSeen 비움)
+  await page.waitForTimeout(900);
+  await shot('report');
+  await closeAll();
+  await page.waitForTimeout(400);
   await shot('home');
   // 획득 팝업은 직접 띄운다 (등급을 고를 수 있게). 애니메이션이 다 끝난 뒤 찍는다
   const cele = async (name, info) => {
@@ -119,9 +129,8 @@ async function captureScreens(lang) {
     await page.waitForTimeout(3200);
     await shot(name);
   };
-  const info0 = { when: '14:07', mode: ko ? '냄' : 'Out loud', dex: 12, all: 56, unlocked: [] };
+  const info0 = { when: '14:07', mode: ko ? '냄' : 'Out loud', dex: 12, all: 119, unlocked: [] };
   await cele('legend', { ...info0, tier: 'legend', char: 'cat', title: ko ? '회의실 테러범' : 'Meeting Room Menace', coins: 40 });
-  await cele('jackpot', { ...info0, tier: 'jackpot', char: 'hamster', title: ko ? '돈 뿌리는 엉덩이' : 'Make It Rain', coins: 100 });
   await closeAll();
   // 짤 화면: 짤 뽑기에서 레전드 짤이 나올 때까지 (하루 3번). 첫 랜덤을 낮게 줘서 레전드 쪽으로 민다
   for (let i = 0; i < 3; i++) {
@@ -140,19 +149,26 @@ async function captureScreens(lang) {
   await closeAll();
   await page.waitForTimeout(500);   // 짤을 닫으면 칭호로 열린 아이템 상자깡이 뜰 수 있다
   await closeAll();
+  // 오늘의 미션
+  await page.click('#topMission');
+  await page.waitForTimeout(500);
+  await shot('missions');
+  await closeAll();
+  // 기상 알람: 한창 연타하는 중 (FX 가 날아다니는 순간)
+  await page.evaluate(() => { window.__ring = true; window.bgbbOnWake(); });
+  await page.waitForTimeout(700);
+  for (let i = 0; i < 13; i++) { await page.click('#waOk'); await page.waitForTimeout(95); }
+  await page.waitForTimeout(60);
+  await shot('alarm');
+  await page.evaluate(() => { window.__ring = false; });
+  await closeAll();
+  await page.waitForTimeout(300);
+  // 꾸미기: 방구 소리 칸
   await page.click('.tab[data-screen="shop"]');
   await page.waitForTimeout(400);
-  await shot('shop');
-  await page.click('.tab[data-screen="home"]');
-  await page.waitForTimeout(300);
-  await page.click('#tabSettings');   // 쫄? 버튼은 설정 안에 있다
+  await page.click('.chip[data-s="sound"]');
   await page.waitForTimeout(400);
-  await page.click('#restOpen');
-  await page.waitForTimeout(600);
-  await page.evaluate(() => document.getElementById('settingsSheet').close());
-  await page.waitForTimeout(200);
-  await shot('rest');
-  await closeAll();
+  await shot('shop');
   await page.click('.tab[data-screen="dex"]');
   await page.waitForTimeout(400);
   await shot('dex');
