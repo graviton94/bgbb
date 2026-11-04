@@ -206,7 +206,7 @@ const STR = {
     'home.wake': '⏰ Wake-up', 'home.rest': '🫣 Chicken hours', 'home.off': 'Off',
     'alarm.ok': 'OK · I’m up', 'alarm.tap': 'Tap to<br>stop it!', 'alarm.tapLeft': '{n} more!!', 'alarm.tapDone': 'UP AND AT IT!!!',
     'alarm.cheer': ['TOOT!', 'TOOT TOOT!', 'MORE!!', 'FASTER!!', 'NOT YET', 'AWASOME', 'ARM DAY', 'WAKE UP!!', 'GRAET', 'FINGER CARDIO', 'TOOT POWER', 'KEEP GOING', 'ONE MORE!!', 'FOCUS', 'RISE'],
-    'wake.days': ['S', 'M', 'T', 'W', 'T', 'F', 'S'], 'wake.everyday': 'Every day', 'wake.weekdays': 'Weekdays', 'wake.weekend': 'Weekends', 'wake.once': 'Once (no days picked)', 'wake.repeat': 'Repeats {days}',
+    'wake.days': ['S', 'M', 'T', 'W', 'T', 'F', 'S'], 'wake.everyday': 'Every day', 'wake.weekdays': 'Weekdays', 'wake.weekend': 'Weekends', 'wake.once': 'Once (no days picked)', 'wake.repeat': '{days}',
     'wake.needExact': 'The wake-up alarm needs "Alarms & reminders" allowed', 'wake.lostExact': '"Alarms & reminders" was turned off, so the wake-up alarm is off. Allow it to turn it back on', 'alarm.snooze': '5 more min…', 'alarm.snoozed': 'Back in 5 minutes. Brace yourself', 'alarm.line': 'Toot hours start now. Any time from {from} to midnight',
     'alarm.shout': ['RISE AND TOOT!!!', 'WAKE UP 뿡!!!', 'GOOD MORNING 뿡', 'UP UP UP!!'],
     'wake.preview': '🔊 Preview the alarm music', 'wake.previewQuiet': 'No preview during bail-out, chicken hours, Do Not Disturb or battery saver', 'wake.previewStop': '■ Stop preview',

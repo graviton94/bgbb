@@ -721,6 +721,9 @@ function openRules() {
     + `<p class="rules-note">${t('rules.late')}</p><p class="rules-note">${t('rules.wake')}</p>`
     + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
   if (!$('rulesSheet').open) $('rulesSheet').showModal();
+  // 작은 화면: 맨 아래 [알겠음] 에 초점이 가면서 아래로 스크롤돼 '중요!' 가 가려지던 것 → 맨 위부터
+  $('rulesSheet').querySelector('.sheet-body').focus?.({ preventScroll: true });
+  requestAnimationFrame(() => { $('rulesSheet').scrollTop = 0; $('rulesSheet').querySelector('.sheet-body').scrollTop = 0; });
   if (!state.rulesSeen) { state.rulesSeen = true; commit(); }
 }
 $('rulesInfo').addEventListener('click', openRules);
