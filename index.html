@@ -17,7 +17,6 @@
       <span class="logo" data-i18n="appName"></span>
       <span class="top-right">
         <span class="muted" id="streak"></span>
-        <button class="top-mission" id="topMission" type="button" data-i18n-attr="aria-label:mission.title"><span aria-hidden="true">🎯</span><b id="missionN"></b></button>
         <button class="top-coins" id="topCoins" type="button"></button>
         <button class="icon-btn" id="openSettings" type="button" data-i18n-attr="aria-label:settings.title">
           <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"></path><circle cx="16" cy="6" r="2"></circle><circle cx="10" cy="12" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg>
@@ -34,7 +33,7 @@
     <main>
       <!-- 홈: 무표정 -->
       <section class="screen active" id="screen-home">
-        <div class="label-row"><div class="label" id="bigLabel"></div></div>
+        <div class="label-row"><div class="label" id="bigLabel"></div><button class="top-mission" id="topMission" type="button" data-i18n-attr="aria-label:mission.title"><span aria-hidden="true">🎯</span><small data-i18n="mission.short"></small><b id="missionN"></b></button></div>
         <h1 class="big" id="big"></h1>
         <p class="line" id="homeLine"></p>
         <p class="today-stats" id="todayStats"></p>
@@ -197,7 +196,7 @@
       <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
       <p class="wa-line" id="waLine"></p>
       <div class="wa-hud" id="waHud" aria-hidden="true"><span class="wa-chips"><small>CHIPS</small><b id="waChips">0</b></span><i>×</i><span class="wa-mult"><small>MULT</small><b id="waMult">1</b></span></div>
-      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-fill" aria-hidden="true"></span><span class="wa-ok-label" data-i18n="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
+      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-fill" aria-hidden="true"></span><span class="wa-ok-label" data-i18n-html="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
       <div class="wa-fx" id="waFx" aria-hidden="true"></div>
       <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
     </div>
@@ -210,7 +209,6 @@
       <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
       <div class="wake-days" id="wakeDays" role="group" aria-label="요일"></div>
       <p class="wake-repeat" id="wakeRepeat"></p>
-      <p class="rest-note" data-i18n="wake.note"></p>
       <button class="btn wide" id="wakePreview" type="button" data-i18n="wake.preview"></button>
       <div class="rest-actions">
         <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>

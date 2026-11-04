@@ -1315,9 +1315,11 @@ function guideMock(kind) {
   }
   if (kind === 'time') {
     const days = t('wake.days').map((d, i) => `<span class="wday ${i > 0 && i < 6 ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</span>`).join('');
-    return `<div class="gm gm-time"><div class="tiles"><div class="tile"><span class="tile-open"><small>${esc(t('home.wake'))}</small><b>07:30 · ${esc(t('wake.weekdays'))}</b></span><span class="gm-switch on"></span></div>
-      <div class="tile"><span class="tile-open"><small>${esc(t('home.rest'))}</small><b>14:00~15:00</b></span><span class="gm-switch on"></span></div></div>
-      <div class="wake-days">${days}</div><div class="gm-tap"><span>${esc(t('alarm.tap'))}</span><b>20</b></div></div>`;
+    const head = (icon, name) => `<div class="gm-feat-head"><span class="gm-ico">${icon}</span><b>${esc(name)}</b><span class="gm-switch on"></span></div>`;
+    return `<div class="gm gm-time">
+      <div class="gm-feat">${head('🫣', t('settings.rest'))}<span class="gm-clock">14:00 ~ 15:00</span><span class="gm-cap">${esc(t('guide.timeRest'))}</span></div>
+      <div class="gm-feat">${head('⏰', t('wake.title'))}<span class="gm-clock">07:30</span><div class="wake-days">${days}</div>
+        <div class="gm-tap"><span>${t('alarm.tap')}</span><b>20</b></div><span class="gm-cap">${esc(t('guide.timeWake'))}</span></div></div>`;
   }
   if (kind === 'daily') {
     const bars = [3, 1, 4, 2, 5, 1, 2].map((n, i) => `<span class="rp-day ${i === 4 ? 'best' : ''}"><i style="height:${n * 20}%"></i></span>`).join('');
@@ -1351,11 +1353,13 @@ $('guidePages').addEventListener('click', e => {
   if (e.target.closest('#permNotif') && native && !native.requestNotifications()) native.openAppSettings?.();
   setTimeout(refreshPerm, 600);
 });
+/** 안내 본문: 한 줄씩 끊어서 (줄줄이 이어 붙지 않게) */
+const guideLines = text => (text ? `<div class="g-lines">${text.split('\n').map(l => `<span>${l}</span>`).join('')}</div>` : '');
 function openGuide() {
   $('guidePages').innerHTML = GUIDE.map(g => `<section class="guide-page gp-${g.id}">
     ${g.face ? `<div class="guide-art">${g.face.map(f => `<img src="assets/faces/${f}.webp" alt="">`).join('')}</div>` : ''}
     ${g.mock ? `<div class="guide-mock" aria-hidden="true">${guideMock(g.mock)}</div>` : ''}
-    <h3>${g.fresh && state.onboarded ? `<span class="gp-new">${t('guide.newTag')}</span>` : ''}${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}<p>${t(`guide.${g.id}b`)}</p></section>`).join('');
+    <h3>${g.fresh && state.onboarded ? `<span class="gp-new">${t('guide.newTag')}</span>` : ''}${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}${guideLines(t(`guide.${g.id}b`))}</section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
   guideAt(0);

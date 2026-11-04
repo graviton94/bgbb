@@ -1,4 +1,10 @@
 /* 방구뿡 v2: 평소엔 무표정(회색·검정), 터질 때만 형광 한 방 + 릴스 자막 + 속보 띠 */
+/*
+ * 전역 규칙
+ *  1. 줄바꿈은 낱말 단위 (word-break: keep-all): '꺼 / 짐!' 처럼 낱말 가운데서 끊지 않는다. 문장은 짧게, 줄은 <br> 로 직접 나눈다.
+ *  2. 화면 아래 시스템 막대(내비게이션 바 · 제스처 막대) 위에 누를 것을 두지 않는다. 아래에 붙는 버튼 · 탭 · 시트는
+ *     var(--safe-bottom) 에 최소 12px 을 더 띄운다. (앱은 네이티브가 시스템 막대만큼 안쪽으로 비켜 주고, 브라우저는 env() 로)
+ */
 /* 일부러 구린 꾸밈 글씨: 궁서 · 양재와당 느낌 (src/memes.js DECOR_FONTS) */
 @font-face { font-family: 'Song Myung'; src: url('assets/fonts/songmyung.woff2') format('woff2'); font-display: swap; }
 @font-face { font-family: 'Kirang Haerang'; src: url('assets/fonts/kiranghaerang.woff2') format('woff2'); font-display: swap; }
@@ -24,6 +30,7 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
+body, button, input, dialog { word-break: keep-all; overflow-wrap: break-word; line-break: strict; }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; }
@@ -84,7 +91,7 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
   display: flex;
   justify-content: center;
   gap: 28px;
-  padding: 4px 0 calc(8px + var(--safe-bottom));
+  padding: 4px 0 calc(12px + var(--safe-bottom));
   background: var(--bg);
 }
 .tab {
@@ -728,7 +735,7 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .guide-art img { height: 100%; max-width: 48%; object-fit: contain; filter: drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff); }
 .guide-art img + img { margin-left: -12%; height: 80%; }
 .guide-page h3 { margin: 0; font: 400 clamp(32px, 10vw, 44px)/1.1 var(--display); }
-.guide-page p { margin: 0; font-size: 16px; line-height: 1.6; }
+.guide-page p { margin: 0; font-size: 16px; line-height: 1.65; text-wrap: pretty; }
 .guide-page small { color: #3A3A30; }
 .guide-dots { display: flex; justify-content: center; gap: 8px; padding: 12px; }
 .guide-dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(0,0,0,.2); }
@@ -987,3 +994,26 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .gm-widget small { color: #3A3A30; font-size: 12px; }
 /* 규칙 쪽은 표가 길어서 그림 없이 */
 .gp-rules { justify-content: flex-start; padding-top: calc(36px + var(--safe-top)); overflow-y: auto; }
+
+/* 안내 본문: 한 줄씩 (낱말 단위로만 줄바꿈) */
+.g-lines { display: flex; flex-direction: column; gap: 6px; font-size: 16px; line-height: 1.45; }
+.g-lines span { display: block; }
+.gp-rules .g-lines { font-size: 13px; color: #3A3A30; }
+.gp-perm .g-lines { font-size: 13px; color: #3A3A30; }
+/* 5쪽: 쫄 시간 · 기상 알람 카드 두 장 (설명은 카드 안에) */
+.gm-time { gap: 12px; }
+.gm-feat { display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border: 3px solid #111; border-radius: 18px; background: #fff; box-shadow: 4px 4px 0 #111; }
+.gm-feat-head { display: flex; align-items: center; gap: 8px; }
+.gm-feat-head b { flex: 1; font: 400 20px var(--display); }
+.gm-ico { font-size: 22px; }
+.gm-clock { font: 400 30px/1 var(--display); font-variant-numeric: tabular-nums; }
+.gm-cap { font-size: 13px; font-weight: 700; color: #3A3A30; }
+.gm-time .wake-days .wday { max-width: 34px; }
+.gm-time .gm-tap { padding: 6px 14px; }
+.gm-time .gm-tap span { font-size: 14px; line-height: 1.1; }
+.gm-time .gm-tap b { font-size: 30px; }
+.gp-time .guide-mock { min-height: 0; }
+/* 홈 '오늘' 줄 오른쪽: 오늘의 미션 과녁 */
+.label-row { align-items: center; }
+.label-row .top-mission { margin-left: auto; gap: 4px; }
+.label-row .top-mission small { font: 800 12px var(--body); }
