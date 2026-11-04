@@ -390,7 +390,7 @@ final class PrankScheduler {
 
     // ---- 앱이 닫혀 있는 동안의 작전 기록. 앱을 열면 JS 가 가져가 집계한다. ----
 
-    static synchronized void logEvent(Context c, long t, String charId, String mode, String why) {
+    static synchronized void logEvent(Context c, long t, String charId, String mode, String why, boolean ear) {
         SharedPreferences p = prefs(c);
         long day = dateKey(windowStart(config(c), t));
         int n = p.getLong(KEY_FIRED_DAY, 0) == day ? p.getInt(KEY_FIRED_N, 0) : 0;
@@ -399,6 +399,7 @@ final class PrankScheduler {
             JSONArray arr = new JSONArray(p.getString(KEY_EVENTS, "[]"));
             JSONObject ev = new JSONObject().put("t", t).put("char", charId).put("mode", mode);
             if (why != null) ev.put("why", why);
+            if (ear) ev.put("ear", true);   // 이어폰으로 냄 (냄으로 치고 표시만)
             arr.put(ev);
             while (arr.length() > MAX_EVENTS) arr.remove(0);
             p.edit().putString(KEY_EVENTS, arr.toString()).apply();

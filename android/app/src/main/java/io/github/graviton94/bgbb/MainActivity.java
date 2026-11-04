@@ -515,6 +515,12 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> updater.complete());
         }
 
+        /** 앱 안 효과음을 내도 되는지 (소리 규칙 0 · 1 · 2 가 아니면 true) */
+        @JavascriptInterface
+        public boolean effectsAllowed() {
+            return PrankPlayer.effectsAllowed(getApplicationContext());
+        }
+
         @JavascriptInterface
         public boolean adReady() {
             return ads != null && ads.ready();
@@ -522,7 +528,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void showRewardedAd() {
-            runOnUiThread(() -> ads.show());
+            runOnUiThread(() -> ads.show(!PrankPlayer.effectsAllowed(getApplicationContext())));
         }
 
         /** 속보 카드 PNG 를 갤러리(Pictures/방구뿡)에 저장하고 공유창을 띄운다. Android 10+ (권한 불필요). */

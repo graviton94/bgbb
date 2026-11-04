@@ -65,11 +65,17 @@ export function playUrl(url, volume = 0.8, rate = 1) {
   });
 }
 
-export const play = (name, volume) => playUrl(fileUrl(name), volume);
+/**
+ * 앱 안 효과음을 내도 되는지 (소리 규칙 0 장전시간 밖 · 쫄 시간 · 비상탈출, 1 방해금지, 2 절전 이면 끔).
+ * 판정은 네이티브 한 곳 (PrankPlayer.effectsAllowed). 브라우저 미리보기는 늘 냄
+ */
+export const effectsOk = () => (window.BgbbNative?.effectsAllowed ? window.BgbbNative.effectsAllowed() : true);
+/** 효과음 (팡파레 · 버튼 소리): 규칙상 끄는 때면 안 냄 */
+export const play = (name, volume) => { if (effectsOk()) playUrl(fileUrl(name), volume); };
 
 /** 캐릭터 소리: 여러 녹음 중 하나 + 아주 살짝 다른 빠르기로, 같은 소리도 매번 새롭게. 'diy' 는 내 목소리 */
 export function playFriend(charId, style, diyUrl, volume = 0.85) {
-  // 앱: 알람과 같은 기준 (벨소리 모드 + 알림 볼륨)으로 네이티브가 낸다. 브라우저 미리보기만 여기서.
+  // 앱: 알람 방구와 같은 판정(미디어 볼륨 우선)으로 네이티브가 낸다. 브라우저 미리보기만 여기서.
   if (window.BgbbNative?.playToot) { window.BgbbNative.playToot(charId, style); return; }
   if (style === 'diy') {
     if (diyUrl) playUrl(diyUrl, volume);

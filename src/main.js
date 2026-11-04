@@ -6,7 +6,7 @@ import {
   state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy
 } from './store.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
-import { play, playFriend, forget } from './audio.js';
+import { play, playFriend, forget, effectsOk } from './audio.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
@@ -121,6 +121,7 @@ function headliner(results) {
  */
 /** 참음 이유 '(방해금지)' · '(7분 늦게 옴)' */
 function whyLabel(ev) {
+  if (ev.ear) return ` (${t('why.ear')})`;
   if (!ev.why) return '';
   const late = /^late(\d+)$/.exec(ev.why);
   return ` (${late ? t('why.late', { n: late[1] }) : t(`why.${ev.why}`)})`;
@@ -536,19 +537,23 @@ function renderStatus() {
   $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.saver ? t('status.saver') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
 /** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트). now = 지금 폰 상태 줄을 형광으로 */
+/** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트 · 업데이트 후 1회): 위에서부터 먼저 맞는 줄. now = 지금 폰 상태 줄을 형광으로 */
 function soundRules(now) {
   const row = (m, icon) => `<li class="${m === now ? 'now' : ''}"><span>${icon}</span><b>${t(`rules.${m}`)}</b><em>${t(`rules.${m}R`)}</em>${m === now ? `<i>${t('rules.now')}</i>` : ''}</li>`;
-  return `<ul class="rules">${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ul><p class="rules-note">${t('rules.note')}</p>`;
+  return `<p class="rules-important">${t('rules.important')}</p><ol class="rules">${row('off', '🫥')}${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ol><p class="rules-note">${t('rules.note')}</p>`;
 }
-$('rulesInfo').addEventListener('click', () => {
+const rulesRow = s => (s.web ? s.mode : s.dnd || s.saver ? 'off' : s.mode);
+function openRules() {
   const s = soundStatus();
   const quiet = state.frozen || resting() || !inWindow();
-  $('rulesBody').innerHTML = soundRules(s.dnd ? 'hold' : s.mode)
+  $('rulesBody').innerHTML = soundRules(rulesRow(s))
     + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
     + `<p class="rules-note">${t('rules.late')}</p><p class="rules-note">${t('rules.wake')}</p>`
     + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
-  $('rulesSheet').showModal();
-});
+  if (!$('rulesSheet').open) $('rulesSheet').showModal();
+  if (!state.rulesSeen) { state.rulesSeen = true; commit(); }
+}
+$('rulesInfo').addEventListener('click', openRules);
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
   if (s.web) { openSettings(); return; }   // 브라우저는 폰 볼륨을 못 바꾼다: 미리보기 상태 고르는 설정으로
@@ -760,6 +765,7 @@ function stopAlarmAudio() {
 }
 $('wakePreview').addEventListener('click', () => {
   if (alarmAudio) { stopAlarmAudio(); return; }
+  if (!effectsOk()) { toast(t('wake.previewQuiet')); return; }   // 소리 규칙 0 · 1 · 2 (비상탈출 · 쫄 시간 · 방해금지 · 절전)
   alarmAudio = new Audio('assets/sounds/alarm_wake.ogg');
   alarmAudio.play().catch(() => {});
   alarmAudio.onended = stopAlarmAudio;
@@ -997,6 +1003,7 @@ $('guideSkip').addEventListener('click', () => $('guide').close());
 $('guide').addEventListener('close', () => {
   if (state.onboarded) return;
   state.onboarded = true;
+  state.rulesSeen = true;   // 2쪽에서 봤음
   state.seenVersion = APP_VERSION;   // 처음 깐 사람은 패치노트 안 띄움
   if (native && state.notify && !native.notificationsAllowed()) native.requestNotifications();
   commit();
@@ -1091,6 +1098,7 @@ drainNative();
 native?.loadTips?.(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));   // 다른 기기에서 응원한 기록 복원
 render();
 if (!state.onboarded) openGuide();
+else if (!state.rulesSeen) openRules();   // 이미 쓰던 사람: 소리 규칙 (중요!) 을 업데이트 후 한 번
 else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음 연 날: 그 사이 바뀐 것만
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;

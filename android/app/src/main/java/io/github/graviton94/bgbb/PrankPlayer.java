@@ -71,14 +71,20 @@ final class PrankPlayer {
             why = "late" + (late / 60_000);
         }
         long t = System.currentTimeMillis();
+        // 진동인데 진동 모터가 없으면 (태블릿 등) 아무 일도 안 일어나니 참음
+        if ("soft".equals(mode) && !hasVibrator(c)) {
+            mode = "hold";
+            why = "novibe";
+        }
         if ("loud".equals(mode)) {
-            // '냄' 은 소리가 실제로 재생되기 시작했을 때만 기록 (재생 실패면 참음 · 소리 안 남)
+            // '냄' 은 소리가 실제로 재생되기 시작했을 때만 기록 (재생 실패면 참음 · 소리 안 남). 이어폰으로 냈으면 표시만 남긴다
+            boolean ear = earbuds(c);
             play(c, charId, sound, done, ok -> {
-                PrankScheduler.logEvent(c, t, charId, ok ? "loud" : "hold", ok ? null : "nosound");
+                PrankScheduler.logEvent(c, t, charId, ok ? "loud" : "hold", ok ? null : "nosound", ok && ear);
                 PrankNotifier.post(c, charId, ok ? "loud" : "hold");
             });
         } else {
-            PrankScheduler.logEvent(c, t, charId, mode, "hold".equals(mode) ? why : null);
+            PrankScheduler.logEvent(c, t, charId, mode, "hold".equals(mode) ? why : null, false);
             PrankNotifier.post(c, charId, mode);
             if ("soft".equals(mode)) vibrate(c, charId, sound);
             done.run();
@@ -111,6 +117,72 @@ final class PrankPlayer {
         if (am == null) return "hold";
         if (am.getStreamVolume(AudioManager.STREAM_MUSIC) > 0) return "loud";
         return am.getRingerMode() == AudioManager.RINGER_MODE_SILENT ? "hold" : "soft";
+    }
+
+    /**
+     * 앱 안 효과음 (팡파레 · 버튼 소리 · 알람 음악 미리 듣기 · 광고 소리) 을 내도 되는지. 소리 규칙의
+     *   0 장전시간 밖 · 쫄 시간 · 비상탈출, 1 방해금지, 2 절전 모드 이면 끈다. 나머지는 미디어 볼륨 그대로.
+     */
+    static boolean effectsAllowed(Context c) {
+        JSONObject cfg = PrankScheduler.config(c);
+        long now = System.currentTimeMillis();
+        if (cfg.optBoolean("frozen") || PrankScheduler.inRest(cfg, now) || !PrankScheduler.inWindow(cfg, now)) return false;
+        NotificationManager nm = c.getSystemService(NotificationManager.class);
+        if (nm != null && nm.getCurrentInterruptionFilter() > NotificationManager.INTERRUPTION_FILTER_ALL) return false;
+        return !powerSave(c);
+    }
+
+    static boolean hasVibrator(Context c) {
+        Vibrator vib = c.getSystemService(Vibrator.class);
+        return vib != null && vib.hasVibrator();
+    }
+
+    /** 소리가 이어폰 · 헤드폰 · 블루투스로 나가는지 (그러면 나만 들음) */
+    static boolean earbuds(Context c) {
+        AudioManager am = c.getSystemService(AudioManager.class);
+        if (am == null) return false;
+        for (android.media.AudioDeviceInfo d : am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+            switch (d.getType()) {
+                case android.media.AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                case android.media.AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                case android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP:
+                case android.media.AudioDeviceInfo.TYPE_USB_HEADSET:
+                case 26:   // TYPE_BLE_HEADSET (Android 12+)
+                case 23:   // TYPE_HEARING_AID
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return false;
+    }
+
+    /** 블루투스로 나가는지 (블루투스는 소리가 시작될 때 0.1~0.3초 늦게 깨어나 앞부분이 잘린다) */
+    private static boolean bluetooth(AudioManager am) {
+        for (android.media.AudioDeviceInfo d : am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+            int type = d.getType();
+            if (type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP || type == 26) return true;
+        }
+        return false;
+    }
+
+    /** 블루투스 길을 미리 깨운다: 0.3초짜리 무음을 먼저 흘려보냄 */
+    private static void wakeBluetooth(AudioAttributes attrs) {
+        int rate = 22050, n = rate * 3 / 10;
+        try {
+            android.media.AudioTrack track = new android.media.AudioTrack.Builder()
+                    .setAudioAttributes(attrs)
+                    .setAudioFormat(new android.media.AudioFormat.Builder().setSampleRate(rate)
+                            .setEncoding(android.media.AudioFormat.ENCODING_PCM_16BIT)
+                            .setChannelMask(android.media.AudioFormat.CHANNEL_OUT_MONO).build())
+                    .setTransferMode(android.media.AudioTrack.MODE_STATIC)
+                    .setBufferSizeInBytes(n * 2).build();
+            track.write(new short[n], 0, n);
+            track.play();
+            new Handler(Looper.getMainLooper()).postDelayed(track::release, 600);
+        } catch (Exception ignored) {
+            // 못 깨워도 그냥 낸다
+        }
     }
 
     static boolean powerSave(Context c) {
@@ -209,9 +281,16 @@ final class PrankPlayer {
                     mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
                 }
             }
+            boolean bt = am != null && bluetooth(am);
+            if (bt) wakeBluetooth(attrs);
             mp.setOnPreparedListener(p -> {
-                p.start();
-                tell.accept(p.isPlaying());
+                Runnable go = () -> {
+                    if (finished[0]) return;
+                    p.start();
+                    tell.accept(p.isPlaying());
+                };
+                if (bt) main.postDelayed(go, 250);   // 블루투스가 깨어난 뒤에 시작해야 '뿌' 로 잘리지 않음
+                else go.run();
             });
             mp.setOnCompletionListener(p -> finish.run());
             mp.setOnErrorListener((p, what, extra) -> { tell.accept(false); finish.run(); return true; });

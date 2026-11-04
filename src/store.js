@@ -11,6 +11,7 @@ function initial() {
   return {
     onboarded: false,
     seenVersion: '',      // 패치노트를 마지막으로 본 버전
+    rulesSeen: false,     // 소리 규칙 (중요!) 을 한 번 봤는지. 이미 쓰던 사람은 업데이트 후 한 번 띄움
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
     // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음) · wake = 기상 알람 (분). 켜면 그 시각부터 24시까지가 방구 시간
@@ -132,7 +133,7 @@ export const ownedCount = () => TITLES.filter(x => state.titles[x.id]).length;
  * 터진 것 1회 기록 + 칭호. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로.
  * 돌려주는 것: { t, char, mode, title(id), isNew, coins(이번에 번 뿡코인) }
  */
-export function recordOperation({ t, char, mode, why }) {
+export function recordOperation({ t, char, mode, why, ear }) {
   const m = MODES[mode] ? mode : 'hold';
   const who = CHARACTERS.some(c => c.id === char) ? char : 'hamster';
   const d = (state.days[dayKey(t)] ||= emptyDay());
@@ -141,7 +142,8 @@ export function recordOperation({ t, char, mode, why }) {
   d[m]++;
   if (!d.chars.includes(who)) d.chars.push(who);
   d.last = m;
-  const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}) };   // why = 참음 이유 (dnd · saver · silent · late7)
+  // why = 참음 이유 (dnd · saver · silent · late7 · nosound · novibe) · ear = 이어폰으로 냄 (냄으로 치고 표시만)
+  const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}), ...(m === 'loud' && ear ? { ear: true } : {}) };
   const c = contextOf(ev, {
     today: { loud: d.loud, soft: d.soft, hold: d.hold }, prev, charsToday: d.chars.length,
     streak: streak(t), total: totals().all, nth: count(d)

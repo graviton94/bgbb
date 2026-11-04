@@ -82,7 +82,9 @@ final class Ads {
         return ad != null;
     }
 
-    void show() {
+    /** muted: 소리 규칙상 효과음을 끄는 때 (비상탈출 · 쫄 시간 · 장전시간 밖 · 방해금지 · 절전) 광고도 음소거 */
+    void show(boolean muted) {
+        MobileAds.setAppMuted(muted);
         RewardedAd shown = ad;
         if (shown == null) { load(); return; }
         ad = null;
