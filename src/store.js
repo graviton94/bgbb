@@ -12,6 +12,7 @@ function initial() {
     onboarded: false,
     seenVersion: '',      // 패치노트를 마지막으로 본 버전
     rulesSeen: false,
+    guideV: 0,            // 본 안내 버전 (main.js GUIDE_V)
     reviewAsked: false,   // Play 인앱 리뷰를 한 번 띄웠는지
     daily: { day: '', counts: {}, claimed: [] },
     reportSeen: '',       // 주간 결산: 마지막으로 본 주 (월요일 날짜)

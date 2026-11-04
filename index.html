@@ -190,12 +190,14 @@
   <!-- 기상 알람이 울릴 때: 잠금화면 위로 뜨는 알람 화면. [확인] 을 눌러야 꺼짐 -->
   <dialog class="wake-alarm" id="wakeAlarm" aria-labelledby="waTime">
     <div class="wa-stripes" aria-hidden="true"></div>
+    <canvas class="wa-canvas" id="waCanvas" aria-hidden="true"></canvas>
     <div class="wa-body">
       <strong class="wa-time" id="waTime"></strong>
       <div class="wa-shout" id="waShout"></div>
       <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
       <p class="wa-line" id="waLine"></p>
-      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-label" data-i18n="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
+      <div class="wa-hud" id="waHud" aria-hidden="true"><span class="wa-chips"><small>CHIPS</small><b id="waChips">0</b></span><i>×</i><span class="wa-mult"><small>MULT</small><b id="waMult">1</b></span></div>
+      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-fill" aria-hidden="true"></span><span class="wa-ok-label" data-i18n="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
       <div class="wa-fx" id="waFx" aria-hidden="true"></div>
       <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
     </div>

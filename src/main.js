@@ -7,6 +7,7 @@ import {
 } from './store.js';
 import { pickMissions, missionProgress } from './missions.js';
 import { reportWeek, weekReport } from './report.js';
+import { startAlarmFx, stopAlarmFx, hitFx, comboFx, finishFx } from './alarmfx.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
 import { play, playFriend, forget, effectsOk } from './audio.js';
 import { dateKey } from './plan.js';
@@ -1032,12 +1033,14 @@ function showWakeAlarm() {
   }
   resetTaps();
   if (!$('wakeAlarm').open) $('wakeAlarm').showModal();
+  startAlarmFx($('waCanvas'));
 }
 function closeWakeAlarm(snooze) {
   if (native) (snooze ? native.snoozeWake : native.stopWake)?.call(native);
   alarmAudio?.pause();
   alarmAudio = null;
   clearInterval(tapDecay);
+  stopAlarmFx();
   $('wakeAlarm').close();
   if (snooze) toast(t('alarm.snoozed'));
 }
@@ -1046,8 +1049,14 @@ function closeWakeAlarm(snooze) {
 const TAPS = 20;
 let firstTap = 0;
 let taps = 0, lastTap = 0, tapDecay = 0;
+// 발라트로식 점수: 빠르게 이어 누르면 MULT 가 오르고, 누를 때마다 CHIPS += 10 × MULT
+let chips = 0, combo = 0;
 function resetTaps() {
   taps = 0;
+  chips = 0;
+  combo = 0;
+  $('waChips').textContent = '0';
+  $('waMult').textContent = '1';
   $('waCount').textContent = TAPS;
   $('waOk').style.setProperty('--p', '0');
   $('wakeAlarm').classList.remove('done');
@@ -1062,6 +1071,18 @@ function drawTaps(hit) {
   $('waOk').style.setProperty('--p', String(taps / TAPS));
   if (!hit) return;
   const box = $('wakeAlarm');
+  // 콤보: 0.45초 안에 이어 누르면 콤보, MULT = 1 + 콤보/4
+  combo = Date.now() - lastTap < 450 || taps === 1 ? combo + 1 : 1;
+  const mult = 1 + Math.floor(combo / 4);
+  chips += 10 * mult;
+  for (const [id, v] of [['waChips', chips], ['waMult', mult]]) {
+    const el = $(id);
+    el.textContent = v;
+    el.parentElement.classList.remove('bump'); void el.offsetWidth; el.parentElement.classList.add('bump');
+  }
+  const r = $('waOk').getBoundingClientRect(), c = $('waCanvas').getBoundingClientRect();
+  hitFx(r.left - c.left + r.width * (0.3 + Math.random() * 0.4), r.top - c.top + r.height / 2, taps, mult);
+  if (taps % 5 === 0 && taps < TAPS) comboFx(taps / 5 + 1);
   // 숫자 펑 + 버튼 눌림 + 화면 흔들림 (뒤로 갈수록 세게)
   for (const [el, cls] of [[$('waCount'), 'pop'], [$('waOk'), 'hit'], [box, `shake${taps % 2}`]]) {
     el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
@@ -1080,17 +1101,18 @@ $('waOk').addEventListener('click', () => {
   if (taps >= TAPS) return;
   taps++;
   if (taps === 1) firstTap = Date.now();
-  lastTap = Date.now();
   haptic(10 + taps);
-  drawTaps(true);
+  drawTaps(true);   // 콤보는 직전에 누른 시각(lastTap)과 비교하므로 그다음에 갱신
+  lastTap = Date.now();
   if (taps < TAPS) return;
   // 다 누름: 숫자 대신 기상 완료가 쿵, 잠깐 보여 주고 끔
   $('waCount').textContent = '✓';
   $('wakeAlarm').classList.add('done');
+  finishFx();
   $('waShout').textContent = t('alarm.tapDone');
   play('ui_treasure', 0.7);
   const fast = Date.now() - firstTap < 4000;
-  setTimeout(() => { closeWakeAlarm(false); if (fast) setTimeout(() => celebrateHidden('hid_alarm_fast'), 500); }, 1100);
+  setTimeout(() => { closeWakeAlarm(false); if (fast) setTimeout(() => celebrateHidden('hid_alarm_fast'), 500); }, 1800);
 });
 $('waSnooze').addEventListener('click', () => {
   const s = state.snooze.day === dayKey() ? state.snooze : (state.snooze = { day: dayKey(), n: 0 });
@@ -1269,14 +1291,48 @@ document.querySelectorAll('dialog').forEach(d => {
   });
 });
 // ---------------------------------------------------------- 사용설명 (옆으로 넘기는 5장)
+// 첫 사용자 안내 (앱 처음 켤 때 · 큰 업데이트 뒤 한 번 · 설정 → 사용설명). 쪽마다 그림 또는 실제 화면을 줄인 모형
 const GUIDE = [
-  { face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
-  { face: ['hamster_burst'], rules: true },
-  { face: ['cat_hold'] },
-  { face: ['hamster_thumbs_up'], real: true },
-  { face: ['tit_eng'] },
-  { face: ['hamster_eng', 'cat_eng'], perm: true }   // 마지막 쪽: 권한 두 개 (없으면 방구가 밀려서 참음만 나옴)
+  { id: 'hello', face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
+  { id: 'rules', rules: true },
+  { id: 'titles', mock: 'titles' },
+  { id: 'home', mock: 'home' },
+  { id: 'time', mock: 'time', fresh: true },
+  { id: 'daily', mock: 'daily', fresh: true },
+  { id: 'style', mock: 'style', fresh: true },
+  { id: 'perm', face: ['hamster_eng', 'cat_eng'], perm: true }   // 마지막 쪽: 권한 두 개 (없으면 방구가 밀려서 참음만 나옴)
 ];
+/** 안내 쪽 그림: 실제 화면 조각을 줄인 모형 (누를 수 없음) */
+function guideMock(kind) {
+  if (kind === 'titles') {
+    const x = titleById('meeting_loud');
+    return `<div class="gm gm-titles"><img src="${face('cat', 'burst', true)}" alt=""><div class="gm-card"><span class="gm-chip">${esc(L(RARITY.legend.name))}</span><b>${esc(L(x.name))}</b><small>${coinify('🪙')} +43 · ${esc(t('home.dexCount', { n: 1, all: TITLES.length }))}</small></div></div>`;
+  }
+  if (kind === 'home') {
+    return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span><span class="rules-i">i</span></div>
+      <img class="gm-hero" src="${face('hamster', 'blank')}" alt="">
+      <div class="row3"><span class="btn primary">${esc(t('home.cushion'))}</span><span class="btn">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze">${esc(t('home.freeze'))}</span></div></div>`;
+  }
+  if (kind === 'time') {
+    const days = t('wake.days').map((d, i) => `<span class="wday ${i > 0 && i < 6 ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</span>`).join('');
+    return `<div class="gm gm-time"><div class="tiles"><div class="tile"><span class="tile-open"><small>${esc(t('home.wake'))}</small><b>07:30 · ${esc(t('wake.weekdays'))}</b></span><span class="gm-switch on"></span></div>
+      <div class="tile"><span class="tile-open"><small>${esc(t('home.rest'))}</small><b>14:00~15:00</b></span><span class="gm-switch on"></span></div></div>
+      <div class="wake-days">${days}</div><div class="gm-tap"><span>${esc(t('alarm.tap'))}</span><b>20</b></div></div>`;
+  }
+  if (kind === 'daily') {
+    const bars = [3, 1, 4, 2, 5, 1, 2].map((n, i) => `<span class="rp-day ${i === 4 ? 'best' : ''}"><i style="height:${n * 20}%"></i></span>`).join('');
+    return `<div class="gm gm-daily"><div class="mission done"><div class="m-text"><b>${esc(L(MISSION_SAMPLE))}</b><span class="m-bar"><i style="width:100%"></i></span><small>1/1</small></div><span class="m-claim">${coinify('🪙')} 30</span></div>
+      <div class="gm-report"><b>${esc(t('report.title'))}</b><div class="rp-bars">${bars}</div></div></div>`;
+  }
+  if (kind === 'style') {
+    const pv = ['sound_xmas', 'sound_drum', 'bg_space', 'prop_trophy'].map(id => itemById(id)).filter(Boolean)
+      .map(x => `<span class="gm-item">${itemPreview(x)}</span>`).join('');
+    return `<div class="gm gm-style"><div class="gm-items">${pv}</div>
+      <div class="gm-widget"><img src="${face('hamster', 'blank')}" alt=""><span><b>${esc(t('widget.left', { n: 3 }))}</b><small>${esc(t('widget.latest', { name: L(titleById('lunch').name) }))}</small></span></div></div>`;
+  }
+  return '';
+}
+const MISSION_SAMPLE = { ko: '점심시간(12~13시)에 터지기', en: 'Go off at lunch (12–1pm)' };
 /** 온보딩 마지막 쪽: 알림 · 알람 및 리마인더 허용 버튼 (허용하면 ✓) */
 function permButtons() {
   const notif = !native || native.notificationsAllowed?.();
@@ -1296,15 +1352,17 @@ $('guidePages').addEventListener('click', e => {
   setTimeout(refreshPerm, 600);
 });
 function openGuide() {
-  $('guidePages').innerHTML = GUIDE.map((g, i) => `<section class="guide-page">
-    <div class="guide-art">${g.face.map(f => `<img src="assets/${g.real ? 'faces_real' : 'faces'}/${f}.webp" alt="">`).join('')}</div>
-    <h3>${t(`guide.${i + 1}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}<p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
+  $('guidePages').innerHTML = GUIDE.map(g => `<section class="guide-page gp-${g.id}">
+    ${g.face ? `<div class="guide-art">${g.face.map(f => `<img src="assets/faces/${f}.webp" alt="">`).join('')}</div>` : ''}
+    ${g.mock ? `<div class="guide-mock" aria-hidden="true">${guideMock(g.mock)}</div>` : ''}
+    <h3>${g.fresh && state.onboarded ? `<span class="gp-new">${t('guide.newTag')}</span>` : ''}${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}<p>${t(`guide.${g.id}b`)}</p></section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
   guideAt(0);
   if (!$('guide').open) $('guide').showModal();
 }
 let guidePage = 0;
+const GUIDE_V = 2;   // 안내 내용이 크게 바뀌면 올림 → 이미 쓰던 사람에게도 한 번 더
 function guideAt(i) {
   guidePage = i;
   [...$('guideDots').children].forEach((d, k) => d.classList.toggle('on', k === i));
@@ -1320,6 +1378,7 @@ $('guideNext').addEventListener('click', () => {
 });
 $('guideSkip').addEventListener('click', () => $('guide').close());
 $('guide').addEventListener('close', () => {
+  if ((state.guideV || 0) < GUIDE_V) { state.guideV = GUIDE_V; state.rulesSeen = true; commit(); }
   if (state.onboarded) return;
   state.onboarded = true;
   state.rulesSeen = true;   // 2쪽에서 봤음
@@ -1422,7 +1481,7 @@ drainNative();
 native?.loadTips?.(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));   // 다른 기기에서 응원한 기록 복원
 render();
 if (!state.onboarded) openGuide();
-else if (!state.rulesSeen) openRules();   // 이미 쓰던 사람: 소리 규칙 (중요!) 을 업데이트 후 한 번
+else if ((state.guideV || 0) < GUIDE_V) openGuide();   // 이미 쓰던 사람: 큰 업데이트 뒤 안내를 한 번 (소리 규칙 중요! 포함)
 else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음 연 날: 그 사이 바뀐 것만
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
