@@ -14,7 +14,8 @@ import com.google.android.play.core.install.model.UpdateAvailability;
 /**
  * 새 버전 알림: Google Play 인앱 업데이트 (유연한 방식).
  * Play 에 더 새 버전이 있으면 JS 에 알리고 (업데이트 팝업), 사용자가 누르면 앱을 쓰는 동안 뒤에서 받는다.
- * 다 받으면 다시 알리고 (지금 다시 시작?), completeUpdate 로 설치 · 재시작.
+ * 받는 동안은 진행률을 알리고 (앱 안 진행 띠), 다 받으면 다시 알리고 (지금 다시 시작?), completeUpdate 로 설치 · 재시작.
+ * Play 확인 창이 닫히며 앱이 다시 보일 때 '새 버전 있음' 을 또 띄우지 않도록, 받는 중이거나 확인 창이 떠 있으면 available 은 건너뛴다.
  * Play 에서 설치하지 않은 APK (테스트용) 에서는 아무 일도 안 일어난다.
  */
 final class Updater {
@@ -22,6 +23,8 @@ final class Updater {
     interface Sink {
         void available(int versionCode);   // 새 버전 있음
         void downloaded();                 // 다 받음 → 다시 시작하면 적용
+        void progress(int percent);        // 받는 중 (0~100, 아직 크기를 모르면 -1)
+        void idle();                       // 취소 · 실패: 다시 '새 버전 있음' 으로
     }
 
     private final Activity activity;
@@ -29,13 +32,19 @@ final class Updater {
     private final AppUpdateManager manager;
     private AppUpdateInfo latest;
     private final InstallStateUpdatedListener listener;
+    private boolean busy;   // Play 확인 창이 떠 있거나 받는 중
 
     Updater(Activity activity, Sink sink) {
         this.activity = activity;
         this.sink = sink;
         this.manager = AppUpdateManagerFactory.create(activity);
         this.listener = state -> {
-            if (state.installStatus() == InstallStatus.DOWNLOADED) sink.downloaded();
+            int st = state.installStatus();
+            if (st == InstallStatus.DOWNLOADED) { busy = false; sink.downloaded(); }
+            else if (st == InstallStatus.PENDING || st == InstallStatus.DOWNLOADING) {
+                busy = true;
+                sink.progress(percent(state.bytesDownloaded(), state.totalBytesToDownload()));
+            } else if (st == InstallStatus.FAILED || st == InstallStatus.CANCELED) { busy = false; sink.idle(); }
         };
         manager.registerListener(listener);
     }
@@ -44,16 +53,34 @@ final class Updater {
     void check() {
         manager.getAppUpdateInfo().addOnSuccessListener(info -> {
             latest = info;
-            if (info.installStatus() == InstallStatus.DOWNLOADED) sink.downloaded();
-            else if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+            int st = info.installStatus();
+            if (st == InstallStatus.DOWNLOADED) { busy = false; sink.downloaded(); }
+            else if (st == InstallStatus.PENDING || st == InstallStatus.DOWNLOADING
+                    || info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                busy = true;
+                sink.progress(percent(info.bytesDownloaded(), info.totalBytesToDownload()));
+            } else if (busy) {
+                // 확인 창이 떠 있는 동안 (앱이 잠깐 가려졌다 돌아옴): 아무것도 안 띄움
+            } else if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
                     && info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) sink.available(info.availableVersionCode());
         });
     }
 
     /** 사용자가 '업데이트' 를 누름: Play 확인 창 → 뒤에서 받기 */
     void start() {
-        if (latest == null) return;
-        manager.startUpdateFlow(latest, activity, AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build());
+        if (latest == null || busy) return;
+        busy = true;
+        sink.progress(-1);
+        manager.startUpdateFlow(latest, activity, AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build())
+                .addOnSuccessListener(code -> {
+                    // 확인 창에서 '업데이트' 가 아니면 (취소 · 뒤로) 다시 처음 상태로
+                    if (code != Activity.RESULT_OK) { busy = false; sink.idle(); }
+                })
+                .addOnFailureListener(e -> { busy = false; sink.idle(); });
+    }
+
+    private static int percent(long done, long total) {
+        return total > 0 ? (int) Math.min(100, done * 100 / total) : -1;
     }
 
     /** 다 받은 걸 설치하고 다시 시작 */

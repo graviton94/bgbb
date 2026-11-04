@@ -457,6 +457,25 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 }
 .toast.show { opacity: 1; transform: none; }
 
+/* 새 버전 받는 중 띠: 화면 위쪽, 받는 동안 계속 */
+.upd-pill {
+  position: fixed; inset: calc(var(--safe-top) + 10px) 0 auto; margin: 0 auto;
+  width: min(320px, calc(100% - 32px));
+  padding: 10px 14px 12px;
+  border: 2px solid var(--ink); border-radius: 14px;
+  background: #fff; color: var(--ink);
+  font-size: 14px; font-weight: 700; text-align: center;
+  box-shadow: 3px 4px 0 var(--ink);
+  opacity: 0; transform: translateY(-8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.upd-pill.show { opacity: 1; transform: none; }
+.upd-pill i { display: block; height: 8px; margin-top: 8px; border: 1.5px solid var(--ink); border-radius: 99px; overflow: hidden; background: #eee; }
+.upd-pill b { display: block; height: 100%; width: 0; background: var(--lime); transition: width 0.3s; }
+.upd-pill.busy b { width: 35%; animation: upd-slide 1.1s ease-in-out infinite alternate; }
+@keyframes upd-slide { from { transform: translateX(-10%); } to { transform: translateX(195%); } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

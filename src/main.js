@@ -1415,6 +1415,7 @@ $('openNotes').addEventListener('click', () => { $('settingsSheet').close(); sho
 
 // ---------------------------------------------------------- 새 버전 (Google Play 인앱 업데이트, Play 에서 깐 앱만)
 let updateMode = 'get';
+let updBusy = false;   // Play 확인 창이 떠 있거나 받는 중: '새 버전 있음' 을 다시 띄우지 않는다
 function updateSheet(mode) {
   updateMode = mode;
   const ready = mode === 'ready';
@@ -1423,16 +1424,34 @@ function updateSheet(mode) {
   $('updGo').textContent = t(ready ? 'update.restart' : 'update.go');
   if (!$('updateSheet').open) $('updateSheet').showModal();
 }
+/** 받는 중 띠 (화면 위쪽, 받는 동안 계속). percent -1 = 아직 크기 모름 */
+function updatePill(percent) {
+  const el = $('updPill');
+  if (percent == null) { el.classList.remove('show'); try { el.hidePopover(); } catch {} return; }
+  const known = percent >= 0;
+  $('updPillText').textContent = known ? t('update.progress', { p: percent }) : t('update.preparing');
+  el.classList.toggle('busy', !known);
+  $('updPillBar').style.width = known ? `${percent}%` : '';
+  try { el.showPopover(); } catch {}
+  el.classList.add('show');
+}
 window.bgbbOnUpdate = code => {
+  if (updBusy) return;
   const snooze = state.updateSnooze || {};
   if (snooze.until && Date.now() < snooze.until) return;   // '나중에' 누른 뒤 하루는 조용히
   updateSheet('get');
 };
-window.bgbbOnUpdateReady = () => updateSheet('ready');
+window.bgbbOnUpdateProgress = p => {
+  updBusy = true;
+  if ($('updateSheet').open && updateMode === 'get') $('updateSheet').close();
+  updatePill(Number(p));
+};
+window.bgbbOnUpdateIdle = () => { updBusy = false; updatePill(null); };
+window.bgbbOnUpdateReady = () => { updBusy = false; updatePill(null); updateSheet('ready'); };
 $('updGo').addEventListener('click', () => {
   $('updateSheet').close();
   if (updateMode === 'ready') native?.completeUpdate?.();
-  else { native?.startUpdate?.(); toast(t('update.downloading')); }
+  else { updBusy = true; updatePill(-1); native?.startUpdate?.(); }
 });
 $('updLater').addEventListener('click', () => {
   $('updateSheet').close();
