@@ -1,8 +1,10 @@
 package io.github.graviton94.bgbb;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Test;
 
@@ -29,9 +31,23 @@ public class PrankSchedulerTest {
 
     @Test
     public void windowLength() throws Exception {
-        assertEquals(9 * H, PrankScheduler.windowLength(cfg(9, 18, "normal")));
-        assertEquals(4 * H, PrankScheduler.windowLength(cfg(22, 2, "normal")));
-        assertEquals(24 * H, PrankScheduler.windowLength(cfg(0, 0, "normal")));
+        assertEquals(9 * H, PrankScheduler.windowLength(cfg(9, 18, "normal"), at("2026-10-20T09:00")));
+        assertEquals(4 * H, PrankScheduler.windowLength(cfg(22, 2, "normal"), at("2026-10-20T22:00")));
+        assertEquals(24 * H, PrankScheduler.windowLength(cfg(0, 0, "normal"), at("2026-10-20T00:00")));
+    }
+
+    /** 기상 알람 요일: 고른 요일만 그 시각부터 (src/plan.js 테스트와 같은 값) */
+    @Test
+    public void wakeDaysMoveTheStart() throws Exception {
+        JSONObject c = cfg(6, 0, "normal");
+        JSONArray days = new JSONArray();
+        for (int i = 0; i < 7; i++) days.put(i >= 1 && i <= 5);
+        c.put("wake", new JSONObject().put("on", true).put("at", 8 * 60).put("days", days));
+        assertEquals(at("2026-11-04T08:00"), PrankScheduler.windowStart(c, at("2026-11-04T12:00")));   // 수요일
+        assertEquals(at("2026-11-07T06:00"), PrankScheduler.windowStart(c, at("2026-11-07T12:00")));   // 토요일
+        assertEquals(16 * H, PrankScheduler.windowLength(c, at("2026-11-04T08:00")));
+        assertFalse(PrankScheduler.inWindow(c, at("2026-11-04T07:00")));
+        assertTrue(PrankScheduler.inWindow(c, at("2026-11-07T07:00")));
     }
 
     @Test

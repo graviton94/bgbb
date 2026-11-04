@@ -2,6 +2,29 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.4.0', date: '2026-11-04',
+    ko: [
+      '소리 규칙 정리: 미디어 볼륨이 제일 먼저. 방해금지 · 절전 · 비상탈출 · 쫄 시간엔 앱 안 효과음과 광고 소리도 꺼짐',
+      '기상 알람: 요일 고르기 (폰 알람처럼) · 끄려면 20번 연타 (휘황찬란 FX) · \'알람 및 리마인더\' 허용해야 켤 수 있음',
+      '첫 사용 안내 새로: 소리 규칙 · 홈 버튼 · 쫄 시간 · 알람 · 미션 · 꾸미기까지 8쪽',
+      '오늘의 미션 3개 · 이번 주 방구 결산 (일요일 밤)',
+      '방구 소리 팩 6종: 바둠츠 · 징글 · 유령 · 꽹과리 · 보름달 피리 · 띠용. 시즌 팩은 그날 앱 열면 공짜',
+      '홈 화면 위젯: 친구 얼굴 누르면 뿡',
+      '칭호 119개로 (63개 추가, 숨김 업적 10개 포함)',
+      '이어폰으로 낸 방구 표시 · 블루투스 이어폰 앞부분 잘림 수정'
+    ],
+    en: [
+      'Sound rules cleaned up: media volume comes first. In-app effects and ad audio are off during DND, battery saver, bail-out and chicken hours',
+      'Wake-up alarm: pick days like a phone alarm, tap 20 times to stop it (with fireworks), needs "Alarms & reminders"',
+      'New first-run guide: sound rules, home buttons, chicken hours, alarm, missions and style in 8 pages',
+      'Three daily missions and a weekly toot report (Sunday night)',
+      'Six toot sound packs: ba-dum-tss, jingle, ghost, gong, full-moon flute, boing. Seasonal ones are free on their day',
+      'Home-screen widget: tap your pal to toot',
+      '119 titles now (63 new, including 10 hidden achievements)',
+      'Toots through earbuds are marked, and Bluetooth no longer clips the start'
+    ]
+  },
+  {
     v: '2.3.2', date: '2026-10-29',
     ko: [
       '노래 듣는 중에 터지면 노래 소리를 잠깐 줄이고 뿡 (이어폰 속 노래에 묻히지 않게)',

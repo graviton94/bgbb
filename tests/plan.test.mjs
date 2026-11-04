@@ -120,3 +120,22 @@ test('기상 알람으로 시작 시각이 바뀌어도 오늘 남은 방구는 
     assert.equal(p2.count, 5);   // 그날 정한 횟수는 그대로
   }
 });
+
+test('기상 알람 요일: 고른 요일만 그 시각부터, 나머지 날은 06시 · 요일을 하나도 안 고르면 그날 하루만', () => {
+  const days = [false, true, true, true, true, true, false];   // 평일만
+  const s = { start: 6, end: 0, wake: { on: true, at: 8 * 60, days } };
+  // 2026-11-04 = 수요일, 2026-11-07 = 토요일
+  assert.equal(windowStart(at('2026-11-04T12:00'), s), at('2026-11-04T08:00'));
+  assert.ok(!inWindow(at('2026-11-04T07:00'), s));
+  assert.equal(windowStart(at('2026-11-07T12:00'), s), at('2026-11-07T06:00'));
+  assert.ok(inWindow(at('2026-11-07T07:00'), s));
+  assert.equal(windowLength(s, at('2026-11-04T08:00')), 16 * H);
+  assert.equal(windowLength(s, at('2026-11-07T06:00')), 18 * H);
+  const once = { start: 6, end: 0, wake: { on: true, at: 9 * 60, days: [false, false, false, false, false, false, false], once: 20261105 } };
+  assert.equal(windowStart(at('2026-11-05T12:00'), once), at('2026-11-05T09:00'));
+  assert.equal(windowStart(at('2026-11-06T12:00'), once), at('2026-11-06T06:00'));
+  // 자정 넘어 짠 토요일 일정은 토요일 시작 시각(06시)부터
+  const p = advancePlan(null, at('2026-11-07T00:30'), s, () => 5, Math.random);
+  assert.equal(p.day, at('2026-11-07T06:00'));
+  assert.ok(p.times.every(t => t >= at('2026-11-07T06:00') && t < at('2026-11-08T00:00')));
+});

@@ -6,29 +6,46 @@
 const HOUR = 3600e3;
 export const GAP = HOUR;
 
-/** 방구 시간 시작 (하루 중 분): 기상 알람을 켰으면 그 시각, 아니면 start 시 (06:00). PrankScheduler.startMin 과 같다 */
-export const startMin = schedule => (schedule.wake?.on ? schedule.wake.at : schedule.start * 60);
+/**
+ * 기상 알람이 그날 울리는지. wake = { on, at, days?: [일..토 7개], once?: 20261105 }
+ * days 가 하나라도 켜져 있으면 그 요일만, 하나도 안 켜져 있으면 once 날짜 하루만 (폰 알람의 '반복 없음'), days 가 없으면 매일.
+ */
+export function wakeOn(wake, t) {
+  if (!wake?.on) return false;
+  if (!Array.isArray(wake.days)) return true;
+  if (wake.days.some(Boolean)) return !!wake.days[new Date(t).getDay()];
+  return wake.once === dateKey(t);
+}
 
-export function windowLength(schedule) {
-  const m = ((schedule.end * 60 - startMin(schedule)) % 1440 + 1440) % 1440;
+/** 그날 방구 시간 시작 (하루 중 분): 그날 기상 알람이 울리면 그 시각, 아니면 start 시 (06:00). PrankScheduler.startMin 과 같다 */
+export const startMin = (schedule, t = Date.now()) => (wakeOn(schedule.wake, t) ? schedule.wake.at : schedule.start * 60);
+
+const midnight = t => { const d = new Date(t); d.setHours(0, 0, 0, 0); return d.getTime(); };
+/** t 날짜의 작전일 시작 시각 */
+export const dayStart = (t, schedule) => midnight(t) + startMin(schedule, t) * 60e3;
+
+/** dayStart 에서 시작하는 작전일의 길이 (시작 시각 ~ end 시) */
+export function windowLength(schedule, start = dayStart(Date.now(), schedule)) {
+  const sm = Math.round((start - midnight(start)) / 60e3);
+  const m = ((schedule.end * 60 - sm) % 1440 + 1440) % 1440;
   return (m === 0 ? 1440 : m) * 60e3;
 }
 
 /** now 가 속한 작전일의 시작 시각 (22~02시처럼 자정을 넘는 시간대 포함) */
 export function windowStart(now, schedule) {
-  const d = new Date(now);
-  d.setHours(0, startMin(schedule), 0, 0);
-  const start = d.getTime();
+  const start = dayStart(now, schedule);
   if (start > now) {
-    d.setDate(d.getDate() - 1);
-    if (now < d.getTime() + windowLength(schedule)) return d.getTime();
+    const prev = new Date(now);
+    prev.setDate(prev.getDate() - 1);
+    const y = dayStart(prev.getTime(), schedule);
+    if (now < y + windowLength(schedule, y)) return y;
   }
   return start;
 }
 
 export function inWindow(now, schedule) {
   const s = windowStart(now, schedule);
-  return now >= s && now < s + windowLength(schedule);
+  return now >= s && now < s + windowLength(schedule, s);
 }
 
 // 쉬는 시간 (쫄?): rest = { on, from, to } — 하루 중 분 (0~1439). 매일 같은 시각, 자정 넘김 포함
@@ -46,7 +63,7 @@ export function inRest(now, rest) {
 
 /** 작전일 [start, start+길이) 에서 쉬는 시간을 뺀 열린 구간들 [[a, b], …] */
 export function openSegments(start, schedule) {
-  const end = start + windowLength(schedule);
+  const end = start + windowLength(schedule, start);
   let segs = [[start, end]];
   if (!restOn(schedule.rest)) return segs;
   const len = restMinutes(schedule.rest) * 60e3;
@@ -78,10 +95,11 @@ export function planDay(start, notBefore, schedule, count, random = Math.random)
   });
 }
 
-export function nextDay(t) {
+/** 다음 날의 작전일 시작 (요일마다 기상 알람이 달라 시작 시각도 다를 수 있음) */
+export function nextDay(t, schedule) {
   const d = new Date(t);
   d.setDate(d.getDate() + 1);
-  return d.getTime();
+  return schedule ? dayStart(d.getTime(), schedule) : d.getTime();
 }
 
 /**
@@ -102,8 +120,8 @@ export function advancePlan(plan, now, schedule, pickCount, random = Math.random
   // 오늘 다시 뿌리기: 설정 직후 (처음이거나 reset) 이고 아직 오늘이 남았으면.
   // 날짜로 비교한다: 기상 알람으로 시작 시각이 바뀌면 같은 날도 시작 시각(ms)이 달라진다
   const pd = plan ? dateKey(plan.day) : 0, td = dateKey(today);
-  let day = !plan || pd < td || (plan.reset && pd === td) ? today : nextDay(today);
-  for (let i = 0; i < 3; i++, day = nextDay(day)) {
+  let day = !plan || pd < td || (plan.reset && pd === td) ? today : nextDay(today, schedule);
+  for (let i = 0; i < 3; i++, day = nextDay(day, schedule)) {
     const count = dateKey(day) === pd && plan.count ? plan.count : pickCount();
     const left = day === today ? Math.max(0, count - fired) : count;
     const next = planDay(day, notBefore, schedule, left, random);

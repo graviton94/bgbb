@@ -454,6 +454,24 @@ public class MainActivity extends Activity {
             if (url != null && url.startsWith("https://")) runOnUiThread(() -> openExternal(Uri.parse(url)));
         }
 
+        /** Play 인앱 리뷰 창 (Play 가 띄울지 말지 정함 · 하루 횟수 제한 있음). 결과는 알 수 없음 */
+        @JavascriptInterface
+        public void requestReview() {
+            runOnUiThread(() -> {
+                com.google.android.play.core.review.ReviewManager rm = com.google.android.play.core.review.ReviewManagerFactory.create(MainActivity.this);
+                rm.requestReviewFlow().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) rm.launchReviewFlow(MainActivity.this, task.getResult());
+                });
+            });
+        }
+
+        /** 이 앱의 폰 설정 화면 (알림을 한 번 거절한 뒤 다시 켤 때) */
+        @JavascriptInterface
+        public void openAppSettings() {
+            runOnUiThread(() -> startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName())));
+        }
+
         /** 의견 · 오류 보내기: 사용자의 메일 앱을 열고 기기 정보를 채운다. 사용자가 직접 보낼 때만 전송된다. */
         @JavascriptInterface
         public void sendFeedback(String log) {
@@ -515,6 +533,24 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> updater.complete());
         }
 
+        /** 위젯에 보일 최근 칭호 · 홈 친구 */
+        @JavascriptInterface
+        public void setWidgetInfo(String json) {
+            BgbbWidget.setInfo(getApplicationContext(), json);
+        }
+
+        /** 상점에서 방구 소리 팩 미리 듣기 (판정이 냄일 때만) */
+        @JavascriptInterface
+        public void previewPack(String pack) {
+            PrankPlayer.previewPack(getApplicationContext(), pack);
+        }
+
+        /** 앱 안 효과음을 내도 되는지 (소리 규칙 0 · 1 · 2 가 아니면 true) */
+        @JavascriptInterface
+        public boolean effectsAllowed() {
+            return PrankPlayer.effectsAllowed(getApplicationContext());
+        }
+
         @JavascriptInterface
         public boolean adReady() {
             return ads != null && ads.ready();
@@ -522,7 +558,7 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void showRewardedAd() {
-            runOnUiThread(() -> ads.show());
+            runOnUiThread(() -> ads.show(!PrankPlayer.effectsAllowed(getApplicationContext())));
         }
 
         /** 속보 카드 PNG 를 갤러리(Pictures/방구뿡)에 저장하고 공유창을 띄운다. Android 10+ (권한 불필요). */

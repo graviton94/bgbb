@@ -2,7 +2,7 @@
 // 흔들림은 devicemotion (권한 필요 없음, 못 읽는 기기는 화면 터치만). 설치 중엔 화면을 검게 해 꺼진 척하고, 앱이면 화면이 안 꺼지게 붙잡는다.
 import { charById, face } from './data.js';
 import { t, L } from './i18n.js';
-import { state, commit, getDiy } from './store.js';
+import { state, commit, getDiy, bump } from './store.js';
 import { native } from './schedule.js';
 import { playFriend, warmFriend } from './audio.js';
 
@@ -86,7 +86,8 @@ function caught() {
   const style = state.friends[heroId].diy && getDiy() && Math.random() < 0.5 ? 'diy' : 'loud';   // 함정은 늘 우렁차게
   playFriend(heroId, style, getDiy(), 1);
   state.cushion++;
-  commit();
+  bump('trap');   // 오늘의 미션 (commit 포함)
+  if (state.cushion >= 10) setTimeout(() => window.bgbbHidden?.('hid_trap10'), 1200);   // 숨김 업적
   $('cCaughtFace').src = face(heroId, 'burst');
   $('cCaughtCount').textContent = t('cushion.count', { n: state.cushion });
   show('caught');

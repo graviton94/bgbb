@@ -3,10 +3,14 @@ import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, coinify, AD_BONUS, AD
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
-  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy
+  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy, dailyToday, bump, grantHidden
 } from './store.js';
+import { pickMissions, missionProgress } from './missions.js';
+import { reportWeek, weekReport } from './report.js';
+import { startAlarmFx, stopAlarmFx, hitFx, comboFx, finishFx } from './alarmfx.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
-import { play, playFriend, forget } from './audio.js';
+import { play, playFriend, forget, effectsOk } from './audio.js';
+import { dateKey } from './plan.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
@@ -121,6 +125,7 @@ function headliner(results) {
  */
 /** 참음 이유 '(방해금지)' · '(7분 늦게 옴)' */
 function whyLabel(ev) {
+  if (ev.ear) return ` (${t('why.ear')})`;
   if (!ev.why) return '';
   const late = /^late(\d+)$/.exec(ev.why);
   return ` (${late ? t('why.late', { n: late[1] }) : t(`why.${ev.why}`)})`;
@@ -209,7 +214,7 @@ window.bgbbOnAdReward = () => {
 };
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
-$('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));
+$('shareCard').addEventListener('click', () => { if (!burstCard) return; countShare(); shareCard(burstCard); });
 
 function celebrate(events) {
   if (!events.length) return;
@@ -233,6 +238,11 @@ function celebrate(events) {
     if (unlocked.length) afterBurst = () => showItem(unlocked[0], unlocked.length > 1
       ? t('cele.more', { slot: L(SLOT_NAMES[unlocked[0].slot]), n: unlocked.length - 1 }) : L(SLOT_NAMES[unlocked[0].slot]),
     t('cele.from', { name: L(title.name) }));
+    // 처음 레전드 · 잭팟을 받고 짤까지 본 직후 딱 한 번 Play 리뷰 창 (기분 제일 좋을 때)
+    else if (ownedCount() >= TITLES.length / 2 && !state.titles.hid_dex_half) afterBurst = () => celebrateHidden('hid_dex_half');
+    else if ((title.rarity === 'legend' || title.rarity === 'jackpot') && !state.reviewAsked && native?.requestReview) {
+      afterBurst = () => { state.reviewAsked = true; commit(); native.requestReview(); };
+    }
   });
 }
 
@@ -241,9 +251,14 @@ let afterBurst = null;
 $('burst').addEventListener('close', () => { const f = afterBurst; afterBurst = null; f && setTimeout(f, 150); });
 
 /** 아이템 상자깡. ㅇㅋ/바로 장착 = 장착 */
+/** 상자깡 팝업이 닫힌 뒤 한 번 할 일 (숨김 업적 등) */
+let afterCele = null;
 function showItem(x, slotLabel, from) {
   play('ui_treasure', 0.5);
   celebrateItem({ name: L(x.name), slot: slotLabel, preview: itemPreview(x), from, equipped: state.equip[x.slot] === x.id }, equip => {
+    const next = afterCele;
+    afterCele = null;
+    if (next) setTimeout(next, 300);
     if (!equip || state.equip[x.slot] === x.id) return;
     equipItem(x);
     toast(t('shop.bought', { name: L(x.name) }));
@@ -370,6 +385,7 @@ function renderBubbles() {
 }
 const newBubbles = () => renderBubbles();
 
+let lastWidget = '';
 function renderHome() {
   const n = remainingToday();
   let big, line;
@@ -400,11 +416,14 @@ function renderHome() {
   $('hero').setAttribute('aria-label', t('home.heroLabel', { name: L(c.name) }));
   const latest = state.recent[0];
   $('latestName').textContent = latest ? L(titleById(latest.title).name) : t('home.noTitle');
+  // 홈 화면 위젯: 최근 칭호 · 홈 친구 (바뀌었을 때만)
+  const widget = JSON.stringify({ title: latest ? L(titleById(latest.title).name) : '', char: heroId() });
+  if (widget !== lastWidget) { lastWidget = widget; native?.setWidgetInfo?.(widget); }
   $('dexCount').textContent = t('home.dexCount', { n: ownedCount(), all: TITLES.length });
   // 기상 알람 · 쫄 시간 타일 + '알람 및 리마인더' 꺼져 있으면 경고 (방구가 화면 켤 때까지 밀림)
   const { wake, rest } = state.schedule;
   $('wakeOn').checked = wake.on;
-  $('wakeInfo').textContent = wake.on ? hm(wake.at) : t('home.off');
+  $('wakeInfo').textContent = wake.on ? `${hm(wake.at)} · ${daysLabel(Array.isArray(wake.days) ? wake.days : [true, true, true, true, true, true, true])}` : t('home.off');
   $('restOn').checked = rest.on;
   $('restInfo').textContent = rest.on ? restLabel() : t('home.off');
   $('exactWarn').hidden = !(native?.exactAllowed && !native.exactAllowed());
@@ -416,7 +435,13 @@ function renderHome() {
 }
 
 let heroBusy = 0;
+let pokes = [];
 $('hero').addEventListener('click', () => {
+  bump('tap');
+  // 숨김 업적: 20초 안에 50번
+  const now = Date.now();
+  pokes = [...pokes.filter(p => now - p < 20000), now];
+  if (pokes.length >= 50) { pokes = []; celebrateHidden('hid_poke50'); }
   const id = heroId();
   playFriend(id, styleOf(id), getDiy(), 0.7);
   // 누르면 잠깐 터지는 얼굴
@@ -439,11 +464,157 @@ $('practice').addEventListener('click', () => {
   const id = heroId();
   playFriend(id, styleOf(id), getDiy());
   gachaToday().n++;
+  bump('gacha');
   commit();
   showBurst({ t: Date.now(), char: id, mode: 'loud' }, { kind: 'gacha' });
 });
 
 $('cushionBtn').addEventListener('click', openCushion);
+
+// ---------------------------------------------------------- 이번 주 방구 결산 (일요일 밤 9시부터 한 번 · 알림도)
+let report = null;
+const WD = () => t('wake.days');   // 일 월 화 …
+function reportRange(r) {
+  const s = new Date(`${r.monday}T00:00`), e = new Date(s); e.setDate(e.getDate() + 6);
+  return `${s.getMonth() + 1}.${s.getDate()} ~ ${e.getMonth() + 1}.${e.getDate()}`;
+}
+function renderReport(r) {
+  const max = Math.max(1, ...r.perDay), wd = WD();
+  const bars = r.perDay.map((n, i) => `<span class="rp-day ${i === r.bestDay && n ? 'best' : ''}"><i style="height:${(n / max) * 100}%"></i><small>${wd[(i + 1) % 7]}</small></span>`).join('');
+  const c = charById(r.top);
+  return `<div class="rp-total"><b>${r.total}</b><span>${t('report.total')}</span></div>
+    <div class="rp-bars" aria-hidden="true">${bars}</div>
+    <div class="rp-modes"><span><b>${r.loud}</b>${esc(L(MODES.loud.name))}</span><span><b>${r.soft}</b>${esc(L(MODES.soft.name))}</span><span><b>${r.hold}</b>${esc(L(MODES.hold.name))}</span></div>
+    <div class="rp-top"><img src="${face(r.top, 'thumbs_up')}" alt=""><span><small>${t('report.mvp')}</small><b>${esc(L(c.name))}</b><em>${t('report.mvpN', { n: r.topN })}</em></span></div>
+    <p class="rp-verdict">${esc(t(`report.v.${r.verdict}`, { n: r.meetingLoud }))}</p>
+    ${r.fresh ? `<p class="rp-fresh">${t('report.fresh', { n: r.fresh })}</p>` : ''}`;
+}
+function openReport(r) {
+  report = r;
+  $('reportRange').textContent = reportRange(r);
+  $('reportBody').innerHTML = renderReport(r);
+  if (!$('reportSheet').open) $('reportSheet').showModal();
+  play('ui_levelup', 0.5);
+}
+/** 볼 결산이 있으면 띄운다 (이미 본 주면 안 띄움) */
+function maybeReport() {
+  const wk = reportWeek();
+  if (state.reportSeen === wk) return false;
+  const r = weekReport(state.days, wk, state.titles);
+  state.reportSeen = wk;
+  commit();
+  if (!r) return false;
+  openReport(r);
+  return true;
+}
+/** 공유용 결산 카드 (1080×1350) */
+async function drawReport(r) {
+  const cv = $('card');
+  cv.width = 1080; cv.height = 1350;
+  const g = cv.getContext('2d');
+  await document.fonts.load('80px "Black Han Sans"').catch(() => {});
+  const F = (px, w = 400) => `${w} ${px}px "Black Han Sans", system-ui, sans-serif`;
+  g.fillStyle = '#FFD400'; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = '#111';
+  for (let i = -1350; i < 1080; i += 90) { g.save(); g.globalAlpha = 0.06; g.fillRect(i, 0, 40, 1350); g.restore(); }
+  g.font = F(40); g.fillText(`${t('appName')} · ${reportRange(r)}`, 70, 110);
+  g.font = F(110); g.fillText(t('report.title'), 70, 240);
+  g.font = F(300); g.fillText(String(r.total), 70, 560);
+  g.font = F(300); const w0 = g.measureText(String(r.total)).width; g.font = F(60); g.fillText(t('report.total'), 90 + w0, 560);
+  const modes = [['loud', r.loud], ['soft', r.soft], ['hold', r.hold]];
+  modes.forEach(([m, n], i) => {
+    const x = 70 + i * 320;
+    g.fillStyle = '#111'; g.beginPath(); g.roundRect(x, 620, 290, 150, 26); g.fill();
+    g.fillStyle = i === 0 ? '#D7FF3D' : '#fff'; g.font = F(80); g.fillText(String(n), x + 30, 715);
+    const nw = g.measureText(String(n)).width;
+    g.font = F(40); g.fillText(L(MODES[m].name), x + 50 + nw, 715);
+  });
+  const img = new Image(); img.src = face(r.top, 'thumbs_up');
+  await img.decode().catch(() => {});
+  if (img.naturalWidth) g.drawImage(img, 70, 820, 330, 330);
+  g.fillStyle = '#111'; g.font = F(44); g.fillText(t('report.mvp'), 430, 900);
+  g.font = F(96); g.fillText(L(charById(r.top).name), 430, 1010);
+  g.font = F(48); g.fillText(t('report.mvpN', { n: r.topN }), 430, 1080);
+  g.fillStyle = '#111'; g.fillRect(0, 1190, 1080, 160);
+  g.fillStyle = '#D7FF3D'; g.font = F(52);
+  g.fillText(t(`report.v.${r.verdict}`, { n: r.meetingLoud }), 70, 1290, 940);
+  return cv;
+}
+$('reportShare').addEventListener('click', async () => {
+  if (!report) return;
+  countShare();
+  const cv = await drawReport(report);
+  const name = `bgbb_week_${report.monday}.png`;
+  if (native) { toast(t(native.saveAndShareImage(cv.toDataURL('image/png').split(',')[1], name) ? 'card.saved' : 'card.cantSave')); return; }
+  const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = name; a.click();
+  toast(t('card.savedWeb'));
+});
+
+// ---------------------------------------------------------- 숨김 업적 (이스터에그): 방구가 아니라 행동으로 받는 칭호
+function celebrateHidden(id) {
+  const r = grantHidden(id);
+  if (!r) return;
+  const x = titleById(id), d = new Date(r.ev.t);
+  play(x.rarity === 'legend' ? 'ui_treasure' : 'ui_levelup', 0.6);
+  haptic([30, 50, 80]);
+  celebrateTitle({
+    tier: x.rarity, title: L(x.name), char: r.ev.char, expr: 'thumbs_up',
+    when: `${two(d.getHours())}:${two(d.getMinutes())}`, mode: t('hidden.tag'),
+    coins: r.coins, dex: ownedCount(), all: TITLES.length, unlocked: []
+  }, () => openTitle(id));
+  checkDexHalf();
+}
+window.bgbbHidden = celebrateHidden;   // cushion.js (함정 10번)
+const checkDexHalf = () => { if (ownedCount() >= TITLES.length / 2) setTimeout(() => celebrateHidden('hid_dex_half'), 1500); };
+function countShare() {
+  bump('share');
+  state.shares = (state.shares || 0) + 1;
+  commit();
+  if (state.shares >= 10) setTimeout(() => celebrateHidden('hid_share10'), 1500);
+}
+// 로고 7연타
+let logoTaps = [];
+document.querySelector('.logo').addEventListener('click', () => {
+  const now = Date.now();
+  logoTaps = [...logoTaps.filter(x => now - x < 3000), now];
+  const logo = document.querySelector('.logo');
+  logo.classList.remove('poke'); void logo.offsetWidth; logo.classList.add('poke');
+  if (logoTaps.length >= 7) { logoTaps = []; playFriend('hamster', 'loud'); celebrateHidden('hid_logo'); }
+});
+/** 새벽 3시대에 앱을 열면 */
+const checkNightOwl = () => { if (new Date().getHours() === 3) celebrateHidden('hid_night_owl'); };
+
+// ---------------------------------------------------------- 오늘의 미션 (날마다 세 개, 깨면 뿡코인)
+const todayMissions = () => missionProgress(pickMissions(dayKey()), day(), dailyToday().counts, dailyToday().claimed);
+function renderMissionBadge() {
+  const list = todayMissions();
+  const ready = list.some(m => m.done && !m.claimed);
+  $('missionN').textContent = `${list.filter(m => m.claimed).length}/${list.length}`;
+  $('topMission').classList.toggle('ready', ready);
+}
+function renderMissions() {
+  $('missionList').innerHTML = todayMissions().map(m => `<li class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}">
+    <div class="m-text"><b>${esc(L(m.name))}</b><span class="m-bar"><i style="width:${(m.n / m.goal) * 100}%"></i></span><small>${m.n}/${m.goal}</small></div>
+    <button class="m-claim" data-id="${m.id}" type="button" ${m.done && !m.claimed ? '' : 'disabled'}>${m.claimed ? t('mission.claimed') : coinify(esc(`🪙 ${m.coins}`))}</button>
+  </li>`).join('');
+}
+$('topMission').addEventListener('click', () => { renderMissions(); $('missionSheet').showModal(); });
+$('missionList').addEventListener('click', e => {
+  const b = e.target.closest('.m-claim');
+  if (!b || b.disabled) return;
+  const m = todayMissions().find(x => x.id === b.dataset.id);
+  if (!m || !m.done || m.claimed) return;
+  dailyToday().claimed.push(m.id);
+  if (dailyToday().claimed.length >= 3) setTimeout(() => celebrateHidden('hid_mission3'), 900);
+  state.coins += m.coins;
+  commit();
+  play('ui_treasure', 0.6);
+  haptic([20, 40, 60]);
+  toast(t('mission.got', { n: m.coins }));
+  renderMissions();
+  const pop = $('topCoins');
+  pop.classList.remove('bump'); void pop.offsetWidth; pop.classList.add('bump');
+});
 
 $('freeze').addEventListener('click', () => {
   state.frozen = !state.frozen;
@@ -536,19 +707,26 @@ function renderStatus() {
   $('mute').textContent = s.web ? t(`status.web.${s.mode}`) : s.dnd ? t('status.dnd') : s.saver ? t('status.saver') : s.vol ? t('status.vol', { vol: s.vol, max: s.max }) : s.mode === 'hold' ? t('status.silent') : t('status.muted');   // 볼륨 0 이어도 무음 모드면 진동 없이 참음
 }
 /** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트). now = 지금 폰 상태 줄을 형광으로 */
+/** 소리 규칙 표 (온보딩 2쪽 · ⓘ 시트 · 업데이트 후 1회): 위에서부터 먼저 맞는 줄. now = 지금 폰 상태 줄을 형광으로 */
 function soundRules(now) {
   const row = (m, icon) => `<li class="${m === now ? 'now' : ''}"><span>${icon}</span><b>${t(`rules.${m}`)}</b><em>${t(`rules.${m}R`)}</em>${m === now ? `<i>${t('rules.now')}</i>` : ''}</li>`;
-  return `<ul class="rules">${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ul><p class="rules-note">${t('rules.note')}</p>`;
+  return `<p class="rules-important">${t('rules.important')}</p><ol class="rules">${row('off', '🫥')}${row('loud', '🔊')}${row('soft', '📳')}${row('hold', '🔕')}</ol><p class="rules-note">${t('rules.note')}</p>`;
 }
-$('rulesInfo').addEventListener('click', () => {
+const rulesRow = s => (s.web ? s.mode : s.dnd || s.saver ? 'off' : s.mode);
+function openRules() {
   const s = soundStatus();
   const quiet = state.frozen || resting() || !inWindow();
-  $('rulesBody').innerHTML = soundRules(s.dnd ? 'hold' : s.mode)
+  $('rulesBody').innerHTML = soundRules(rulesRow(s))
     + `<p class="rules-note">${s.web ? '' : `${t('rules.now')}: ${esc($('mute').textContent)}. `}${t('rules.mute')}</p>`
     + `<p class="rules-note">${t('rules.late')}</p><p class="rules-note">${t('rules.wake')}</p>`
     + (quiet ? `<p class="rules-note"><b>${t('rules.quiet')}</b></p>` : '');
-  $('rulesSheet').showModal();
-});
+  if (!$('rulesSheet').open) $('rulesSheet').showModal();
+  // 작은 화면: 맨 아래 [알겠음] 에 초점이 가면서 아래로 스크롤돼 '중요!' 가 가려지던 것 → 맨 위부터
+  $('rulesSheet').querySelector('.sheet-body').focus?.({ preventScroll: true });
+  requestAnimationFrame(() => { $('rulesSheet').scrollTop = 0; $('rulesSheet').querySelector('.sheet-body').scrollTop = 0; });
+  if (!state.rulesSeen) { state.rulesSeen = true; commit(); }
+}
+$('rulesInfo').addEventListener('click', openRules);
 $('mute').addEventListener('click', () => {
   const s = soundStatus();
   if (s.web) { openSettings(); return; }   // 브라우저는 폰 볼륨을 못 바꾼다: 미리보기 상태 고르는 설정으로
@@ -597,7 +775,7 @@ const frameImage = () => pickOwned('frame')?.src || null;
 let shopSlot = 'bg';
 function itemPreview(x) {
   if (x.slot === 'bg') return `<span class="sw" style="background:${x.css}${x.frame ? `;box-shadow:inset 0 0 0 4px ${x.frame}` : ''}"></span>`;
-  if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
+  if (x.slot === 'prop' || x.slot === 'fx' || x.slot === 'frame' || x.slot === 'sound') return x.src ? `<img src="${x.src}" alt="">` : x.slot === 'fx' ? '<span class="sfx-pv">뿡!</span>' : '<span class="none">—</span>';
   if (x.slot === 'bubble') return `<span class="bubble ${x.src ? 'img' : ''}" data-skin="${x.id}" style="--bubble-img:${x.src ? `url(${x.src})` : 'none'}">${t('shop.sample')}</span>`;
   if (x.slot === 'font') return `<span class="font-pv ${x.deco ? `f-${x.deco}` : ''}">${t('shop.fontSample')}</span>`;
   if (x.slot === 'wear') return `<span class="wear-pv"><img src="${face(heroId(), 'blank', realLook())}" alt="">${x.src ? `<img src="${x.src}" alt="">` : ''}</span>`;
@@ -614,6 +792,7 @@ function renderShop() {
     const hint = x.title && (state.titles[x.title] ? L(titleById(x.title).name) : L(titleById(x.title).hint));
     const season = x.season ? t('shop.season', { m: x.season.join('·') }) : '';
     const how = on ? t('shop.equipped') : owned ? t('shop.equip')
+      : x.gift ? t('shop.gift', { when: L(titleById(x.gift).hint), n: x.price })
       : x.title && x.price ? t('shop.title_or', { hint, n: x.price }) : x.title ? t('shop.title_only', { hint }) : `${season ? `${season} · ` : ''}${t('shop.buy', { n: x.price })}`;
     return `<li><button class="item ${owned ? '' : 'locked'} ${on ? 'on' : ''}" data-id="${x.id}" type="button">
       <span class="pv">${itemPreview(x)}</span><b>${esc(L(x.name))}</b><small>${coinify(esc(how))}</small></button></li>`;
@@ -650,6 +829,7 @@ $('shopList').addEventListener('click', e => {
   if (!b) return;
   const x = itemById(b.dataset.id);
   if (!isOwned(x, state.titles, state.bought)) {
+    if (x.slot === 'sound') previewSound(x);   // 사기 전에 들어 보기
     if (!x.price) { toast(t('shop.title_only', { hint: L(titleById(x.title).hint) })); return; }
     if (!inSeason(x)) { toast(t('shop.offSeason', { m: x.season.join('·') })); return; }
     if (state.coins < x.price) { toast(t('shop.poor')); return; }
@@ -657,18 +837,40 @@ $('shopList').addEventListener('click', e => {
     state.coins -= x.price;
     state.bought[x.id] = true;
     commit();
+    if (Object.keys(state.bought).length >= 10) afterCele = () => celebrateHidden('hid_shopaholic');
+    if (x.slot === 'sound') syncSchedule(previewOperation);   // 알람 방구도 이 팩을 씀
     showItem(x, L(SLOT_NAMES[x.slot]), t('cele.paid', { n: x.price }));
     return;
   }
   play('ui_pop', 0.4);
   equipItem(x);
+  if (x.slot === 'sound') { previewSound(x); syncSchedule(previewOperation); }
 });
+/** 방구 소리 팩 미리 듣기: 햄찌 방구 + 팩 (앱은 소리 규칙대로 네이티브가) */
+function previewSound(x) {
+  if (native?.previewPack) { native.previewPack(x.pack || ''); return; }
+  playFriend('hamster', 'main');
+  if (x.pack) new Audio(`assets/sounds/pack_${x.pack}.ogg`).play().catch(() => {});
+}
+/** 시즌 소리 팩: 그날 앱을 열면 공짜 (칭호의 날짜 조건을 그대로 씀) */
+function giveGifts() {
+  const d = new Date();
+  const ctx = { month: d.getMonth() + 1, day: d.getDate(), ymd: dayKey(), hour: d.getHours(), wd: d.getDay(), today: { loud: 0, soft: 0, hold: 0 } };
+  const gift = ITEMS.find(x => x.gift && !isOwned(x, state.titles, state.bought) && titleById(x.gift)?.test(ctx));
+  if (!gift) return false;
+  state.bought[gift.id] = true;
+  commit();
+  syncSchedule(previewOperation);
+  showItem(gift, L(SLOT_NAMES[gift.slot]), t('shop.giftGot', { when: L(titleById(gift.gift).hint) }));
+  return true;
+}
 
 // ---------------------------------------------------------- 렌더
 function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
   $('topCoins').innerHTML = `${coinify('🪙')} ${state.coins}`;
+  renderMissionBadge();
   renderStatus();
   renderHome();
   applySkin();
@@ -728,8 +930,37 @@ $('restOpen').addEventListener('click', openRest);
 // ---------------------------------------------------------- 기상 알람 (04~12시, 5분 단위)
 fillWheel($('wH'), [...Array(9).keys()].map(i => i + 4));
 fillWheel($('wM'), minutes);
+// 요일: 폰 알람처럼 일~토 일곱 개를 아무렇게나 켜고 끔. 하나도 안 켜면 '한 번만' (다음 그 시각 하루)
+let wakeDays = [true, true, true, true, true, true, true];
+/** '매일' · '평일' · '주말' · '월 수 금' · '한 번만' */
+function daysLabel(days) {
+  const n = days.filter(Boolean).length, names = t('wake.days');
+  if (n === 7) return t('wake.everyday');
+  if (!n) return t('wake.once');
+  if (n === 5 && !days[0] && !days[6]) return t('wake.weekdays');
+  if (n === 2 && days[0] && days[6]) return t('wake.weekend');
+  return days.map((on, i) => (on ? names[i] : '')).filter(Boolean).join(' ');
+}
+function renderWakeDays() {
+  $('wakeDays').innerHTML = t('wake.days').map((d, i) =>
+    `<button class="wday ${wakeDays[i] ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}" data-i="${i}" type="button" aria-pressed="${wakeDays[i]}">${d}</button>`).join('');
+  const n = wakeDays.filter(Boolean).length;
+  $('wakeRepeat').textContent = n ? t('wake.repeat', { days: daysLabel(wakeDays) }) : t('wake.once');
+}
+$('wakeDays').addEventListener('click', e => {
+  const b = e.target.closest('.wday');
+  if (!b) return;
+  wakeDays[+b.dataset.i] = !wakeDays[+b.dataset.i];
+  haptic(8);
+  renderWakeDays();
+});
+/** 정확한 알람 권한 ('알람 및 리마인더'): 없으면 기상 알람을 켤 수 없음 */
+const exactOk = () => !(native?.exactAllowed && !native.exactAllowed());
 function openWake() {
-  const at = state.schedule.wake.at;
+  if (!exactOk()) { toast(t('wake.needExact'), 3200); native.openExactSettings?.(); return; }
+  const { at, days } = state.schedule.wake;
+  wakeDays = Array.isArray(days) ? [...days] : [true, true, true, true, true, true, true];
+  renderWakeDays();
   $('wakeSheet').showModal();
   wheelSet($('wH'), Math.floor(at / 60)); wheelSet($('wM'), at % 60 - (at % STEP));
 }
@@ -740,15 +971,35 @@ $('wakeOn').addEventListener('change', e => {
   toast(t('wake.off'));
   syncSchedule(previewOperation);
 });
+/** 다음에 at 분이 되는 날 (요일을 하나도 안 골랐을 때 그 하루) */
+function nextOnce(at, now = Date.now()) {
+  const d = new Date(now);
+  d.setHours(0, at, 0, 0);
+  if (d.getTime() <= now) d.setDate(d.getDate() + 1);
+  return dateKey(d.getTime());
+}
 $('wakeSave').addEventListener('click', () => {
+  if (!exactOk()) { toast(t('wake.needExact'), 3200); native.openExactSettings?.(); return; }
   const at = wheelGet($('wH')) * 60 + wheelGet($('wM'));
-  state.schedule.wake = { on: true, at };
+  const once = wakeDays.some(Boolean) ? 0 : nextOnce(at);
+  state.schedule.wake = { on: true, at, days: [...wakeDays], once };
   $('wakeSheet').close();
   play('ui_pop', 0.5);
-  toast(t('wake.saved', { at: hm(at) }));
+  toast(t('wake.saved', { at: `${hm(at)} · ${daysLabel(wakeDays)}` }));
   syncSchedule(previewOperation);
-  if (native?.exactAllowed && !native.exactAllowed()) native.openExactSettings?.();   // 알람은 정확해야 함
 });
+/** 앱을 열 때: 권한이 꺼졌으면 알람도 끔 · '한 번만' 알람이 이미 지났으면 끔 */
+function checkWakeSettings() {
+  const w = state.schedule.wake;
+  if (!w.on) return;
+  let off = false;
+  if (!exactOk()) { off = true; toast(t('wake.lostExact'), 4000); }
+  else if (Array.isArray(w.days) && !w.days.some(Boolean)) {
+    const ring = new Date(Math.floor(w.once / 10000), Math.floor(w.once / 100) % 100 - 1, w.once % 100, 0, w.at).getTime();
+    if (Date.now() > ring + 15 * 60e3 && !native?.wakeRinging?.()) off = true;
+  }
+  if (off) { w.on = false; syncSchedule(previewOperation); }
+}
 $('exactWarn').addEventListener('click', () => native?.openExactSettings?.());
 
 // 알람 음악 미리 듣기 (미디어 볼륨, 웹뷰에서). 실제 알람은 네이티브가 알람 볼륨으로
@@ -760,6 +1011,7 @@ function stopAlarmAudio() {
 }
 $('wakePreview').addEventListener('click', () => {
   if (alarmAudio) { stopAlarmAudio(); return; }
+  if (!effectsOk()) { toast(t('wake.previewQuiet')); return; }   // 소리 규칙 0 · 1 · 2 (비상탈출 · 쫄 시간 · 방해금지 · 절전)
   alarmAudio = new Audio('assets/sounds/alarm_wake.ogg');
   alarmAudio.play().catch(() => {});
   alarmAudio.onended = stopAlarmAudio;
@@ -782,17 +1034,96 @@ function showWakeAlarm() {
     alarmAudio.loop = true;
     alarmAudio.play().catch(() => {});
   }
+  resetTaps();
   if (!$('wakeAlarm').open) $('wakeAlarm').showModal();
+  startAlarmFx($('waCanvas'));
 }
 function closeWakeAlarm(snooze) {
   if (native) (snooze ? native.snoozeWake : native.stopWake)?.call(native);
   alarmAudio?.pause();
   alarmAudio = null;
+  clearInterval(tapDecay);
+  stopAlarmFx();
   $('wakeAlarm').close();
   if (snooze) toast(t('alarm.snoozed'));
 }
-$('waOk').addEventListener('click', () => closeWakeAlarm(false));
-$('waSnooze').addEventListener('click', () => closeWakeAlarm(true));
+
+// [확인] 20번 연타 미션: 누를 때마다 숫자가 펑 · 화면 흔들림 · 응원 글자 · 색 번쩍. 2초 손을 떼면 숫자가 다시 올라감
+const TAPS = 20;
+let firstTap = 0;
+let taps = 0, lastTap = 0, tapDecay = 0;
+// 발라트로식 점수: 빠르게 이어 누르면 MULT 가 오르고, 누를 때마다 CHIPS += 10 × MULT
+let chips = 0, combo = 0;
+function resetTaps() {
+  taps = 0;
+  chips = 0;
+  combo = 0;
+  $('waChips').textContent = '0';
+  $('waMult').textContent = '1';
+  $('waCount').textContent = TAPS;
+  $('waOk').style.setProperty('--p', '0');
+  $('wakeAlarm').classList.remove('done');
+  clearInterval(tapDecay);
+  tapDecay = setInterval(() => {   // 안 누르고 있으면 0.35초마다 하나씩 되돌아감
+    if (taps > 0 && taps < TAPS && Date.now() - lastTap > 2000) { taps--; drawTaps(false); }
+  }, 350);
+}
+function drawTaps(hit) {
+  const left = TAPS - taps;
+  $('waCount').textContent = left;
+  $('waOk').style.setProperty('--p', String(taps / TAPS));
+  if (!hit) return;
+  const box = $('wakeAlarm');
+  // 콤보: 0.45초 안에 이어 누르면 콤보, MULT = 1 + 콤보/4
+  combo = Date.now() - lastTap < 450 || taps === 1 ? combo + 1 : 1;
+  const mult = 1 + Math.floor(combo / 4);
+  chips += 10 * mult;
+  for (const [id, v] of [['waChips', chips], ['waMult', mult]]) {
+    const el = $(id);
+    el.textContent = v;
+    el.parentElement.classList.remove('bump'); void el.offsetWidth; el.parentElement.classList.add('bump');
+  }
+  const r = $('waOk').getBoundingClientRect(), c = $('waCanvas').getBoundingClientRect();
+  hitFx(r.left - c.left + r.width * (0.3 + Math.random() * 0.4), r.top - c.top + r.height / 2, taps, mult);
+  if (taps % 5 === 0 && taps < TAPS) comboFx(taps / 5 + 1);
+  // 숫자 펑 + 버튼 눌림 + 화면 흔들림 (뒤로 갈수록 세게)
+  for (const [el, cls] of [[$('waCount'), 'pop'], [$('waOk'), 'hit'], [box, `shake${taps % 2}`]]) {
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  }
+  box.style.setProperty('--amp', `${2 + taps * 0.6}px`);
+  box.style.setProperty('--hue', `${(taps * 47) % 360}deg`);
+  // 응원 글자가 아무 데서나 튀어나왔다 사라짐
+  const word = document.createElement('span');
+  word.className = 'wa-word';
+  word.textContent = left > 0 && left <= 5 ? t('alarm.tapLeft', { n: left }) : pick(t('alarm.cheer'));
+  word.style.cssText = `left:${8 + Math.random() * 70}%;top:${12 + Math.random() * 60}%;--r:${Math.round(Math.random() * 40 - 20)}deg;--c:${['#D7FF3D', '#FFD400', '#FF6FB5', '#7EC8FF', '#FFFFFF'][taps % 5]}`;
+  $('waFx').appendChild(word);
+  setTimeout(() => word.remove(), 900);
+}
+$('waOk').addEventListener('click', () => {
+  if (taps >= TAPS) return;
+  taps++;
+  if (taps === 1) firstTap = Date.now();
+  haptic(10 + taps);
+  drawTaps(true);   // 콤보는 직전에 누른 시각(lastTap)과 비교하므로 그다음에 갱신
+  lastTap = Date.now();
+  if (taps < TAPS) return;
+  // 다 누름: 숫자 대신 기상 완료가 쿵, 잠깐 보여 주고 끔
+  $('waCount').textContent = '✓';
+  $('wakeAlarm').classList.add('done');
+  finishFx();
+  $('waShout').textContent = t('alarm.tapDone');
+  play('ui_treasure', 0.7);
+  const fast = Date.now() - firstTap < 4000;
+  setTimeout(() => { closeWakeAlarm(false); if (fast) setTimeout(() => celebrateHidden('hid_alarm_fast'), 500); }, 1800);
+});
+$('waSnooze').addEventListener('click', () => {
+  const s = state.snooze.day === dayKey() ? state.snooze : (state.snooze = { day: dayKey(), n: 0 });
+  s.n++;
+  commit();
+  closeWakeAlarm(true);
+  if (s.n >= 3) setTimeout(() => celebrateHidden('hid_snooze3'), 600);
+});
 $('wakeAlarm').addEventListener('cancel', e => e.preventDefault());   // 뒤로가기로는 안 꺼짐
 window.bgbbOnWake = () => { if (native?.wakeRinging?.() ?? true) showWakeAlarm(); };
 const checkWake = () => { if (native?.wakeRinging?.() && !$('wakeAlarm').open) showWakeAlarm(); };
@@ -963,23 +1294,82 @@ document.querySelectorAll('dialog').forEach(d => {
   });
 });
 // ---------------------------------------------------------- 사용설명 (옆으로 넘기는 5장)
+// 첫 사용자 안내 (앱 처음 켤 때 · 큰 업데이트 뒤 한 번 · 설정 → 사용설명). 쪽마다 그림 또는 실제 화면을 줄인 모형
 const GUIDE = [
-  { face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
-  { face: ['hamster_burst'], rules: true },
-  { face: ['cat_hold'] },
-  { face: ['hamster_thumbs_up'], real: true },
-  { face: ['tit_eng'] }
+  { id: 'hello', face: ['hamster_shameless', 'tit_whistle', 'cat_blank'] },
+  { id: 'rules', rules: true },
+  { id: 'titles', mock: 'titles' },
+  { id: 'home', mock: 'home' },
+  { id: 'time', mock: 'time', fresh: true },
+  { id: 'daily', mock: 'daily', fresh: true },
+  { id: 'style', mock: 'style', fresh: true },
+  { id: 'perm', face: ['hamster_eng', 'cat_eng'], perm: true }   // 마지막 쪽: 권한 두 개 (없으면 방구가 밀려서 참음만 나옴)
 ];
+/** 안내 쪽 그림: 실제 화면 조각을 줄인 모형 (누를 수 없음) */
+function guideMock(kind) {
+  if (kind === 'titles') {
+    const x = titleById('meeting_loud');
+    return `<div class="gm gm-titles"><img src="${face('cat', 'burst', true)}" alt=""><div class="gm-card"><span class="gm-chip">${esc(L(RARITY.legend.name))}</span><b>${esc(L(x.name))}</b><small>${coinify('🪙')} +43 · ${esc(t('home.dexCount', { n: 1, all: TITLES.length }))}</small></div></div>`;
+  }
+  if (kind === 'home') {
+    return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span><span class="rules-i">i</span></div>
+      <img class="gm-hero" src="${face('hamster', 'blank')}" alt="">
+      <div class="row3"><span class="btn primary">${esc(t('home.cushion'))}</span><span class="btn">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze">${esc(t('home.freeze'))}</span></div></div>`;
+  }
+  if (kind === 'time') {
+    const days = t('wake.days').map((d, i) => `<span class="wday ${i > 0 && i < 6 ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${d}</span>`).join('');
+    const head = (icon, name) => `<div class="gm-feat-head"><span class="gm-ico">${icon}</span><b>${esc(name)}</b><span class="gm-switch on"></span></div>`;
+    return `<div class="gm gm-time">
+      <div class="gm-feat">${head('🫣', t('settings.rest'))}<span class="gm-clock">14:00 ~ 15:00</span><span class="gm-cap">${esc(t('guide.timeRest'))}</span></div>
+      <div class="gm-feat">${head('⏰', t('wake.title'))}<span class="gm-clock">07:30</span><div class="wake-days">${days}</div>
+        <div class="gm-tap"><span>${t('alarm.tap')}</span><b>20</b></div><span class="gm-cap">${esc(t('guide.timeWake'))}</span></div></div>`;
+  }
+  if (kind === 'daily') {
+    const bars = [3, 1, 4, 2, 5, 1, 2].map((n, i) => `<span class="rp-day ${i === 4 ? 'best' : ''}"><i style="height:${n * 20}%"></i></span>`).join('');
+    return `<div class="gm gm-daily"><div class="mission done"><div class="m-text"><b>${esc(L(MISSION_SAMPLE))}</b><span class="m-bar"><i style="width:100%"></i></span><small>1/1</small></div><span class="m-claim">${coinify('🪙')} 30</span></div>
+      <div class="gm-report"><b>${esc(t('report.title'))}</b><div class="rp-bars">${bars}</div></div></div>`;
+  }
+  if (kind === 'style') {
+    const pv = ['sound_xmas', 'sound_drum', 'bg_space', 'prop_trophy'].map(id => itemById(id)).filter(Boolean)
+      .map(x => `<span class="gm-item">${itemPreview(x)}</span>`).join('');
+    return `<div class="gm gm-style"><div class="gm-items">${pv}</div>
+      <div class="gm-widget"><img src="${face('hamster', 'blank')}" alt=""><span><b>${esc(t('widget.left', { n: 3 }))}</b><small>${esc(t('widget.latest', { name: L(titleById('lunch').name) }))}</small></span></div></div>`;
+  }
+  return '';
+}
+const MISSION_SAMPLE = { ko: '점심시간(12~13시)에 터지기', en: 'Go off at lunch (12–1pm)' };
+/** 온보딩 마지막 쪽: 알림 · 알람 및 리마인더 허용 버튼 (허용하면 ✓) */
+function permButtons() {
+  const notif = !native || native.notificationsAllowed?.();
+  const exact = !native || exactOk();
+  return `<div class="perm">
+    <button class="perm-btn ${exact ? 'ok' : ''}" id="permExact" type="button"><b>${exact ? '✓' : '1'}</b><span>${t('perm.exact')}<small>${t('perm.exactWhy')}</small></span></button>
+    <button class="perm-btn ${notif ? 'ok' : ''}" id="permNotif" type="button"><b>${notif ? '✓' : '2'}</b><span>${t('perm.notif')}<small>${t('perm.notifWhy')}</small></span></button>
+  </div>`;
+}
+function refreshPerm() {
+  const box = document.querySelector('.guide-page .perm');
+  if (box) box.outerHTML = permButtons();
+}
+$('guidePages').addEventListener('click', e => {
+  if (e.target.closest('#permExact')) native?.openExactSettings?.();
+  if (e.target.closest('#permNotif') && native && !native.requestNotifications()) native.openAppSettings?.();
+  setTimeout(refreshPerm, 600);
+});
+/** 안내 본문: 한 줄씩 끊어서 (줄줄이 이어 붙지 않게) */
+const guideLines = text => (text ? `<div class="g-lines">${text.split('\n').map(l => `<span>${l}</span>`).join('')}</div>` : '');
 function openGuide() {
-  $('guidePages').innerHTML = GUIDE.map((g, i) => `<section class="guide-page">
-    <div class="guide-art">${g.face.map(f => `<img src="assets/${g.real ? 'faces_real' : 'faces'}/${f}.webp" alt="">`).join('')}</div>
-    <h3>${t(`guide.${i + 1}t`)}</h3>${g.rules ? soundRules() : ''}<p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
+  $('guidePages').innerHTML = GUIDE.map(g => `<section class="guide-page gp-${g.id}">
+    ${g.face ? `<div class="guide-art">${g.face.map(f => `<img src="assets/faces/${f}.webp" alt="">`).join('')}</div>` : ''}
+    ${g.mock ? `<div class="guide-mock" aria-hidden="true">${guideMock(g.mock)}</div>` : ''}
+    <h3>${g.fresh && state.onboarded ? `<span class="gp-new">${t('guide.newTag')}</span>` : ''}${t(`guide.${g.id}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}${guideLines(t(`guide.${g.id}b`))}</section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
   guideAt(0);
   if (!$('guide').open) $('guide').showModal();
 }
 let guidePage = 0;
+const GUIDE_V = 2;   // 안내 내용이 크게 바뀌면 올림 → 이미 쓰던 사람에게도 한 번 더
 function guideAt(i) {
   guidePage = i;
   [...$('guideDots').children].forEach((d, k) => d.classList.toggle('on', k === i));
@@ -995,8 +1385,10 @@ $('guideNext').addEventListener('click', () => {
 });
 $('guideSkip').addEventListener('click', () => $('guide').close());
 $('guide').addEventListener('close', () => {
+  if ((state.guideV || 0) < GUIDE_V) { state.guideV = GUIDE_V; state.rulesSeen = true; commit(); }
   if (state.onboarded) return;
   state.onboarded = true;
+  state.rulesSeen = true;   // 2쪽에서 봤음
   state.seenVersion = APP_VERSION;   // 처음 깐 사람은 패치노트 안 띄움
   if (native && state.notify && !native.notificationsAllowed()) native.requestNotifications();
   commit();
@@ -1067,12 +1459,17 @@ window.bgbbBack = () => {
 
 window.bgbbOnNativeResume = () => {
   drainNative();
+  checkWakeSettings();
   render();
   checkWake();
+  checkNightOwl();
+  if (!document.querySelector('dialog[open]') && !giveGifts()) maybeReport();   // 시즌 선물 · 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
+  if ($('guide').open) refreshPerm();   // 폰 설정에서 허용하고 돌아왔을 때 ✓
+  checkWakeSettings();
   checkWake();
   shuffleStage();
   drainNative();
@@ -1091,11 +1488,14 @@ drainNative();
 native?.loadTips?.(JSON.stringify([...TIPS, ...COIN_PACKS].map(x => x.id)));   // 다른 기기에서 응원한 기록 복원
 render();
 if (!state.onboarded) openGuide();
+else if ((state.guideV || 0) < GUIDE_V) openGuide();   // 이미 쓰던 사람: 큰 업데이트 뒤 안내를 한 번 (소리 규칙 중요! 포함)
 else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음 연 날: 그 사이 바뀐 것만
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
   commit();
-}
+} else if (!giveGifts()) maybeReport();
 native?.checkUpdate?.();
+checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우
+checkNightOwl();
 addEventListener('pagehide', flush);

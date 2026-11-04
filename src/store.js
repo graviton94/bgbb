@@ -1,6 +1,6 @@
 // 앱 상태 하나 + 저장 + 변경 알림. 화면은 subscribe 해서 다시 그린다.
 import { CHARACTERS, MODES } from './data.js';
-import { TITLES, pickTitle, contextOf } from './titles.js';
+import { TITLES, pickTitle, contextOf, titleById } from './titles.js';
 import { COINS, TITLE_BONUS, DEFAULT_EQUIP } from './items.js';
 
 const KEY = 'bgbb.v2';
@@ -11,10 +11,17 @@ function initial() {
   return {
     onboarded: false,
     seenVersion: '',      // 패치노트를 마지막으로 본 버전
+    rulesSeen: false,
+    guideV: 0,            // 본 안내 버전 (main.js GUIDE_V)
+    reviewAsked: false,   // Play 인앱 리뷰를 한 번 띄웠는지
+    daily: { day: '', counts: {}, claimed: [] },
+    reportSeen: '',       // 주간 결산: 마지막으로 본 주 (월요일 날짜)
+    shares: 0,            // 짤 자랑 누적 (숨김 업적)
+    snooze: { day: '', n: 0 },   // 그날 [5분만 더] 횟수 (숨김 업적)   // 오늘의 미션: 그날 센 횟수 (캐릭터 누르기 · 짤 뽑기 · 공유 · 함정) · 받은 미션     // 소리 규칙 (중요!) 을 한 번 봤는지. 이미 쓰던 사람은 업데이트 후 한 번 띄움
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
     // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음) · wake = 기상 알람 (분). 켜면 그 시각부터 24시까지가 방구 시간
-    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 }, wake: { on: false, at: 7 * 60 } },
+    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 }, wake: { on: false, at: 7 * 60, days: [true, true, true, true, true, true, true], once: 0 } },
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
     notify: true,         // 터진 뒤 알림 문구 (앱)
@@ -108,6 +115,25 @@ export function dayKey(t = Date.now()) {
 
 const emptyDay = () => ({ loud: 0, soft: 0, hold: 0, chars: [], last: null });
 export const day = (key = dayKey()) => state.days[key] || emptyDay();
+/** 숨김 업적 주기 (이스터에그): 이미 있으면 null. 방구 기록은 안 남김 */
+export function grantHidden(id) {
+  const x = titleById(id);
+  if (!x?.hidden || state.titles[id]) return null;
+  const t = Date.now(), ev = { t, char: state.hero, mode: 'loud' };
+  state.titles[id] = { n: 1, first: t, ev, last: ev };
+  const coins = TITLE_BONUS[x.rarity];
+  state.coins += coins;
+  commit();
+  return { id, coins, ev };
+}
+/** 오늘의 미션 기록 (날이 바뀌면 새로) */
+export const dailyToday = () => (state.daily?.day === dayKey() ? state.daily : (state.daily = { day: dayKey(), counts: {}, claimed: [] }));
+/** 오늘의 미션 횟수 하나 올리기: tap · gacha · share · trap */
+export function bump(key) {
+  const c = dailyToday().counts;
+  c[key] = (c[key] || 0) + 1;
+  commit();
+}
 const count = d => d.loud + d.soft + d.hold;
 
 export function streak(from = Date.now()) {
@@ -132,7 +158,7 @@ export const ownedCount = () => TITLES.filter(x => state.titles[x.id]).length;
  * 터진 것 1회 기록 + 칭호. 네이티브 알람이 보낸 것이든 웹 미리보기든 모두 여기로.
  * 돌려주는 것: { t, char, mode, title(id), isNew, coins(이번에 번 뿡코인) }
  */
-export function recordOperation({ t, char, mode, why }) {
+export function recordOperation({ t, char, mode, why, ear }) {
   const m = MODES[mode] ? mode : 'hold';
   const who = CHARACTERS.some(c => c.id === char) ? char : 'hamster';
   const d = (state.days[dayKey(t)] ||= emptyDay());
@@ -140,14 +166,19 @@ export function recordOperation({ t, char, mode, why }) {
   const prev = d.last || null;
   d[m]++;
   if (!d.chars.includes(who)) d.chars.push(who);
+  (d.hours ||= []).push(new Date(t).getHours());   // 오늘의 미션 (점심 · 아침 · 밤)
+  (d.by ||= {})[who] = (d.by[who] || 0) + 1;   // 주간 결산: 친구별 횟수
+  if (m === 'loud') (d.loudH ||= []).push(new Date(t).getHours());   // 주간 결산: 최악의 타이밍
   d.last = m;
-  const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}) };   // why = 참음 이유 (dnd · saver · silent · late7)
+  // why = 참음 이유 (dnd · saver · silent · late7 · nosound · novibe) · ear = 이어폰으로 냄 (냄으로 치고 표시만)
+  const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}), ...(m === 'loud' && ear ? { ear: true } : {}) };
   const c = contextOf(ev, {
     today: { loud: d.loud, soft: d.soft, hold: d.hold }, prev, charsToday: d.chars.length,
     streak: streak(t), total: totals().all, nth: count(d)
   });
   const title = pickTitle(c, state.titles);
   const isNew = !state.titles[title.id];
+  if (isNew) d.fresh = (d.fresh || 0) + 1;
   const own = (state.titles[title.id] ||= { n: 0, first: t, ev });
   own.n++;
   own.last = ev;

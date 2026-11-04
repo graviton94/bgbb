@@ -2,6 +2,7 @@
 //  - 안드로이드 앱: window.BgbbNative 가 AlarmManager 로 앱이 꺼져 있어도 실행한다. 여기선 설정만 넘긴다.
 //  - 브라우저: 같은 규칙(plan.js)으로 탭이 열려 있는 동안만 setTimeout 으로 흉내 낸다.
 import { CHARACTERS, FREQUENCIES } from './data.js';
+import { ITEMS, isOwned, itemById } from './items.js';
 import { state, commit, flush, dayKey } from './store.js';
 import { windowLength, windowStart, inWindow as inWin, inRest, advancePlan, startMin } from './plan.js';
 
@@ -9,7 +10,7 @@ export const native = window.BgbbNative || null;
 const HOUR = 3600e3;
 
 export const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-/** 방구 시간 시작 '07:30' (기상 알람 시각 또는 06:00) */
+/** 오늘 방구 시간 시작 '07:30' (오늘 기상 알람이 울리면 그 시각, 아니면 06:00) */
 export const startLabel = (schedule = state.schedule) => hm(startMin(schedule));
 export function windowLabel(schedule = state.schedule) {
   return `${startLabel(schedule)}~${hm((schedule.end || 24) * 60)}`;
@@ -24,7 +25,8 @@ export const restLabel = (rest = state.schedule.rest) => `${hm(rest.from)}~${hm(
 export function remainingToday() {
   if (!isActive()) return 0;
   if (native) return native.remainingToday();
-  const end = windowStart(Date.now(), state.schedule) + windowLength(state.schedule);
+  const start = windowStart(Date.now(), state.schedule);
+  const end = start + windowLength(state.schedule, start);
   return (state.plan?.times || []).filter(t => t > Date.now() && t < end).length;
 }
 
@@ -39,11 +41,13 @@ function configJson() {
     frozen: state.frozen,
     start: state.schedule.start,
     end: state.schedule.end,
-    startMin: startMin(state.schedule),
     wake: state.schedule.wake,
     freq: state.schedule.freq,
     rest: state.schedule.rest,
-    sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, diy: !!state.friends[c.id].diy }))
+    sounds: CHARACTERS.filter(c => state.friends[c.id].on).map(c => ({ char: c.id, diy: !!state.friends[c.id].diy })),
+    // 방구 소리 팩: 가진 것 중 랜덤 (장착한 건 40%), 네이티브가 방구마다 고른다 (PrankPlayer.pickPack)
+    packs: ITEMS.filter(x => x.slot === 'sound' && x.pack && isOwned(x, state.titles, state.bought)).map(x => x.pack),
+    pack: itemById(state.equip.sound)?.pack || ''
   });
 }
 

@@ -33,7 +33,7 @@
     <main>
       <!-- 홈: 무표정 -->
       <section class="screen active" id="screen-home">
-        <div class="label-row"><div class="label" id="bigLabel"></div></div>
+        <div class="label-row"><div class="label" id="bigLabel"></div><button class="top-mission" id="topMission" type="button" data-i18n-attr="aria-label:mission.title"><span aria-hidden="true">🎯</span><small data-i18n="mission.short"></small><b id="missionN"></b></button></div>
         <h1 class="big" id="big"></h1>
         <p class="line" id="homeLine"></p>
         <p class="today-stats" id="todayStats"></p>
@@ -189,12 +189,15 @@
   <!-- 기상 알람이 울릴 때: 잠금화면 위로 뜨는 알람 화면. [확인] 을 눌러야 꺼짐 -->
   <dialog class="wake-alarm" id="wakeAlarm" aria-labelledby="waTime">
     <div class="wa-stripes" aria-hidden="true"></div>
+    <canvas class="wa-canvas" id="waCanvas" aria-hidden="true"></canvas>
     <div class="wa-body">
       <strong class="wa-time" id="waTime"></strong>
       <div class="wa-shout" id="waShout"></div>
       <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
       <p class="wa-line" id="waLine"></p>
-      <button class="wa-ok" id="waOk" type="button" data-i18n="alarm.ok"></button>
+      <div class="wa-hud" id="waHud" aria-hidden="true"><span class="wa-chips"><small>CHIPS</small><b id="waChips">0</b></span><i>×</i><span class="wa-mult"><small>MULT</small><b id="waMult">1</b></span></div>
+      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-fill" aria-hidden="true"></span><span class="wa-ok-label" data-i18n-html="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
+      <div class="wa-fx" id="waFx" aria-hidden="true"></div>
       <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
     </div>
   </dialog>
@@ -204,7 +207,8 @@
     <div class="sheet-body rest">
       <h2 class="rest-title" id="wakeTitle" data-i18n="wake.title"></h2>
       <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
-      <p class="rest-note" data-i18n="wake.note"></p>
+      <div class="wake-days" id="wakeDays" role="group" aria-label="요일"></div>
+      <p class="wake-repeat" id="wakeRepeat"></p>
       <button class="btn wide" id="wakePreview" type="button" data-i18n="wake.preview"></button>
       <div class="rest-actions">
         <button class="btn ghost" data-close type="button" data-i18n="rest.cancel"></button>
@@ -258,9 +262,30 @@
   </dialog>
 
   <!-- 패치노트: 업데이트하고 처음 열 때 한 번 -->
+  <!-- 이번 주 방구 결산 (src/report.js): 일요일 밤 9시부터 한 번 -->
+  <dialog class="sheet" id="reportSheet" aria-labelledby="reportTitle">
+    <div class="sheet-body report">
+      <span class="rp-eyebrow" id="reportRange"></span>
+      <h3 id="reportTitle" data-i18n="report.title"></h3>
+      <div id="reportBody"></div>
+      <button class="btn dark wide" id="reportShare" type="button" data-i18n="burst.share"></button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
+  <!-- 오늘의 미션: 날마다 세 개, 깨면 뿡코인 (src/missions.js) -->
+  <dialog class="sheet" id="missionSheet" aria-labelledby="missionTitle">
+    <div class="sheet-body">
+      <h3 id="missionTitle" data-i18n="mission.title"></h3>
+      <p class="muted small" data-i18n="mission.sub"></p>
+      <ul class="missions" id="missionList"></ul>
+      <button class="btn ghost wide" data-close type="button" data-i18n="common.close"></button>
+    </div>
+  </dialog>
+
   <!-- 소리 규칙: 미디어 볼륨 기준 (홈 볼륨 버튼 옆 ⓘ) -->
   <dialog class="sheet" id="rulesSheet" aria-labelledby="rulesTitle">
-    <div class="sheet-body">
+    <div class="sheet-body" tabindex="-1">
       <h3 id="rulesTitle" data-i18n="rules.title"></h3>
       <div id="rulesBody"></div>
       <button class="btn primary wide" data-close type="button" data-i18n="rules.ok"></button>

@@ -12,6 +12,7 @@ public class PrankReceiver extends BroadcastReceiver {
     static final String ACTION_FIRE = "io.github.graviton94.bgbb.ACTION_FIRE";
     static final String ACTION_NAG = "io.github.graviton94.bgbb.ACTION_NAG";
     static final String ACTION_RESUME = "io.github.graviton94.bgbb.ACTION_RESUME";
+    static final String ACTION_REPORT = "io.github.graviton94.bgbb.ACTION_REPORT";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -19,6 +20,7 @@ public class PrankReceiver extends BroadcastReceiver {
         JSONObject cfg = PrankScheduler.config(c);
         String action = intent.getAction();
         if (WakeAlarm.ACTION_RING.equals(action)) { WakeAlarm.ring(c); return; }
+        if (ACTION_REPORT.equals(action)) { PrankNotifier.report(c); PrankNotifier.scheduleReport(c); return; }
         if (ACTION_RESUME.equals(intent.getAction())) {   // 도발 알림의 "다시 시작!"
             PrankScheduler.resumeFromNotification(c);
             PrankNotifier.resumed(c);
