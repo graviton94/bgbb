@@ -11,7 +11,10 @@ function initial() {
   return {
     onboarded: false,
     seenVersion: '',      // 패치노트를 마지막으로 본 버전
-    rulesSeen: false,     // 소리 규칙 (중요!) 을 한 번 봤는지. 이미 쓰던 사람은 업데이트 후 한 번 띄움
+    rulesSeen: false,
+    reviewAsked: false,   // Play 인앱 리뷰를 한 번 띄웠는지
+    daily: { day: '', counts: {}, claimed: [] },
+    reportSeen: '',       // 주간 결산: 마지막으로 본 주 (월요일 날짜)   // 오늘의 미션: 그날 센 횟수 (캐릭터 누르기 · 짤 뽑기 · 공유 · 함정) · 받은 미션     // 소리 규칙 (중요!) 을 한 번 봤는지. 이미 쓰던 사람은 업데이트 후 한 번 띄움
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
     // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음) · wake = 기상 알람 (분). 켜면 그 시각부터 24시까지가 방구 시간
@@ -109,6 +112,14 @@ export function dayKey(t = Date.now()) {
 
 const emptyDay = () => ({ loud: 0, soft: 0, hold: 0, chars: [], last: null });
 export const day = (key = dayKey()) => state.days[key] || emptyDay();
+/** 오늘의 미션 기록 (날이 바뀌면 새로) */
+export const dailyToday = () => (state.daily?.day === dayKey() ? state.daily : (state.daily = { day: dayKey(), counts: {}, claimed: [] }));
+/** 오늘의 미션 횟수 하나 올리기: tap · gacha · share · trap */
+export function bump(key) {
+  const c = dailyToday().counts;
+  c[key] = (c[key] || 0) + 1;
+  commit();
+}
 const count = d => d.loud + d.soft + d.hold;
 
 export function streak(from = Date.now()) {
@@ -141,6 +152,9 @@ export function recordOperation({ t, char, mode, why, ear }) {
   const prev = d.last || null;
   d[m]++;
   if (!d.chars.includes(who)) d.chars.push(who);
+  (d.hours ||= []).push(new Date(t).getHours());   // 오늘의 미션 (점심 · 아침 · 밤)
+  (d.by ||= {})[who] = (d.by[who] || 0) + 1;   // 주간 결산: 친구별 횟수
+  if (m === 'loud') (d.loudH ||= []).push(new Date(t).getHours());   // 주간 결산: 최악의 타이밍
   d.last = m;
   // why = 참음 이유 (dnd · saver · silent · late7 · nosound · novibe) · ear = 이어폰으로 냄 (냄으로 치고 표시만)
   const ev = { t, char: who, mode: m, ...(m === 'hold' && why ? { why } : {}), ...(m === 'loud' && ear ? { ear: true } : {}) };
@@ -150,6 +164,7 @@ export function recordOperation({ t, char, mode, why, ear }) {
   });
   const title = pickTitle(c, state.titles);
   const isNew = !state.titles[title.id];
+  if (isNew) d.fresh = (d.fresh || 0) + 1;
   const own = (state.titles[title.id] ||= { n: 0, first: t, ev });
   own.n++;
   own.last = ev;

@@ -136,6 +136,7 @@ final class PrankScheduler {
 
         JSONObject cfg = config(c);
         WakeAlarm.schedule(c);
+        PrankNotifier.scheduleReport(c);
         scheduleNag(c, am, cfg, System.currentTimeMillis());
         if (!isActive(cfg)) return;
         long next = nextTrigger(c, cfg, System.currentTimeMillis());

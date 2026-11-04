@@ -3,6 +3,8 @@
     <string name="app_name">방구뿡</string>
     <string name="channel_news">뿡 속보</string>
     <string name="channel_news_desc">터질 때마다 소리 없이 한 줄</string>
+    <string name="report_title">이번 주 방구 결산 나옴!</string>
+    <string name="report_text">누가 제일 많이 뀌었는지 눌러서 확인</string>
     <string name="channel_wake">기상 방구</string>
     <string name="wake_title">기상! 뿡!</string>
     <string name="wake_text">눌러서 앱을 열고 [확인]을 눌러야 꺼짐</string>

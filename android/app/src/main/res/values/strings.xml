@@ -3,6 +3,8 @@
     <string name="app_name">Pocket Toot</string>
     <string name="channel_news">Toot news</string>
     <string name="channel_news_desc">One silent line after each surprise toot</string>
+    <string name="report_title">This week in toots is out!</string>
+    <string name="report_text">Tap to see who tooted the most</string>
     <string name="channel_wake">Wake-up toot</string>
     <string name="wake_title">Rise and toot!</string>
     <string name="wake_text">Open the app and hit OK to stop it</string>

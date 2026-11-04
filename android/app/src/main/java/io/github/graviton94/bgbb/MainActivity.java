@@ -454,6 +454,17 @@ public class MainActivity extends Activity {
             if (url != null && url.startsWith("https://")) runOnUiThread(() -> openExternal(Uri.parse(url)));
         }
 
+        /** Play 인앱 리뷰 창 (Play 가 띄울지 말지 정함 · 하루 횟수 제한 있음). 결과는 알 수 없음 */
+        @JavascriptInterface
+        public void requestReview() {
+            runOnUiThread(() -> {
+                com.google.android.play.core.review.ReviewManager rm = com.google.android.play.core.review.ReviewManagerFactory.create(MainActivity.this);
+                rm.requestReviewFlow().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) rm.launchReviewFlow(MainActivity.this, task.getResult());
+                });
+            });
+        }
+
         /** 이 앱의 폰 설정 화면 (알림을 한 번 거절한 뒤 다시 켤 때) */
         @JavascriptInterface
         public void openAppSettings() {

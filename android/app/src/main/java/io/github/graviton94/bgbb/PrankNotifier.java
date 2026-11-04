@@ -76,6 +76,27 @@ final class PrankNotifier {
         show(c, nick, line(c, R.array.nag_rest, nick), null);
     }
 
+    /** 일요일 밤 9시대: "이번 주 방구 결산 나옴" (소리 없는 채널). 누르면 앱이 결산을 띄운다 */
+    static void report(Context c) {
+        show(c, c.getString(R.string.report_title), c.getString(R.string.report_text), null);
+    }
+
+    /** 다음 일요일 21:00~21:40 중 아무 때나 (정확할 필요 없음) */
+    static void scheduleReport(Context c) {
+        android.app.AlarmManager am = c.getSystemService(android.app.AlarmManager.class);
+        if (am == null) return;
+        PendingIntent pi = PendingIntent.getBroadcast(c, 8, new Intent(c, PrankReceiver.class).setAction(PrankReceiver.ACTION_REPORT),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        long now = cal.getTimeInMillis();
+        cal.set(java.util.Calendar.DAY_OF_WEEK, java.util.Calendar.SUNDAY);
+        cal.set(java.util.Calendar.HOUR_OF_DAY, 21);
+        cal.set(java.util.Calendar.MINUTE, RANDOM.nextInt(40));
+        cal.set(java.util.Calendar.SECOND, 0);
+        if (cal.getTimeInMillis() <= now) cal.add(java.util.Calendar.DAY_OF_MONTH, 7);
+        am.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, cal.getTimeInMillis(), pi);
+    }
+
     /** "다시 시작!" 눌렀을 때 그 알림을 바꿔 둔다 */
     static void resumed(Context c) {
         show(c, c.getString(R.string.app_name), c.getString(R.string.resumed), null);

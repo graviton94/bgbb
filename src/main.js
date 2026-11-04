@@ -3,8 +3,10 @@ import { CHARACTERS, MODES, FREQUENCIES, TIPS, COIN_PACKS, coinify, AD_BONUS, AD
 import { TITLES, RARITY, titleById } from './titles.js';
 import { t, L, LANG, applyI18n } from './i18n.js';
 import {
-  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy
+  state, commit, flush, subscribe, resetAll, dayKey, day, recordOperation, streak, totals, ownedCount, getDiy, setDiy, dailyToday, bump
 } from './store.js';
+import { pickMissions, missionProgress } from './missions.js';
+import { reportWeek, weekReport } from './report.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
 import { play, playFriend, forget, effectsOk } from './audio.js';
 import { dateKey } from './plan.js';
@@ -211,7 +213,7 @@ window.bgbbOnAdReward = () => {
 };
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
-$('shareCard').addEventListener('click', () => burstCard && shareCard(burstCard));
+$('shareCard').addEventListener('click', () => { if (!burstCard) return; bump('share'); shareCard(burstCard); });
 
 function celebrate(events) {
   if (!events.length) return;
@@ -235,6 +237,10 @@ function celebrate(events) {
     if (unlocked.length) afterBurst = () => showItem(unlocked[0], unlocked.length > 1
       ? t('cele.more', { slot: L(SLOT_NAMES[unlocked[0].slot]), n: unlocked.length - 1 }) : L(SLOT_NAMES[unlocked[0].slot]),
     t('cele.from', { name: L(title.name) }));
+    // 처음 레전드 · 잭팟을 받고 짤까지 본 직후 딱 한 번 Play 리뷰 창 (기분 제일 좋을 때)
+    else if ((title.rarity === 'legend' || title.rarity === 'jackpot') && !state.reviewAsked && native?.requestReview) {
+      afterBurst = () => { state.reviewAsked = true; commit(); native.requestReview(); };
+    }
   });
 }
 
@@ -419,6 +425,7 @@ function renderHome() {
 
 let heroBusy = 0;
 $('hero').addEventListener('click', () => {
+  bump('tap');
   const id = heroId();
   playFriend(id, styleOf(id), getDiy(), 0.7);
   // 누르면 잠깐 터지는 얼굴
@@ -441,11 +448,122 @@ $('practice').addEventListener('click', () => {
   const id = heroId();
   playFriend(id, styleOf(id), getDiy());
   gachaToday().n++;
+  bump('gacha');
   commit();
   showBurst({ t: Date.now(), char: id, mode: 'loud' }, { kind: 'gacha' });
 });
 
 $('cushionBtn').addEventListener('click', openCushion);
+
+// ---------------------------------------------------------- 이번 주 방구 결산 (일요일 밤 9시부터 한 번 · 알림도)
+let report = null;
+const WD = () => t('wake.days');   // 일 월 화 …
+function reportRange(r) {
+  const s = new Date(`${r.monday}T00:00`), e = new Date(s); e.setDate(e.getDate() + 6);
+  return `${s.getMonth() + 1}.${s.getDate()} ~ ${e.getMonth() + 1}.${e.getDate()}`;
+}
+function renderReport(r) {
+  const max = Math.max(1, ...r.perDay), wd = WD();
+  const bars = r.perDay.map((n, i) => `<span class="rp-day ${i === r.bestDay && n ? 'best' : ''}"><i style="height:${(n / max) * 100}%"></i><small>${wd[(i + 1) % 7]}</small></span>`).join('');
+  const c = charById(r.top);
+  return `<div class="rp-total"><b>${r.total}</b><span>${t('report.total')}</span></div>
+    <div class="rp-bars" aria-hidden="true">${bars}</div>
+    <div class="rp-modes"><span><b>${r.loud}</b>${esc(L(MODES.loud.name))}</span><span><b>${r.soft}</b>${esc(L(MODES.soft.name))}</span><span><b>${r.hold}</b>${esc(L(MODES.hold.name))}</span></div>
+    <div class="rp-top"><img src="${face(r.top, 'thumbs_up')}" alt=""><span><small>${t('report.mvp')}</small><b>${esc(L(c.name))}</b><em>${t('report.mvpN', { n: r.topN })}</em></span></div>
+    <p class="rp-verdict">${esc(t(`report.v.${r.verdict}`, { n: r.meetingLoud }))}</p>
+    ${r.fresh ? `<p class="rp-fresh">${t('report.fresh', { n: r.fresh })}</p>` : ''}`;
+}
+function openReport(r) {
+  report = r;
+  $('reportRange').textContent = reportRange(r);
+  $('reportBody').innerHTML = renderReport(r);
+  if (!$('reportSheet').open) $('reportSheet').showModal();
+  play('ui_levelup', 0.5);
+}
+/** 볼 결산이 있으면 띄운다 (이미 본 주면 안 띄움) */
+function maybeReport() {
+  const wk = reportWeek();
+  if (state.reportSeen === wk) return false;
+  const r = weekReport(state.days, wk, state.titles);
+  state.reportSeen = wk;
+  commit();
+  if (!r) return false;
+  openReport(r);
+  return true;
+}
+/** 공유용 결산 카드 (1080×1350) */
+async function drawReport(r) {
+  const cv = $('card');
+  cv.width = 1080; cv.height = 1350;
+  const g = cv.getContext('2d');
+  await document.fonts.load('80px "Black Han Sans"').catch(() => {});
+  const F = (px, w = 400) => `${w} ${px}px "Black Han Sans", system-ui, sans-serif`;
+  g.fillStyle = '#FFD400'; g.fillRect(0, 0, 1080, 1350);
+  g.fillStyle = '#111';
+  for (let i = -1350; i < 1080; i += 90) { g.save(); g.globalAlpha = 0.06; g.fillRect(i, 0, 40, 1350); g.restore(); }
+  g.font = F(40); g.fillText(`${t('appName')} · ${reportRange(r)}`, 70, 110);
+  g.font = F(110); g.fillText(t('report.title'), 70, 240);
+  g.font = F(300); g.fillText(String(r.total), 70, 560);
+  g.font = F(300); const w0 = g.measureText(String(r.total)).width; g.font = F(60); g.fillText(t('report.total'), 90 + w0, 560);
+  const modes = [['loud', r.loud], ['soft', r.soft], ['hold', r.hold]];
+  modes.forEach(([m, n], i) => {
+    const x = 70 + i * 320;
+    g.fillStyle = '#111'; g.beginPath(); g.roundRect(x, 620, 290, 150, 26); g.fill();
+    g.fillStyle = i === 0 ? '#D7FF3D' : '#fff'; g.font = F(80); g.fillText(String(n), x + 30, 715);
+    const nw = g.measureText(String(n)).width;
+    g.font = F(40); g.fillText(L(MODES[m].name), x + 50 + nw, 715);
+  });
+  const img = new Image(); img.src = face(r.top, 'thumbs_up');
+  await img.decode().catch(() => {});
+  if (img.naturalWidth) g.drawImage(img, 70, 820, 330, 330);
+  g.fillStyle = '#111'; g.font = F(44); g.fillText(t('report.mvp'), 430, 900);
+  g.font = F(96); g.fillText(L(charById(r.top).name), 430, 1010);
+  g.font = F(48); g.fillText(t('report.mvpN', { n: r.topN }), 430, 1080);
+  g.fillStyle = '#111'; g.fillRect(0, 1190, 1080, 160);
+  g.fillStyle = '#D7FF3D'; g.font = F(52);
+  g.fillText(t(`report.v.${r.verdict}`, { n: r.meetingLoud }), 70, 1290, 940);
+  return cv;
+}
+$('reportShare').addEventListener('click', async () => {
+  if (!report) return;
+  bump('share');
+  const cv = await drawReport(report);
+  const name = `bgbb_week_${report.monday}.png`;
+  if (native) { toast(t(native.saveAndShareImage(cv.toDataURL('image/png').split(',')[1], name) ? 'card.saved' : 'card.cantSave')); return; }
+  const a = document.createElement('a'); a.href = cv.toDataURL('image/png'); a.download = name; a.click();
+  toast(t('card.savedWeb'));
+});
+
+// ---------------------------------------------------------- 오늘의 미션 (날마다 세 개, 깨면 뿡코인)
+const todayMissions = () => missionProgress(pickMissions(dayKey()), day(), dailyToday().counts, dailyToday().claimed);
+function renderMissionBadge() {
+  const list = todayMissions();
+  const ready = list.some(m => m.done && !m.claimed);
+  $('missionN').textContent = `${list.filter(m => m.claimed).length}/${list.length}`;
+  $('topMission').classList.toggle('ready', ready);
+}
+function renderMissions() {
+  $('missionList').innerHTML = todayMissions().map(m => `<li class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}">
+    <div class="m-text"><b>${esc(L(m.name))}</b><span class="m-bar"><i style="width:${(m.n / m.goal) * 100}%"></i></span><small>${m.n}/${m.goal}</small></div>
+    <button class="m-claim" data-id="${m.id}" type="button" ${m.done && !m.claimed ? '' : 'disabled'}>${m.claimed ? t('mission.claimed') : coinify(esc(`🪙 ${m.coins}`))}</button>
+  </li>`).join('');
+}
+$('topMission').addEventListener('click', () => { renderMissions(); $('missionSheet').showModal(); });
+$('missionList').addEventListener('click', e => {
+  const b = e.target.closest('.m-claim');
+  if (!b || b.disabled) return;
+  const m = todayMissions().find(x => x.id === b.dataset.id);
+  if (!m || !m.done || m.claimed) return;
+  dailyToday().claimed.push(m.id);
+  state.coins += m.coins;
+  commit();
+  play('ui_treasure', 0.6);
+  haptic([20, 40, 60]);
+  toast(t('mission.got', { n: m.coins }));
+  renderMissions();
+  const pop = $('topCoins');
+  pop.classList.remove('bump'); void pop.offsetWidth; pop.classList.add('bump');
+});
 
 $('freeze').addEventListener('click', () => {
   state.frozen = !state.frozen;
@@ -675,6 +793,7 @@ function render() {
   const n = streak();
   $('streak').textContent = n ? t('top.streak', { n }) : '';
   $('topCoins').innerHTML = `${coinify('🪙')} ${state.coins}`;
+  renderMissionBadge();
   renderStatus();
   renderHome();
   applySkin();
@@ -1195,6 +1314,7 @@ window.bgbbOnNativeResume = () => {
   checkWakeSettings();
   render();
   checkWake();
+  if (!document.querySelector('dialog[open]')) maybeReport();   // 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -1224,7 +1344,7 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
   commit();
-}
+} else maybeReport();
 native?.checkUpdate?.();
 checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우
