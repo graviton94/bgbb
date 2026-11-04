@@ -36,8 +36,18 @@ const CAPTIONS = {
   ]
 };
 const FEATURE = {
-  ko: { title: '방구뿡', sub: '★★★ 아무 때나 뿡 ★★★ 데단해 ★★★ 채고야 ★★★ 정말굉장한걸? ★★★', sticker: 'GRAET' },
-  en: { title: 'Pocket Toot', sub: '★★★ TOOTS WHENEVER ★★★ AWASOME ★★★ EXCELENT ★★★ GRAET ★★★', sticker: 'WONDREFUL' }
+  ko: {
+    title: '방구뿡', combo: 'COMBO x4!!',
+    sub: '★★★ 아무 때나 뿡 ★★★ 데단해 ★★★ 채고야 ★★★ 정말굉장한걸? ★★★ GRAET ★★★',
+    chips: [['skin/prop/prop_megaphone', '<b>20연타</b><br>방구 알람'], ['skin/prop/prop_trophy', '칭호<br><b>119개</b>'],
+      ['shop/sound_drum', '방구<br><b>소리 팩</b>'], ['shop/coins_m', '매일<br><b>미션 3개</b>']]
+  },
+  en: {
+    title: 'Pocket Toot', combo: 'COMBO x4!!',
+    sub: '★★★ TOOTS WHENEVER ★★★ AWASOME ★★★ EXCELENT ★★★ GRAET ★★★ WONDREFUL ★★★',
+    chips: [['skin/prop/prop_megaphone', '<b>20-tap</b><br>alarm'], ['skin/prop/prop_trophy', '<b>119</b><br>titles'],
+      ['shop/sound_drum', 'Sound<br><b>packs</b>'], ['shop/coins_m', '<b>3 daily</b><br>missions']]
+  }
 };
 
 // 보기 좋은 예시 기록 (지난 7일, 칭호 몇 개)
@@ -192,39 +202,62 @@ async function compose(lang, shots) {
     await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: path.join(OUT, lang, `screen-${i + 1}-${name}.png`) });
   }
-  // 대표 그림 1024×500
-  await page.setViewportSize({ width: 1024, height: 500 });
+  await page.close();
+}
+
+// 대표 그림 1024×500: 구린 PPT 무지개 + 워드아트는 그대로, v2.4 기능 네 개(알람 20연타 · 칭호 119 · 소리 팩 · 미션)를 클립아트 상자로,
+// 오른쪽엔 알람 20연타 FX 처럼 터지는 셋 + 날아다니는 소품 · 동전 · 콤보 글자
+async function feature(lang) {
+  await fs.mkdir(path.join(OUT, lang), { recursive: true });
+  const page = await browser.newPage({ viewport: { width: 1024, height: 500 } });
+  const bhs = (await fs.readFile(path.join(ROOT, 'assets/fonts/blackhansans.woff2'))).toString('base64');
+  const font = `@font-face{font-family:BHS;src:url(data:font/woff2;base64,${bhs}) format('woff2')}`;
   const f = FEATURE[lang];
-  const real = n => `${base}/assets/faces_real/${n}.webp`;
-  const deco = n => `${base}/assets/deco/${n}.webp`;
+  const a = n => `${base}/assets/${n}.webp`;
   const shades = `${base}/assets/faces/sunglasses.png`;
-  // 구린 PPT 감성: 무지개 배경 · 금색 워드아트 + 반사 · 파란 전광판 · 흰 테두리 실사 스티커 · 지폐
+  const chip = ([icon, text], i) => `<div class="c" style="transform:rotate(${[-2, 1.5, 1, -1.5][i]}deg)"><img src="${a(icon)}"><span>${text}</span></div>`;
+  const fly = (src, x, y, w, r) => `<img class="fly" src="${a(src)}" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${r}deg)">`;
+  const face = (n, x, y, w, r, z) => `<div class="w s" style="left:${x}px;top:${y}px;width:${w}px;transform:rotate(${r}deg);z-index:${z}"><img src="${a('faces_real/' + n)}"><img class="g" src="${shades}"></div>`;
   await page.setContent(`<style>${font}
     body{margin:0;width:1024px;height:500px;background:linear-gradient(120deg,#22C8FF,#2EFF6A,#FFE600,#FF7A2E,#FF00C8);font-family:BHS;position:relative;overflow:hidden}
-    .t{position:absolute;left:44px;top:40px;font-size:${lang === 'ko' ? 150 : 92}px;line-height:1;background:linear-gradient(180deg,#FFF6B0,#E3B320 55%,#7A5600);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #4A3600;white-space:nowrap}
-    .t.m{top:${lang === 'ko' ? 262 : 196}px;transform:scaleY(-1);opacity:.2;height:60px;overflow:hidden}
-    .bar{position:absolute;left:0;right:0;top:300px;height:64px;background:#0000AA;border-block:4px ridge #C0C0C0;color:#FFFF00;font-family:system-ui,sans-serif;font-weight:900;font-size:30px;line-height:58px;white-space:nowrap;overflow:hidden}
-    .s{position:absolute;filter:drop-shadow(6px 0 0 #fff) drop-shadow(-6px 0 0 #fff) drop-shadow(0 6px 0 #fff) drop-shadow(0 -6px 0 #fff) drop-shadow(8px 10px 0 rgba(0,0,0,.35))}
+    .rays{position:absolute;left:790px;top:200px;width:1400px;height:1400px;margin:-700px 0 0 -700px;background:repeating-conic-gradient(rgba(255,255,255,.34) 0 9deg,transparent 9deg 18deg);border-radius:50%}
+    .ring{position:absolute;border-radius:50%;border:10px solid;transform:translate(-50%,-50%)}
+    .t{position:absolute;left:40px;top:22px;font-size:${lang === 'ko' ? 136 : 80}px;line-height:1;background:linear-gradient(180deg,#FFF6B0,#E3B320 55%,#7A5600);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-stroke:2px #4A3600;white-space:nowrap;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.35))}
+    .new{position:absolute;left:${lang === 'ko' ? 410 : 300}px;top:${lang === 'ko' ? 30 : 106}px;padding:4px 14px;background:#f00;color:#ff0;font-family:system-ui,sans-serif;font-weight:900;font-size:28px;border:4px outset #F99;transform:rotate(10deg)}
+    .grid{position:absolute;left:40px;top:${lang === 'ko' ? 182 : 170}px;width:520px;display:grid;grid-template-columns:1fr 1fr;gap:14px 16px}
+    .c{display:flex;align-items:center;gap:10px;height:${lang === 'ko' ? 92 : 98}px;padding:0 14px;background:linear-gradient(180deg,#FFFFFF,#FFF59A);border:4px outset #E0E0E0;box-shadow:6px 7px 0 rgba(0,0,0,.4);font-size:${lang === 'ko' ? 31 : 30}px;line-height:1.08;color:#111;word-break:keep-all}
+    .c img{width:62px;height:62px;object-fit:contain;flex:none}
+    .c span b{color:#E0006E;font-weight:normal}
     .w{position:absolute}.w img{display:block;width:100%}.w .g{position:absolute;left:24%;top:37%;width:52%;image-rendering:pixelated}
-    .k{position:absolute;font-size:64px;color:#FF2EA6;-webkit-text-stroke:3px #111;paint-order:stroke fill;transform:rotate(-12deg)}
-    .new{position:absolute;left:60px;top:400px;padding:6px 18px;background:#f00;color:#fff;font-family:system-ui,sans-serif;font-weight:900;font-size:34px;border:4px outset #F99}
+    .s{filter:drop-shadow(5px 0 0 #fff) drop-shadow(-5px 0 0 #fff) drop-shadow(0 5px 0 #fff) drop-shadow(0 -5px 0 #fff) drop-shadow(8px 10px 0 rgba(0,0,0,.35))}
+    .fly{position:absolute;filter:drop-shadow(4px 5px 0 rgba(0,0,0,.3))}
+    .pop{position:absolute;color:#FFD400;-webkit-text-stroke:7px #111;paint-order:stroke fill;white-space:nowrap}
+    .bar{position:absolute;left:0;right:0;top:438px;height:62px;background:#0000AA;border-top:4px ridge #C0C0C0;color:#FFFF00;font-family:system-ui,sans-serif;font-weight:900;font-size:28px;line-height:58px;white-space:nowrap;overflow:hidden}
   </style>
-    <img src="${deco('stars')}" style="position:absolute;left:560px;top:20px;width:90px">
-    <span class="t">${f.title}</span><span class="t m" aria-hidden="true">${f.title}</span>
-    <div class="bar">${f.sub}${f.sub}</div>
-    <img src="${deco('money_bill')}" style="position:absolute;left:640px;top:220px;width:130px;transform:rotate(-24deg)">
-    <img src="${deco('money_bill')}" style="position:absolute;left:470px;top:380px;width:110px;transform:rotate(18deg)">
-    <div class="w s" style="left:650px;top:40px;width:250px;transform:rotate(-8deg)"><img src="${real('cat_shameless')}"><img class="g" src="${shades}"></div>
-    <div class="w s" style="left:790px;top:170px;width:260px;transform:rotate(7deg)"><img src="${real('hamster_thumbs_up')}"><img class="g" src="${shades}"></div>
-    <span class="new">NEW!!</span>
-    <span class="k" style="left:${lang === 'ko' ? 250 : 300}px;top:390px">${f.sticker}</span>`);
+    <div class="rays"></div>
+    <div class="ring" style="left:790px;top:215px;width:430px;height:430px;border-color:#FFD400"></div>
+    <div class="ring" style="left:790px;top:215px;width:300px;height:300px;border-color:#FF6FB5;border-width:7px"></div>
+    <span class="t">${f.title}</span><span class="new">v2.4 NEW!!</span>
+    <div class="grid">${f.chips.map(chip).join('')}</div>
+    ${fly('shop/coin', 600, 40, 70, -18)}${fly('shop/coin', 960, 70, 56, 22)}${fly('shop/coin', 640, 360, 52, 30)}
+    ${fly('skin/prop/prop_whoopee', 944, 236, 76, 18)}
+    ${fly('deco/money_bill', 860, 20, 120, -14)}${fly('skin/fx/fx_sparkle', 700, 6, 70, 0)}${fly('skin/fx/fx_poop', 966, 196, 54, -10)}
+    ${face('cat_burst', 622, 96, 190, -10, 2)}${face('tit_burst', 830, 118, 180, 9, 2)}${face('hamster_burst', 704, 176, 220, 2, 3)}
+    <span class="pop" style="left:600px;top:378px;font-size:50px;transform:rotate(-8deg);z-index:5">${f.combo}</span>
+    <span class="pop" style="left:900px;top:318px;font-size:44px;color:#7EC8FF;transform:rotate(10deg);z-index:5">+200</span>
+    <div class="bar">${f.sub}${f.sub}</div>`);
   await page.evaluate(() => document.fonts.ready);
-  await page.waitForTimeout(300);
+  await page.waitForTimeout(400);
   await page.screenshot({ path: path.join(OUT, lang, 'feature.png') });
   await page.close();
 }
 
-for (const lang of ['ko', 'en']) await compose(lang, await captureScreens(lang));
+// --feature 면 대표 그림만 다시 만든다
+const onlyFeature = process.argv.includes('--feature');
+for (const lang of ['ko', 'en']) {
+  if (!onlyFeature) await compose(lang, await captureScreens(lang));
+  await feature(lang);
+}
 await browser.close();
 server.close();
 console.log('docs/store 에 저장했어요');
