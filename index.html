@@ -194,7 +194,8 @@
       <div class="wa-shout" id="waShout"></div>
       <div class="wa-faces" id="waFaces" aria-hidden="true"></div>
       <p class="wa-line" id="waLine"></p>
-      <button class="wa-ok" id="waOk" type="button" data-i18n="alarm.ok"></button>
+      <button class="wa-ok" id="waOk" type="button"><span class="wa-ok-label" data-i18n="alarm.tap"></span><b class="wa-count" id="waCount">20</b></button>
+      <div class="wa-fx" id="waFx" aria-hidden="true"></div>
       <button class="wa-snooze" id="waSnooze" type="button" data-i18n="alarm.snooze"></button>
     </div>
   </dialog>
@@ -204,6 +205,8 @@
     <div class="sheet-body rest">
       <h2 class="rest-title" id="wakeTitle" data-i18n="wake.title"></h2>
       <div class="rest-row"><div class="wheel" id="wH" aria-label="hour"></div><b>:</b><div class="wheel" id="wM" aria-label="minute"></div></div>
+      <div class="wake-days" id="wakeDays" role="group" aria-label="요일"></div>
+      <p class="wake-repeat" id="wakeRepeat"></p>
       <p class="rest-note" data-i18n="wake.note"></p>
       <button class="btn wide" id="wakePreview" type="button" data-i18n="wake.preview"></button>
       <div class="rest-actions">

@@ -9,7 +9,7 @@ export const native = window.BgbbNative || null;
 const HOUR = 3600e3;
 
 export const hm = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-/** 방구 시간 시작 '07:30' (기상 알람 시각 또는 06:00) */
+/** 오늘 방구 시간 시작 '07:30' (오늘 기상 알람이 울리면 그 시각, 아니면 06:00) */
 export const startLabel = (schedule = state.schedule) => hm(startMin(schedule));
 export function windowLabel(schedule = state.schedule) {
   return `${startLabel(schedule)}~${hm((schedule.end || 24) * 60)}`;
@@ -24,7 +24,8 @@ export const restLabel = (rest = state.schedule.rest) => `${hm(rest.from)}~${hm(
 export function remainingToday() {
   if (!isActive()) return 0;
   if (native) return native.remainingToday();
-  const end = windowStart(Date.now(), state.schedule) + windowLength(state.schedule);
+  const start = windowStart(Date.now(), state.schedule);
+  const end = start + windowLength(state.schedule, start);
   return (state.plan?.times || []).filter(t => t > Date.now() && t < end).length;
 }
 
@@ -39,7 +40,6 @@ function configJson() {
     frozen: state.frozen,
     start: state.schedule.start,
     end: state.schedule.end,
-    startMin: startMin(state.schedule),
     wake: state.schedule.wake,
     freq: state.schedule.freq,
     rest: state.schedule.rest,

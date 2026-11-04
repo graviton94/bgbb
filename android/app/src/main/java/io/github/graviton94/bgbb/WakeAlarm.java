@@ -54,22 +54,28 @@ final class WakeAlarm {
             p.edit().remove(KEY_SNOOZE).apply();
             return;
         }
-        long at = snooze > now ? snooze : next(wake.optInt("at", 420), now);
-        if (exactAllowed(c)) am.setAlarmClock(new AlarmManager.AlarmClockInfo(at, openApp(c)), pi);
-        else am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);   // 권한이 없으면 몇 분 늦을 수 있음
+        // 정확한 알람 권한이 없으면 걸지 않는다 (부정확하게 걸면 시각에 못 울리거나 소리 없이 알림만 뜸). 앱이 켜기 전에 허용을 받는다
+        if (!exactAllowed(c)) return;
+        long at = snooze > now ? snooze : next(wake, now);
+        if (at > 0) am.setAlarmClock(new AlarmManager.AlarmClockInfo(at, openApp(c)), pi);
     }
 
-    /** 하루 중 분 → 다음 그 시각 */
-    private static long next(int minutes, long now) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(now);
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        cal.add(Calendar.MINUTE, minutes);
-        if (cal.getTimeInMillis() <= now) cal.add(Calendar.DAY_OF_MONTH, 1);
-        return cal.getTimeInMillis();
+    /** 다음에 울릴 시각: 오늘부터 일주일 안에서 고른 요일 (요일을 안 골랐으면 그 하루) 의 알람 시각. 없으면 -1 */
+    private static long next(JSONObject wake, long now) {
+        int minutes = wake.optInt("at", 420);
+        for (int k = 0; k <= 7; k++) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(now);
+            cal.add(Calendar.DAY_OF_MONTH, k);
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            cal.set(Calendar.MILLISECOND, 0);
+            cal.add(Calendar.MINUTE, minutes);
+            long t = cal.getTimeInMillis();
+            if (t > now && PrankScheduler.wakeOn(wake, t)) return t;
+        }
+        return -1;
     }
 
     static void snooze(Context c) {

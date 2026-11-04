@@ -454,6 +454,13 @@ public class MainActivity extends Activity {
             if (url != null && url.startsWith("https://")) runOnUiThread(() -> openExternal(Uri.parse(url)));
         }
 
+        /** 이 앱의 폰 설정 화면 (알림을 한 번 거절한 뒤 다시 켤 때) */
+        @JavascriptInterface
+        public void openAppSettings() {
+            runOnUiThread(() -> startActivity(new Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, getPackageName())));
+        }
+
         /** 의견 · 오류 보내기: 사용자의 메일 앱을 열고 기기 정보를 채운다. 사용자가 직접 보낼 때만 전송된다. */
         @JavascriptInterface
         public void sendFeedback(String log) {

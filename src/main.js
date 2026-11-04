@@ -7,6 +7,7 @@ import {
 } from './store.js';
 import { native, syncSchedule, armWebTimer, remainingToday, isActive, anyFriendOn, windowLabel, startLabel, hm, inWindow, resting, restLabel } from './schedule.js';
 import { play, playFriend, forget, effectsOk } from './audio.js';
+import { dateKey } from './plan.js';
 import { drawCard } from './card.js';
 import { startFx, stopFx } from './fx.js';
 import { openCushion } from './cushion.js';
@@ -405,7 +406,7 @@ function renderHome() {
   // 기상 알람 · 쫄 시간 타일 + '알람 및 리마인더' 꺼져 있으면 경고 (방구가 화면 켤 때까지 밀림)
   const { wake, rest } = state.schedule;
   $('wakeOn').checked = wake.on;
-  $('wakeInfo').textContent = wake.on ? hm(wake.at) : t('home.off');
+  $('wakeInfo').textContent = wake.on ? `${hm(wake.at)} · ${daysLabel(Array.isArray(wake.days) ? wake.days : [true, true, true, true, true, true, true])}` : t('home.off');
   $('restOn').checked = rest.on;
   $('restInfo').textContent = rest.on ? restLabel() : t('home.off');
   $('exactWarn').hidden = !(native?.exactAllowed && !native.exactAllowed());
@@ -733,8 +734,37 @@ $('restOpen').addEventListener('click', openRest);
 // ---------------------------------------------------------- 기상 알람 (04~12시, 5분 단위)
 fillWheel($('wH'), [...Array(9).keys()].map(i => i + 4));
 fillWheel($('wM'), minutes);
+// 요일: 폰 알람처럼 일~토 일곱 개를 아무렇게나 켜고 끔. 하나도 안 켜면 '한 번만' (다음 그 시각 하루)
+let wakeDays = [true, true, true, true, true, true, true];
+/** '매일' · '평일' · '주말' · '월 수 금' · '한 번만' */
+function daysLabel(days) {
+  const n = days.filter(Boolean).length, names = t('wake.days');
+  if (n === 7) return t('wake.everyday');
+  if (!n) return t('wake.once');
+  if (n === 5 && !days[0] && !days[6]) return t('wake.weekdays');
+  if (n === 2 && days[0] && days[6]) return t('wake.weekend');
+  return days.map((on, i) => (on ? names[i] : '')).filter(Boolean).join(' ');
+}
+function renderWakeDays() {
+  $('wakeDays').innerHTML = t('wake.days').map((d, i) =>
+    `<button class="wday ${wakeDays[i] ? 'on' : ''} ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}" data-i="${i}" type="button" aria-pressed="${wakeDays[i]}">${d}</button>`).join('');
+  const n = wakeDays.filter(Boolean).length;
+  $('wakeRepeat').textContent = n ? t('wake.repeat', { days: daysLabel(wakeDays) }) : t('wake.once');
+}
+$('wakeDays').addEventListener('click', e => {
+  const b = e.target.closest('.wday');
+  if (!b) return;
+  wakeDays[+b.dataset.i] = !wakeDays[+b.dataset.i];
+  haptic(8);
+  renderWakeDays();
+});
+/** 정확한 알람 권한 ('알람 및 리마인더'): 없으면 기상 알람을 켤 수 없음 */
+const exactOk = () => !(native?.exactAllowed && !native.exactAllowed());
 function openWake() {
-  const at = state.schedule.wake.at;
+  if (!exactOk()) { toast(t('wake.needExact'), 3200); native.openExactSettings?.(); return; }
+  const { at, days } = state.schedule.wake;
+  wakeDays = Array.isArray(days) ? [...days] : [true, true, true, true, true, true, true];
+  renderWakeDays();
   $('wakeSheet').showModal();
   wheelSet($('wH'), Math.floor(at / 60)); wheelSet($('wM'), at % 60 - (at % STEP));
 }
@@ -745,15 +775,35 @@ $('wakeOn').addEventListener('change', e => {
   toast(t('wake.off'));
   syncSchedule(previewOperation);
 });
+/** 다음에 at 분이 되는 날 (요일을 하나도 안 골랐을 때 그 하루) */
+function nextOnce(at, now = Date.now()) {
+  const d = new Date(now);
+  d.setHours(0, at, 0, 0);
+  if (d.getTime() <= now) d.setDate(d.getDate() + 1);
+  return dateKey(d.getTime());
+}
 $('wakeSave').addEventListener('click', () => {
+  if (!exactOk()) { toast(t('wake.needExact'), 3200); native.openExactSettings?.(); return; }
   const at = wheelGet($('wH')) * 60 + wheelGet($('wM'));
-  state.schedule.wake = { on: true, at };
+  const once = wakeDays.some(Boolean) ? 0 : nextOnce(at);
+  state.schedule.wake = { on: true, at, days: [...wakeDays], once };
   $('wakeSheet').close();
   play('ui_pop', 0.5);
-  toast(t('wake.saved', { at: hm(at) }));
+  toast(t('wake.saved', { at: `${hm(at)} · ${daysLabel(wakeDays)}` }));
   syncSchedule(previewOperation);
-  if (native?.exactAllowed && !native.exactAllowed()) native.openExactSettings?.();   // 알람은 정확해야 함
 });
+/** 앱을 열 때: 권한이 꺼졌으면 알람도 끔 · '한 번만' 알람이 이미 지났으면 끔 */
+function checkWakeSettings() {
+  const w = state.schedule.wake;
+  if (!w.on) return;
+  let off = false;
+  if (!exactOk()) { off = true; toast(t('wake.lostExact'), 4000); }
+  else if (Array.isArray(w.days) && !w.days.some(Boolean)) {
+    const ring = new Date(Math.floor(w.once / 10000), Math.floor(w.once / 100) % 100 - 1, w.once % 100, 0, w.at).getTime();
+    if (Date.now() > ring + 15 * 60e3 && !native?.wakeRinging?.()) off = true;
+  }
+  if (off) { w.on = false; syncSchedule(previewOperation); }
+}
 $('exactWarn').addEventListener('click', () => native?.openExactSettings?.());
 
 // 알람 음악 미리 듣기 (미디어 볼륨, 웹뷰에서). 실제 알람은 네이티브가 알람 볼륨으로
@@ -788,16 +838,65 @@ function showWakeAlarm() {
     alarmAudio.loop = true;
     alarmAudio.play().catch(() => {});
   }
+  resetTaps();
   if (!$('wakeAlarm').open) $('wakeAlarm').showModal();
 }
 function closeWakeAlarm(snooze) {
   if (native) (snooze ? native.snoozeWake : native.stopWake)?.call(native);
   alarmAudio?.pause();
   alarmAudio = null;
+  clearInterval(tapDecay);
   $('wakeAlarm').close();
   if (snooze) toast(t('alarm.snoozed'));
 }
-$('waOk').addEventListener('click', () => closeWakeAlarm(false));
+
+// [확인] 20번 연타 미션: 누를 때마다 숫자가 펑 · 화면 흔들림 · 응원 글자 · 색 번쩍. 2초 손을 떼면 숫자가 다시 올라감
+const TAPS = 20;
+let taps = 0, lastTap = 0, tapDecay = 0;
+function resetTaps() {
+  taps = 0;
+  $('waCount').textContent = TAPS;
+  $('waOk').style.setProperty('--p', '0');
+  $('wakeAlarm').classList.remove('done');
+  clearInterval(tapDecay);
+  tapDecay = setInterval(() => {   // 안 누르고 있으면 0.35초마다 하나씩 되돌아감
+    if (taps > 0 && taps < TAPS && Date.now() - lastTap > 2000) { taps--; drawTaps(false); }
+  }, 350);
+}
+function drawTaps(hit) {
+  const left = TAPS - taps;
+  $('waCount').textContent = left;
+  $('waOk').style.setProperty('--p', String(taps / TAPS));
+  if (!hit) return;
+  const box = $('wakeAlarm');
+  // 숫자 펑 + 버튼 눌림 + 화면 흔들림 (뒤로 갈수록 세게)
+  for (const [el, cls] of [[$('waCount'), 'pop'], [$('waOk'), 'hit'], [box, `shake${taps % 2}`]]) {
+    el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls);
+  }
+  box.style.setProperty('--amp', `${2 + taps * 0.6}px`);
+  box.style.setProperty('--hue', `${(taps * 47) % 360}deg`);
+  // 응원 글자가 아무 데서나 튀어나왔다 사라짐
+  const word = document.createElement('span');
+  word.className = 'wa-word';
+  word.textContent = left > 0 && left <= 5 ? t('alarm.tapLeft', { n: left }) : pick(t('alarm.cheer'));
+  word.style.cssText = `left:${8 + Math.random() * 70}%;top:${12 + Math.random() * 60}%;--r:${Math.round(Math.random() * 40 - 20)}deg;--c:${['#D7FF3D', '#FFD400', '#FF6FB5', '#7EC8FF', '#FFFFFF'][taps % 5]}`;
+  $('waFx').appendChild(word);
+  setTimeout(() => word.remove(), 900);
+}
+$('waOk').addEventListener('click', () => {
+  if (taps >= TAPS) return;
+  taps++;
+  lastTap = Date.now();
+  haptic(10 + taps);
+  drawTaps(true);
+  if (taps < TAPS) return;
+  // 다 누름: 숫자 대신 기상 완료가 쿵, 잠깐 보여 주고 끔
+  $('waCount').textContent = '✓';
+  $('wakeAlarm').classList.add('done');
+  $('waShout').textContent = t('alarm.tapDone');
+  play('ui_treasure', 0.7);
+  setTimeout(() => closeWakeAlarm(false), 1100);
+});
 $('waSnooze').addEventListener('click', () => closeWakeAlarm(true));
 $('wakeAlarm').addEventListener('cancel', e => e.preventDefault());   // 뒤로가기로는 안 꺼짐
 window.bgbbOnWake = () => { if (native?.wakeRinging?.() ?? true) showWakeAlarm(); };
@@ -974,12 +1073,31 @@ const GUIDE = [
   { face: ['hamster_burst'], rules: true },
   { face: ['cat_hold'] },
   { face: ['hamster_thumbs_up'], real: true },
-  { face: ['tit_eng'] }
+  { face: ['tit_eng'] },
+  { face: ['hamster_eng', 'cat_eng'], perm: true }   // 마지막 쪽: 권한 두 개 (없으면 방구가 밀려서 참음만 나옴)
 ];
+/** 온보딩 마지막 쪽: 알림 · 알람 및 리마인더 허용 버튼 (허용하면 ✓) */
+function permButtons() {
+  const notif = !native || native.notificationsAllowed?.();
+  const exact = !native || exactOk();
+  return `<div class="perm">
+    <button class="perm-btn ${exact ? 'ok' : ''}" id="permExact" type="button"><b>${exact ? '✓' : '1'}</b><span>${t('perm.exact')}<small>${t('perm.exactWhy')}</small></span></button>
+    <button class="perm-btn ${notif ? 'ok' : ''}" id="permNotif" type="button"><b>${notif ? '✓' : '2'}</b><span>${t('perm.notif')}<small>${t('perm.notifWhy')}</small></span></button>
+  </div>`;
+}
+function refreshPerm() {
+  const box = document.querySelector('.guide-page .perm');
+  if (box) box.outerHTML = permButtons();
+}
+$('guidePages').addEventListener('click', e => {
+  if (e.target.closest('#permExact')) native?.openExactSettings?.();
+  if (e.target.closest('#permNotif') && native && !native.requestNotifications()) native.openAppSettings?.();
+  setTimeout(refreshPerm, 600);
+});
 function openGuide() {
   $('guidePages').innerHTML = GUIDE.map((g, i) => `<section class="guide-page">
     <div class="guide-art">${g.face.map(f => `<img src="assets/${g.real ? 'faces_real' : 'faces'}/${f}.webp" alt="">`).join('')}</div>
-    <h3>${t(`guide.${i + 1}t`)}</h3>${g.rules ? soundRules() : ''}<p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
+    <h3>${t(`guide.${i + 1}t`)}</h3>${g.rules ? soundRules() : ''}${g.perm ? permButtons() : ''}<p>${t(`guide.${i + 1}b`)}</p></section>`).join('');
   $('guideDots').innerHTML = GUIDE.map(() => '<i></i>').join('');
   $('guidePages').scrollLeft = 0;
   guideAt(0);
@@ -1074,12 +1192,15 @@ window.bgbbBack = () => {
 
 window.bgbbOnNativeResume = () => {
   drainNative();
+  checkWakeSettings();
   render();
   checkWake();
 };
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
+  if ($('guide').open) refreshPerm();   // 폰 설정에서 허용하고 돌아왔을 때 ✓
+  checkWakeSettings();
   checkWake();
   shuffleStage();
   drainNative();
@@ -1105,5 +1226,6 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   commit();
 }
 native?.checkUpdate?.();
+checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우
 addEventListener('pagehide', flush);

@@ -15,7 +15,7 @@ function initial() {
     friends: Object.fromEntries(CHARACTERS.map(c => [c.id, { on: true, diy: false }])),   // diy = 내 목소리 섞기
     hero: 'hamster',      // 홈에 서 있는 친구
     // rest = 쫄? 매일 쉬는 시간 (분, 소리·진동 없음) · wake = 기상 알람 (분). 켜면 그 시각부터 24시까지가 방구 시간
-    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 }, wake: { on: false, at: 7 * 60 } },
+    schedule: { on: true, start: 6, end: 0, freq: 'normal', rest: { on: false, from: 12 * 60, to: 13 * 60 }, wake: { on: false, at: 7 * 60, days: [true, true, true, true, true, true, true], once: 0 } },
     frozen: false,
     previewMode: 'loud',  // 웹 미리보기에서 흉내 낼 폰 상태
     notify: true,         // 터진 뒤 알림 문구 (앱)

@@ -166,7 +166,7 @@ final class PrankScheduler {
             } else if (isActive(cfg) && rest(cfg) != null) {
                 // 다음 쫄 시간 (06~24시와 겹치는 부분) 중 아무 때나, 30% 확률로만. 꽝이면 그 쫄 시간이 끝날 때 다시 뽑는다.
                 for (int k = 0; k < 3 && at == 0; k++) {
-                    long day = addDays(windowStart(cfg, now), k);
+                    long day = k == 0 ? windowStart(cfg, now) : dayStart(cfg, addDays(windowStart(cfg, now), k));
                     long[] rest = restInside(cfg, day);
                     if (rest == null || rest[1] <= now) continue;
                     long from = Math.max(rest[0], now + 60_000);
@@ -197,7 +197,7 @@ final class PrankScheduler {
     /** 작전일 day 안에서 쉬는 시간과 겹치는 첫 구간 [a, b] (없으면 null) */
     private static long[] restInside(JSONObject cfg, long day) {
         List<long[]> open = openSegments(cfg, day);
-        long end = day + windowLength(cfg), cursor = day;
+        long end = day + windowLength(cfg, day), cursor = day;
         for (long[] s : open) {
             if (s[0] > cursor) return new long[]{cursor, s[0]};
             cursor = s[1];
@@ -221,8 +221,8 @@ final class PrankScheduler {
             int fired = p.getLong(KEY_FIRED_DAY, 0) == dateKey(today) ? p.getInt(KEY_FIRED_N, 0) : 0;
             // 날짜로 비교: 기상 알람으로 시작 시각이 바뀌면 같은 날도 시작 시각(ms)이 달라진다 (src/plan.js 와 같다)
             long pd = planDay == 0 ? 0 : dateKey(planDay), td = dateKey(today);
-            long day = planDay == 0 || pd < td || (reset && pd == td) ? today : addDays(today, 1);
-            for (int i = 0; plan.isEmpty() && i < 3; i++, day = addDays(day, 1)) {
+            long day = planDay == 0 || pd < td || (reset && pd == td) ? today : dayStart(cfg, addDays(today, 1));
+            for (int i = 0; plan.isEmpty() && i < 3; i++, day = dayStart(cfg, addDays(day, 1))) {
                 int n = dateKey(day) == pd && count > 0 ? count : dailyCount(cfg);
                 plan = planDay(cfg, day, notBefore, day == today ? Math.max(0, n - fired) : n);
                 planDay = day;
@@ -238,7 +238,7 @@ final class PrankScheduler {
         JSONObject cfg = config(c);
         if (!isActive(cfg)) return 0;
         long now = System.currentTimeMillis();
-        long end = windowStart(cfg, now) + windowLength(cfg);
+        long start = windowStart(cfg, now), end = start + windowLength(cfg, start);
         int n = 0;
         for (long t : parse(prefs(c).getString(KEY_PLAN, ""))) if (t > now && t < end) n++;
         return n;
@@ -247,7 +247,7 @@ final class PrankScheduler {
     /** 06~24시 안인지. 절전 모드로 알람이 늦게 와서 24시를 넘겼으면 그 방은 버린다 (자정 넘어 터지지 않게). */
     static boolean inWindow(JSONObject cfg, long now) {
         long start = windowStart(cfg, now);
-        return now >= start && now < start + windowLength(cfg);
+        return now >= start && now < start + windowLength(cfg, start);
     }
 
     // 쉬는 시간 (쫄?): rest = { on, from, to } — 하루 중 분 (0~1439), 자정 넘김 포함. src/plan.js 와 같다.
@@ -273,7 +273,7 @@ final class PrankScheduler {
     /** 작전일 [start, start+길이) 에서 쉬는 시간을 뺀 열린 구간들 */
     static List<long[]> openSegments(JSONObject cfg, long start) {
         List<long[]> segs = new ArrayList<>();
-        segs.add(new long[]{start, start + windowLength(cfg)});
+        segs.add(new long[]{start, start + windowLength(cfg, start)});
         JSONObject rest = rest(cfg);
         if (rest == null) return segs;
         long len = restMinutes(rest) * 60_000L;
@@ -337,28 +337,55 @@ final class PrankScheduler {
 
     /** now 가 속한 작전일의 시작 시각. 22~02시처럼 자정을 넘는 시간대도 처리한다. */
     static long windowStart(JSONObject cfg, long now) {
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(now);
-        int startMin = startMin(cfg);
-        cal.set(Calendar.HOUR_OF_DAY, startMin / 60);
-        cal.set(Calendar.MINUTE, startMin % 60);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        long start = cal.getTimeInMillis();
+        long start = dayStart(cfg, now);
         if (start > now) {
-            long yesterday = addDays(start, -1);
-            if (now < yesterday + windowLength(cfg)) return yesterday;
+            long yesterday = dayStart(cfg, addDays(now, -1));
+            if (now < yesterday + windowLength(cfg, yesterday)) return yesterday;
         }
         return start;
     }
 
-    /** 방구 시간 시작 (하루 중 분): 기상 알람을 켰으면 그 시각, 아니면 06:00. src/plan.js 와 같다 */
-    static int startMin(JSONObject cfg) {
-        return cfg.has("startMin") ? cfg.optInt("startMin") : cfg.optInt("start", 6) * 60;
+    private static long midnight(long t) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
     }
 
-    static long windowLength(JSONObject cfg) {
-        int minutes = ((cfg.optInt("end", 0) * 60 - startMin(cfg)) % 1440 + 1440) % 1440;
+    /** t 날짜의 작전일 시작 시각 */
+    static long dayStart(JSONObject cfg, long t) {
+        return midnight(t) + startMin(cfg, t) * 60_000L;
+    }
+
+    /**
+     * 그날 기상 알람이 울리는지 (src/plan.js wakeOn 과 같다). wake = { on, at, days?: [일..토], once?: 20261105 }
+     * days 중 하나라도 켜져 있으면 그 요일만, 하나도 안 켜져 있으면 once 날짜 하루만, days 가 없으면 매일.
+     */
+    static boolean wakeOn(JSONObject wake, long t) {
+        if (wake == null || !wake.optBoolean("on")) return false;
+        JSONArray days = wake.optJSONArray("days");
+        if (days == null) return true;
+        boolean any = false;
+        for (int i = 0; i < days.length(); i++) any |= days.optBoolean(i);
+        if (!any) return wake.optLong("once") == dateKey(t);
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(t);
+        return days.optBoolean(cal.get(Calendar.DAY_OF_WEEK) - 1);
+    }
+
+    /** 그날 방구 시간 시작 (하루 중 분): 그날 기상 알람이 울리면 그 시각, 아니면 06:00 */
+    static int startMin(JSONObject cfg, long t) {
+        JSONObject wake = cfg.optJSONObject("wake");
+        return wakeOn(wake, t) ? wake.optInt("at", 420) : cfg.optInt("start", 6) * 60;
+    }
+
+    /** start 에서 시작하는 작전일의 길이 (시작 시각 ~ end 시) */
+    static long windowLength(JSONObject cfg, long start) {
+        int sm = (int) ((start - midnight(start)) / 60_000L);
+        int minutes = ((cfg.optInt("end", 0) * 60 - sm) % 1440 + 1440) % 1440;
         return (minutes == 0 ? 1440 : minutes) * 60_000L;
     }
 
