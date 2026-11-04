@@ -5,7 +5,7 @@
 이미지 (`npm run store-images` · `python3 tools/make_icons.py` 로 다시 만듦)
 - 앱 아이콘 512×512: `icon-512.png`
 - 그래픽 이미지 1024×500: `ko/feature.png` · `en/feature.png`
-- 휴대전화 스크린샷 1080×1920 (9:16) 7장씩: `ko/screen-*.png` · `en/screen-*.png`
+- 휴대전화 스크린샷 1080×1920 (9:16) 8장씩 (v2.4 기준, `npm run store-images`): `ko/screen-*.png` · `en/screen-*.png`
 
 ## 한국어 (ko-KR)
 
@@ -20,25 +20,35 @@
 06~24시 사이 하루 3~10번, 아무 때나 터짐. 언제인지는 아무도 모름. 그게 포인트임.
 
 그 순간 내 폰이…
-· 미디어 볼륨이 켜져 있으면 진짜 소리 남 (이어폰이면 이어폰으로)
-· 무음 · 방해금지면 꾹 참음
-· 아니면 부르르 진동만 (친구마다 진동 모양이 다름)
+· 미디어 볼륨이 1 이상이면 진짜 소리 (무음 · 진동 모드여도, 이어폰이면 이어폰으로)
+· 미디어 볼륨 0이면 부르르 진동만 (친구마다 진동 모양이 다름)
+· 미디어 볼륨 0 + 무음 모드, 방해금지, 절전 모드면 꾹 참음
 
-■ 터질 때마다 칭호 하나
-시간 · 요일 · 폰 상태 · 오늘 몇 번째인지로 칭호가 정해짐. "회의실 테러범", "새벽의 암살자", "참다가 터짐"… 노멀 · 레어 · 레전드 40개 + 0.5% 잭팟 5개 + 1년에 그날만 나오는 시즌 칭호 11개 (설날 · 수능 · 크리스마스…). 이미 가진 칭호면 꽝.
+■ 터질 때마다 칭호 하나 · 모두 119개
+시간 · 요일 · 폰 상태 · 오늘 몇 번째인지로 칭호가 정해짐. "회의실 테러범", "정각 장인", "참다가 터짐"…
+노멀 · 레어 · 레전드에 0.5% 잭팟, 1년에 그날만 나오는 시즌 칭호 17개, 행동으로 찾는 숨김 업적 10개까지.
 
 ■ 축하가 구림 (일부러)
-새 칭호를 따면 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄.
+새 칭호는 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄.
 
 ■ 터진 순간이 짤이 됨
 칭호마다 고정 짤 하나. 유튜브 썸네일, 구린 PPT, CCTV, 주식창, 영수증… 하루 3번 짤 뽑기도 있음. 짤 그대로 저장 · 공유.
 
-■ 꾸미기 = 가진 것 중 랜덤 난장판
-배경 · 소품 · 착용 · 말풍선 · 뿡 효과. 칭호를 따면 공짜로 열리고 뿡코인으로도 삼. 홈 화면은 가진 것 중에서 매번 랜덤으로 섞임. 캐릭터 크기 30~300%, 360도 회전.
+■ 기상 알람
+고른 요일 그 시각에 우리 효과음으로 만든 알람 음악이 울림. 끄려면 20번 연타. 알람 울리는 날은 그때부터 방구 시간.
+
+■ 매일 할 거리
+오늘의 미션 3개, 깨면 뿡코인. 일요일 밤엔 이번 주 방구 결산 (MVP 친구 · 최악의 타이밍).
+
+■ 꾸미기 · 방구 소리 팩
+배경 · 소품 · 착용 · 말풍선 · 뿡 효과 · 구린 글씨 · 방구 소리 팩. 칭호로 열거나 뿡코인으로 삼. 시즌 소리 팩은 그날 앱을 열면 공짜. 홈 화면은 가진 것 중에서 매번 랜덤으로 섞임.
+
+■ 홈 화면 위젯
+친구 얼굴을 누르면 뿡. 오늘 몇 번 장전됐는지 한눈에.
 
 ■ 쫄?
 매일 회의 · 수업 시간은 '쫄 시간'으로. 그 시간엔 소리 · 진동 일체 없음.
-급하면 '비상탈출'. '다시 시작!' 누를 때까지 조용함 (가끔 "아직도 참고 있어?" 도발 알림).
+급하면 '비상탈출'. '다시 시작!' 누를 때까지 조용함.
 
 ■ 함정설치!
 폰을 소파 쿠션 밑이나 친구 자리에 두고 설치. 누가 들거나 만지는 순간 뿡.
@@ -47,9 +57,9 @@
 소리는 매번 랜덤 (기본 · 소심 · 우렁참). 3초 녹음으로 내 목소리도 섞을 수 있음.
 
 ■ 조용한 앱
-계정 · 서버 없음. 기록은 폰 안에만 있고 인터넷 없이 작동. 광고는 짤 뽑기를 더 하고 싶을 때 직접 골라서 보는 것 하나뿐.
+계정 · 서버 없음. 기록은 폰 안에만 있음. 광고는 짤 뽑기를 더 하고 싶을 때 직접 골라서 보는 것 하나뿐.
 
-잠긴 기능 없음. 마음에 들면 응원하기로 간식 하나.
+잠긴 기능 없음. 뿡코인 충전과 응원하기는 원할 때만.
 
 ## English (en-US)
 
@@ -64,12 +74,13 @@ A hamster, a little bird and a cat live in your pocket.
 3 to 10 times a day, between 6am and midnight, one of them goes off. When? Nobody knows. That's the point.
 
 At that moment, if your phone…
-· has media volume up, it's a real sound (earbuds too)
-· is on silent or Do Not Disturb, they hold it in
-· otherwise, just a buzz (each pal buzzes differently)
+· has media volume at 1 or more, it's a real sound (even on silent or vibrate; earbuds too)
+· has media volume at 0, just a buzz (each pal buzzes differently)
+· has media volume at 0 on silent, or Do Not Disturb, or battery saver, they hold it in
 
-■ A title every time
-Time, day, phone state and how many today decide the title: "Meeting Room Menace", "Dawn Assassin", "Held, Then Blew"… 40 titles across Normal, Rare and Legend, five 0.5% jackpots and 11 once-a-year seasonal titles (Christmas, Halloween, Lunar New Year…). Already have it? Better luck next time.
+■ A title every time, 119 in all
+Time, day, phone state and how many today decide the title: "Meeting Room Menace", "On-the-Hour Artisan", "Held, Then Blew"…
+Normal, Rare and Legend, 0.5% jackpots, 17 once-a-year seasonal titles and 10 hidden achievements you find by doing things.
 
 ■ Deliberately cringe celebrations
 New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jackpots get a money gun.
@@ -77,8 +88,17 @@ New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jac
 ■ Every toot becomes a meme
 Each title has its own meme: YouTube thumbnails, cringe slides, CCTV, stock charts, receipts… plus 3 meme draws a day. Save and share as is.
 
-■ Style = random chaos from what you own
-Backgrounds, props, hats, bubbles and toot effects. Unlock with titles or buy with toot coins. The home screen reshuffles what you own every time. Sizes from 30% to 300%, any angle.
+■ Wake-up alarm
+On the days you pick, an alarm anthem made of our toots plays. Tap 20 times to stop it. On alarm days toot hours start then.
+
+■ Something every day
+Three daily missions for toot coins. Every Sunday night, this week in toots: MVP pal and worst timing.
+
+■ Style and toot sound packs
+Backgrounds, props, hats, bubbles, toot effects, cringe fonts and toot sound packs. Unlock with titles or buy with toot coins. Seasonal sound packs are free if you open the app on their day. Home reshuffles what you own every time.
+
+■ Home-screen widget
+Tap your pal to toot, and see how many are loaded today.
 
 ■ Chicken hours
 Set a daily quiet window for meetings or class: no sound, no buzz.
@@ -91,9 +111,9 @@ Leave your phone under a cushion or on a friend's seat. The moment someone picks
 The sound is random every time. Record 3 seconds to mix in your own voice.
 
 ■ A quiet app
-No account, no server. Your records stay on your phone and it works offline. The only ad is one you choose to watch for extra meme draws.
+No account, no server. Your records stay on your phone. The only ad is one you choose to watch for extra meme draws.
 
-Nothing is locked. If you enjoy it, buy them a snack from Support.
+Nothing is locked. Coin packs and Support are there only if you want them.
 
 ## 비공개 테스트 (Play Console → 테스트 → 비공개 테스트)
 
@@ -101,26 +121,53 @@ Nothing is locked. If you enjoy it, buy them a snack from Support.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
-- 출시 노트 (Play Console 에 그대로 붙여 넣기, 언어별 500자 이내):
+- 출시 노트 · 정식 출시 v2.4.0 (프로덕션 트랙에 그대로 붙여 넣기, 언어별 500자 이내):
+  ```
+  <ko-KR>
+방구뿡 정식 출시!
+주머니 속 햄찌 · 오목이 · 냥이가 하루 몇 번, 아무 때나 뿡.
+
+- 터질 때마다 칭호 하나 · 모두 119개 (숨김 업적 포함)
+- 기상 알람: 요일 고르기 · 20번 연타해야 꺼짐
+- 오늘의 미션 3개 · 일요일 밤 이번 주 방구 결산
+- 방구 소리 팩 6종 (시즌 팩은 그날 앱 열면 공짜)
+- 홈 화면 위젯: 친구 얼굴 누르면 뿡
+- 쫄 시간 · 비상탈출로 회의 중엔 조용히
+- 소리는 미디어 볼륨 기준 (처음 안내에서 확인)
+  </ko-KR>
+  <en-US>
+Pocket Toot is here!
+Hammy, Birdie and Kitty hide in your pocket and toot a few times a day, whenever.
+
+- A title every time, 119 in all (hidden achievements too)
+- Wake-up alarm: pick the days, tap 20 times to stop it
+- Three daily missions and a weekly toot report on Sunday night
+- Six toot sound packs (seasonal ones free on their day)
+- Home-screen widget: tap your pal to toot
+- Chicken hours and Bail out keep meetings quiet
+- Sound follows media volume (see the first-run guide)
+  </en-US>
+  ```
+- 출시 노트 · 비공개 테스트 v2.4.0 (테스트 트랙용):
   ```
   <ko-KR>
 비공개 테스트 v2.4.0
-- 소리 규칙 정리: 미디어 볼륨이 제일 먼저 (앱 처음 열면 한 번 안내)
+- 소리 규칙 정리: 미디어 볼륨이 제일 먼저 (처음 안내에서 한 번)
 - 기상 알람 요일 선택 · 20번 연타해야 꺼짐
 - 오늘의 미션 · 이번 주 방구 결산
 - 방구 소리 팩 6종 (시즌 팩은 그날 열면 공짜)
-- 홈 화면 위젯
-- 칭호 119개 (숨김 업적 10개)
+- 홈 화면 위젯 · 칭호 119개 (숨김 업적 10개)
+- 첫 사용 안내 새로 (8쪽)
 '알람 및 리마인더' 허용을 물어보면 꼭 허용해 주세요!
   </ko-KR>
   <en-US>
 Closed test v2.4.0
-- Sound rules cleaned up: media volume comes first (shown once when you open the app)
+- Sound rules cleaned up: media volume comes first (shown once in the guide)
 - Wake-up alarm days, and 20 taps to stop it
 - Daily missions and a weekly toot report
 - Six toot sound packs (seasonal ones free on their day)
-- Home-screen widget
-- 119 titles (10 hidden achievements)
+- Home-screen widget, 119 titles (10 hidden achievements)
+- New 8-page first-run guide
 If asked, please allow "Alarms & reminders"!
   </en-US>
   ```

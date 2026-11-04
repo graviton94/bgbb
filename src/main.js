@@ -423,9 +423,10 @@ function renderHome() {
   // 기상 알람 · 쫄 시간 타일 + '알람 및 리마인더' 꺼져 있으면 경고 (방구가 화면 켤 때까지 밀림)
   const { wake, rest } = state.schedule;
   $('wakeOn').checked = wake.on;
-  $('wakeInfo').textContent = wake.on ? `${hm(wake.at)} · ${daysLabel(Array.isArray(wake.days) ? wake.days : [true, true, true, true, true, true, true])}` : t('home.off');
+  // 시각은 크게, 요일은 그 아래 작게 (작은 폰에서 한 줄에 다 안 들어감)
+  $('wakeInfo').innerHTML = wake.on ? `${hm(wake.at)}<em class="t-sub">${esc(daysLabel(Array.isArray(wake.days) ? wake.days : [true, true, true, true, true, true, true]))}</em>` : esc(t('home.off'));
   $('restOn').checked = rest.on;
-  $('restInfo').textContent = rest.on ? restLabel() : t('home.off');
+  $('restInfo').innerHTML = rest.on ? `${hm(rest.from)}<em class="t-sub">~ ${hm(rest.to)}</em>` : esc(t('home.off'));
   $('exactWarn').hidden = !(native?.exactAllowed && !native.exactAllowed());
   $('freeze').textContent = t(state.frozen ? 'home.unfreeze' : 'home.freeze');
   const left = gachaLeft();

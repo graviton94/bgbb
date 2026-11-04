@@ -1017,3 +1017,11 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .label-row { align-items: center; }
 .label-row .top-mission { margin-left: auto; gap: 4px; }
 .label-row .top-mission small { font: 800 12px var(--body); }
+/* 작은 폰 (360px) 에서 기상 알람 · 쫄 시간 타일 글자가 잘리고 스위치가 밀려나던 것 */
+.tile { padding: 8px 8px 8px 12px; min-width: 0; }
+.tile-open small { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tile-open b { font-size: clamp(14px, 4.4vw, 18px); white-space: nowrap; }
+.tile .switch { transform: scale(0.8); }
+.tile-open b { overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.tile-open b { font-size: clamp(13px, 4vw, 18px); }
+.tile-open .t-sub { display: block; font: 700 11px var(--body); font-style: normal; color: var(--muted); }
