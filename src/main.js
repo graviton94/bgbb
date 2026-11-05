@@ -168,7 +168,9 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
     $('burstWhen').textContent = t('gacha.left', { n: gachaLeft() });
     $('burstTitle').textContent = t('gacha.title');
     $('burstMeta').textContent = '';
-    burstCard = shareData(ev, meme, null, t('gacha.title'));
+    // 공유 이미지: 레전드 짤은 레전드 바탕, 실사는 분홍 홀로, 이름 자리엔 한 줄 드립
+    burstCard = { ...shareData(ev, meme, null, pick(t('gacha.lines'))), theme: meme.legend ? 'legend' : meme.real ? 'rare' : 'meme',
+      chip: meme.legend || meme.real ? t(meme.legend ? 'gacha.legend' : 'gacha.real') : '' };
   } else {
     $('burstChip').hidden = true;
     $('burstWhen').textContent = kind === 'miss' ? info : t('burst.practice');

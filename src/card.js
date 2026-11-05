@@ -96,7 +96,7 @@ async function drawTrophy(canvas, data) {
   canvas.width = CW;
   canvas.height = CH;
   const g = canvas.getContext('2d');
-  const th = THEME[data.rarity] || THEME.meme;
+  const th = THEME[data.theme || data.rarity] || THEME.meme;
   // 바탕: 대각선 그라데이션 + 물방울 무늬
   const bg = g.createLinearGradient(0, 0, CW, CH);
   th.bg.forEach((c, i) => bg.addColorStop(i / (th.bg.length - 1), c));
