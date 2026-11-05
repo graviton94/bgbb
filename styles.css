@@ -243,20 +243,6 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 #dexStats { margin: 8px 16px 0; }
 .filters { display: flex; gap: 6px; padding: 10px 16px; overflow-x: auto; border-bottom: 1px solid var(--line); }
 .filters .chip { min-height: 34px; flex: none; }
-.dex { list-style: none; margin: 0; padding: 0; }
-.dex-row {
-  width: 100%;
-  display: flex; align-items: center; gap: 10px;
-  min-height: 60px; padding: 10px 16px;
-  border: 0; border-bottom: 1px solid #EDEDED; background: none;
-  text-align: left; cursor: pointer;
-}
-.dex-row:active { background: #F6F6F4; }
-.dex-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-.dex-text b { font-size: 15px; }
-.dex-text small { font-size: 12px; color: var(--muted); }
-.dex-row.locked b { color: #8A8A85; }
-.dex-row .n { font-size: 12px; color: var(--muted); }
 .tag {
   flex: none;
   min-width: 44px; padding: 2px 6px;
@@ -268,67 +254,107 @@ main { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .tag.rare { background: #FFB3D9; }
 .tag.jackpot { background: #FFD400; }
 
-/* 도감 줄 FX: 레어리티마다 바탕 효과 (레어 < 레전드 < 잭팟). 잠긴 줄은 흐리게 맛보기 */
-.dex-row.r-rare, .dex-row.r-legend, .dex-row.r-jackpot { position: relative; overflow: hidden; isolation: isolate; }
-.dex-row.r-rare { background: linear-gradient(90deg, #FFE3F1, #fff 70%); box-shadow: inset 4px 0 0 #FF6FB5; }
-.dex-row.r-legend { background: linear-gradient(90deg, #EEFFB0, #fff 75%); box-shadow: inset 5px 0 0 #9BD600; }
-.dex-row.r-jackpot {
-  background: linear-gradient(100deg, #FFE45C, #FFF6C2 30%, #FFB800 55%, #FFF3A8 80%, #FFD400);
-  background-size: 300% 100%; animation: dx-gold 4s linear infinite;
-  box-shadow: inset 0 0 0 2px #E0A800, inset 6px 0 0 #FF2EA6;
+/* 도감: 2열 수집 카드. 메달(친구 얼굴) · 레어리티 태그 · 받은 횟수 스티커 · 이름 · 조건 */
+.dex { list-style: none; margin: 0; padding: 12px 12px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.dex-card {
+  position: relative; overflow: hidden; isolation: isolate;
+  width: 100%; height: 100%; min-height: 200px;
+  display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 10px 12px;
+  border: 2.5px solid var(--ink); border-radius: 18px; background: #fff; color: var(--ink);
+  box-shadow: 3px 4px 0 var(--ink); text-align: center; cursor: pointer;
+  transition: transform .2s var(--e-pop, ease);
 }
-.dex-row.r-jackpot b { color: #5A3A00; text-shadow: 0 1px 0 #fff; }
-.dex-row.r-jackpot small { color: #6E5200; }
-/* 빛 줄기가 지나감 */
-.dex-row.r-rare::before, .dex-row.r-legend::before, .dex-row.r-jackpot::before {
-  content: ''; position: absolute; z-index: -1; top: -20%; bottom: -20%; left: 0; width: 38%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.9), transparent);
-  transform: translateX(-120%) skewX(-18deg); animation: dx-shine 4.2s ease-in-out infinite;
+.dex-card:active { transform: translateY(2px) scale(.98); box-shadow: 1px 2px 0 var(--ink); }
+.dc-top { align-self: stretch; display: flex; justify-content: space-between; align-items: center; }
+.dc-top .tag { min-width: 0; border-radius: 6px; }
+.dc-n { padding: 1px 8px; border: 2px solid var(--ink); border-radius: 999px; background: var(--ink); color: #fff; font: 400 13px/1.3 var(--display); transform: rotate(6deg); }
+.dc-q { background: none; border: 0; color: inherit; font-size: 15px; transform: none; padding: 0; }
+.dc-medal {
+  position: relative; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 35% 30%, #fff, #F2F2F0 70%); border: 3px solid var(--ink);
+  box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .08), 0 0 0 4px var(--medal, #fff), 0 0 0 6.5px var(--ink);
+  margin: 6px 0 4px;
 }
-.dex-row.r-rare::before { animation-duration: 6s; opacity: 0.6; }
-.dex-row.r-legend::before { animation-duration: 3.4s; }
-.dex-row.r-jackpot::before { animation-duration: 2.2s; width: 50%; }
-/* 반짝이: 레전드는 몇 개, 잭팟은 잔뜩 + 무지개 테두리 */
-.dex-row.r-legend::after, .dex-row.r-jackpot::after {
+.dc-medal { overflow: hidden; }
+.dc-medal img { width: 116%; height: 116%; object-fit: contain; object-position: 50% 0; margin-top: 18px; }
+.dc-name { font: 400 17px/1.2 var(--display); word-break: keep-all; letter-spacing: -.2px; }
+.dc-how { font-size: 11.5px; line-height: 1.35; color: #5A5A55; word-break: keep-all; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+
+/* 노멀: 흰 카드 · 회색 메달 테 */
+.dex-card.r-normal { --medal: #E4E4DF; }
+/* 레어: 분홍 홀로그램 */
+.dex-card.r-rare { --medal: #FF8CC6; background: linear-gradient(155deg, #FFE3F1, #fff 45%, #FFD6EC); }
+/* 레전드: 형광 호일 + 빛 줄기 + 반짝이 */
+.dex-card.r-legend {
+  --medal: #B8F000;
+  background: linear-gradient(135deg, #F4FFC2, #DFFF6A 40%, #F8FFD9 60%, #C9F23C); background-size: 200% 200%;
+  animation: dc-foil 5s ease-in-out infinite alternate;
+}
+/* 잭팟: 금박이 흐르고 무지개 테두리가 돌고 별이 터짐 */
+.dex-card.r-jackpot {
+  --medal: #FFD400; border-color: #7A5600; color: #4A3000;
+  background: linear-gradient(110deg, #FFE45C, #FFF6C2 25%, #FFB800 50%, #FFF3A8 75%, #FFD400); background-size: 300% 100%;
+  animation: dx-gold 3.5s linear infinite;
+  box-shadow: 3px 4px 0 var(--ink), 0 0 16px rgba(255, 184, 0, .75);
+}
+.dex-card.r-jackpot .dc-how { color: #6E5200; }
+.dex-card.r-jackpot .dc-medal { background: radial-gradient(circle at 35% 30%, #FFFBE0, #FFD400 75%); }
+.dex-card.r-jackpot .tag { animation: dx-pop 1.2s ease-in-out infinite; box-shadow: 0 0 10px #FFB800; }
+.dex-card.r-legend .tag { box-shadow: 0 0 8px rgba(155, 214, 0, .9); }
+/* 빛 줄기 (레어 · 레전드 · 잭팟) */
+.dex-card.r-rare::before, .dex-card.r-legend::before, .dex-card.r-jackpot::before {
+  content: ''; position: absolute; z-index: -1; top: -30%; bottom: -30%; left: 0; width: 45%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .95), transparent);
+  transform: translateX(-140%) skewX(-18deg); animation: dx-shine 4.2s ease-in-out infinite;
+}
+.dex-card.r-rare::before { animation-duration: 6s; opacity: .7; }
+.dex-card.r-legend::before { animation-duration: 3.4s; }
+.dex-card.r-jackpot::before { animation-duration: 2s; width: 60%; }
+/* 반짝이 점 (레전드) · 반짝이 + 무지개 테두리 (잭팟) */
+.dex-card.r-legend::after, .dex-card.r-jackpot::after {
   content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none;
   background:
-    radial-gradient(circle at 62% 30%, #fff 0 1.6px, transparent 2.6px),
-    radial-gradient(circle at 78% 70%, #fff 0 2px, transparent 3px),
-    radial-gradient(circle at 90% 25%, #fff 0 1.4px, transparent 2.4px),
-    radial-gradient(circle at 48% 78%, #fff 0 1.2px, transparent 2.2px);
-  animation: dx-twinkle 1.6s ease-in-out infinite alternate;
+    radial-gradient(circle at 18% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 82% 42%, #fff 0 2.4px, transparent 3.4px),
+    radial-gradient(circle at 26% 74%, #fff 0 1.6px, transparent 2.6px), radial-gradient(circle at 76% 84%, #fff 0 2px, transparent 3px);
+  animation: dx-twinkle 1.5s ease-in-out infinite alternate;
 }
-.dex-row.r-jackpot::after {
-  inset: 0; padding: 2px; border-radius: 0;
+.dex-card.r-jackpot::after {
+  z-index: 1; padding: 3px; border-radius: 15px;
   background:
-    radial-gradient(circle at 55% 25%, #fff 0 2px, transparent 3px),
-    radial-gradient(circle at 70% 75%, #fff 0 2.4px, transparent 3.4px),
-    radial-gradient(circle at 84% 30%, #fff 0 1.8px, transparent 2.8px),
-    radial-gradient(circle at 93% 70%, #fff 0 2.2px, transparent 3.2px),
-    radial-gradient(circle at 40% 70%, #fff 0 1.6px, transparent 2.6px),
+    radial-gradient(circle at 15% 25%, #fff 0 2.4px, transparent 3.4px), radial-gradient(circle at 85% 30%, #fff 0 2.8px, transparent 3.8px),
+    radial-gradient(circle at 22% 80%, #fff 0 2px, transparent 3px), radial-gradient(circle at 80% 78%, #fff 0 2.4px, transparent 3.4px),
     conic-gradient(from var(--dx-a, 0deg), #FF2EA6, #FFD400, #2EFF6A, #22C8FF, #B98CFF, #FF2EA6);
   -webkit-mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
-  animation: dx-twinkle 0.9s ease-in-out infinite alternate, dx-spin 3s linear infinite;
-  z-index: 1;
+  animation: dx-twinkle .9s ease-in-out infinite alternate, dx-spin 3s linear infinite;
 }
-/* 잭팟: 테두리 무지개는 위 mask 로 가장자리만 남고, 반짝이는 따로 */
-.dex-row.r-jackpot .dex-text::after {
-  content: '✦'; position: absolute; right: 64px; top: 6px; font-size: 14px; color: #fff; text-shadow: 0 0 6px #FFB800;
+.dex-card.r-jackpot .dc-top::after {
+  content: '✦'; position: absolute; right: 22%; top: 46px; font-size: 20px; color: #fff; text-shadow: 0 0 8px #FFB800, 0 0 2px #7A5600;
   animation: dx-star 1.2s ease-in-out infinite;
 }
-.dex-row.r-jackpot .tag { animation: dx-pop 1.2s ease-in-out infinite; box-shadow: 0 0 10px #FFB800; }
-.dex-row.r-legend .tag { box-shadow: 0 0 8px rgba(155, 214, 0, 0.9); }
-.dex-row.locked.r-rare, .dex-row.locked.r-legend, .dex-row.locked.r-jackpot { filter: saturate(0.45); opacity: 0.85; }
-.dex-row.locked.r-jackpot b, .dex-row.locked.r-legend b { color: #8A8A85; text-shadow: none; }
+.dex-card.r-jackpot .dc-top::before {
+  content: '✦'; position: absolute; left: 20%; top: 110px; font-size: 14px; color: #fff; text-shadow: 0 0 8px #FFB800, 0 0 2px #7A5600;
+  animation: dx-star 1.2s .6s ease-in-out infinite;
+}
+/* 안 딴 칭호: 검은 카드 · 실루엣 메달 · 힌트. 레어리티 테는 그대로 보여서 "저거 레전드네" 정도는 알 수 있게 */
+.dex-card.locked { background: #1C1C1A; color: #fff; animation: none; box-shadow: 3px 4px 0 #000; border-color: #000; }
+.dex-card.locked::before { opacity: .18; }
+.dex-card.locked::after { opacity: .5; }
+.dex-card.locked .dc-medal { background: #2C2C29; border-color: #000; box-shadow: 0 0 0 4px var(--medal, #444), 0 0 0 6.5px #000; }
+.dex-card.locked .dc-medal img { filter: brightness(0) invert(.32); }
+.dex-card.locked .dc-name { color: #9A9A92; font-size: 22px; }
+.dex-card.locked .dc-how { color: #BDBDB4; }
+.dex-card.locked.r-normal { --medal: #3A3A36; }
+.dex-card.locked .tag { opacity: .85; }
+@keyframes dc-foil { to { background-position: 100% 100%; } }
 @property --dx-a { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
 @keyframes dx-spin { to { --dx-a: 360deg; } }
-@keyframes dx-shine { 0%, 35% { transform: translateX(-120%) skewX(-18deg); } 80%, 100% { transform: translateX(320%) skewX(-18deg); } }
+@keyframes dx-shine { 0%, 35% { transform: translateX(-140%) skewX(-18deg); } 80%, 100% { transform: translateX(330%) skewX(-18deg); } }
 @keyframes dx-gold { to { background-position: 300% 0; } }
-@keyframes dx-twinkle { from { opacity: 0.25; } to { opacity: 1; } }
-@keyframes dx-star { 0%, 100% { transform: scale(0.6) rotate(0); opacity: 0.4; } 50% { transform: scale(1.3) rotate(90deg); opacity: 1; } }
+@keyframes dx-twinkle { from { opacity: .25; } to { opacity: 1; } }
+@keyframes dx-star { 0%, 100% { transform: scale(.6) rotate(0); opacity: .4; } 50% { transform: scale(1.3) rotate(90deg); opacity: 1; } }
 @keyframes dx-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12) rotate(-3deg); } }
-@media (prefers-reduced-motion: reduce) { .dex-row::before, .dex-row::after, .dex-row *, .dex-row { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .dex-card, .dex-card::before, .dex-card::after, .dex-card * { animation: none !important; } }
 
 /* ---------------------------------------------------------- 터지는 순간: 정사각형 짤 한 칸 + 칭호 */
 .burst {

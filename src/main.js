@@ -643,12 +643,16 @@ function renderDex() {
   const order = { jackpot: -1, legend: 0, rare: 1, normal: 2 };
   const list = TITLES.filter(x => dexFilter === 'all' || (dexFilter === 'locked' ? !state.titles[x.id] : x.rarity === dexFilter))
     .sort((a, b) => !!state.titles[b.id] - !!state.titles[a.id] || order[a.rarity] - order[b.rarity]);
-  $('dexList').innerHTML = list.map(x => {
+  $('dexList').innerHTML = list.map((x, i) => {
     const own = state.titles[x.id];
-    return `<li><button class="dex-row r-${x.rarity} ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
-      <span class="tag ${x.rarity}">${L(RARITY[x.rarity].name)}</span>
-      <span class="dex-text"><b>${own ? esc(L(x.name)) : '???'}</b><small>${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></span>
-      <span class="n">${own ? t('dex.count', { n: own.n }) : ''}</span></button></li>`;
+    // 메달 얼굴: 마지막으로 터진 친구 · 그때 표정 (잭팟은 엄지척). 안 딴 칭호는 실루엣
+    const who = own?.last?.char || ['hamster', 'tit', 'cat'][i % 3];
+    const expr = !own ? 'blank' : x.rarity === 'jackpot' ? 'thumbs_up' : BURST_FACE[own.last?.mode] || 'burst';
+    return `<li><button class="dex-card r-${x.rarity} ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
+      <span class="dc-top"><span class="tag ${x.rarity}">${L(RARITY[x.rarity].name)}</span>${own ? `<span class="dc-n">x${own.n}</span>` : '<span class="dc-n dc-q">🔒</span>'}</span>
+      <span class="dc-medal"><img src="${face(who, expr)}" alt="" loading="lazy"></span>
+      <b class="dc-name">${own ? esc(L(x.name)) : '???'}</b>
+      <small class="dc-how">${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></button></li>`;
   }).join('');
 }
 
@@ -661,7 +665,7 @@ $('filters').addEventListener('click', e => {
 });
 
 $('dexList').addEventListener('click', e => {
-  const b = e.target.closest('.dex-row');
+  const b = e.target.closest('.dex-card');
   if (!b) return;
   const x = titleById(b.dataset.id);
   if (!state.titles[x.id]) { toast(t('dex.lockedToast', { hint: L(x.hint) })); return; }
