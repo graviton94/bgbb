@@ -985,7 +985,7 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .missions { list-style: none; margin: 12px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .mission { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--ink); border-radius: 14px; background: #fff; }
 .mission.done:not(.claimed) { background: #F4FFD0; }
-.mission.claimed { opacity: .55; }
+.mission.claimed .m-text, .mission.claimed .m-claim:disabled { opacity: .55; }   /* 받은 뒤 광고 버튼은 또렷하게 */
 .m-text { flex: 1; min-width: 0; display: grid; grid-template-columns: 1fr auto; gap: 4px 8px; align-items: center; }
 .m-text b { grid-column: 1 / -1; font-size: 15px; }
 .m-bar { height: 8px; border-radius: 99px; background: #E6E6E3; overflow: hidden; }
@@ -1286,3 +1286,27 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .gp-rules .rules li span { font-size: 19px; }
 .gp-rules .rules-important { font-size: 13px; line-height: 1.45; padding: 9px 11px; }
 .gp-rules .rules-note { font-size: 12px; line-height: 1.45; margin: 0; color: #3A3A30; }
+
+/* 상점: 광고 보고 뿡코인 (한 줄 고정, 길면 …) */
+.ad-coins {
+  display: block; width: calc(100% - 32px); margin: 10px 16px 0; min-height: 44px; padding: 0 14px;
+  border: 2px solid var(--ink); border-radius: 14px; background: #FFD400; color: var(--ink);
+  font: 900 14px/1.2 var(--body); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.ad-coins:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.ad-coins:disabled { background: #F0F0EC; color: var(--muted); border-color: #CFCFC9; box-shadow: none; cursor: default; }
+/* 미션: 받은 뒤 광고 버튼. 받기 버튼과 같은 폭 · 한 줄 */
+.m-claim { white-space: nowrap; min-width: 76px; }
+.m-claim.m-ad:not(:disabled) { background: #FFD400; animation: m-ready 1.6s var(--e-pop) infinite; }
+.mission .m-text { min-width: 0; }
+.mission .m-text b { overflow-wrap: anywhere; word-break: keep-all; }
+
+/* 시즌 공지: 아이템 미리보기 3칸씩 */
+.season-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 14px; }
+.season-items .pv { aspect-ratio: 1; border: 2px solid var(--ink); background: #F2F2F0; }
+.season-items .pv img { max-width: 80%; max-height: 80%; }
+.season-items .wear-pv img { max-width: 100%; max-height: 100%; }
+.season-sheet h3 { font: 400 28px/1.15 var(--display); margin: 0 0 6px; word-break: keep-all; }
+.season-sheet p { margin: 0 0 12px; line-height: 1.5; word-break: keep-all; }
+.season-items .pv-sound::after { content: '🔊'; position: absolute; right: 4px; bottom: 2px; font-size: 18px; }

@@ -168,7 +168,9 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
     $('burstWhen').textContent = t('gacha.left', { n: gachaLeft() });
     $('burstTitle').textContent = t('gacha.title');
     $('burstMeta').textContent = '';
-    burstCard = shareData(ev, meme, null, t('gacha.title'));
+    // 공유 이미지: 레전드 짤은 레전드 바탕, 실사는 분홍 홀로, 이름 자리엔 한 줄 드립
+    burstCard = { ...shareData(ev, meme, null, pick(t('gacha.lines'))), theme: meme.legend ? 'legend' : meme.real ? 'rare' : 'meme',
+      chip: meme.legend || meme.real ? t(meme.legend ? 'gacha.legend' : 'gacha.real') : '' };
   } else {
     $('burstChip').hidden = true;
     $('burstWhen').textContent = kind === 'miss' ? info : t('burst.practice');
@@ -206,13 +208,50 @@ let adReady = !!native?.adReady?.();   // 앱을 다시 켰을 때 이미 받아
 // 광고로 더 받을 수 있는 횟수 (앱 · 광고 SDK 가 있을 때만)
 const adsLeft = () => (native?.showRewardedAd ? Math.max(0, AD_PER_DAY - (gachaToday().ads || 0)) : 0);
 const canWatchAd = () => adReady && adsLeft() > 0;
-window.bgbbOnAdReady = v => { adReady = v === 'true' || v === true; renderHome(); };
+// 광고 자리는 셋: 짤 뽑기 +1 (하루 3번) · 미션 보상 한 번 더 (미션마다 1번) · 상점 뿡코인 +20 (하루 3번). 각자 따로 센다
+const AD_COINS = 20, AD_COINS_PER_DAY = 3;
+const hasAds = () => !!native?.showRewardedAd;
+const coinAdsLeft = () => (hasAds() ? Math.max(0, AD_COINS_PER_DAY - (dailyToday().adCoins || 0)) : 0);
+let adFor = { kind: 'gacha' };   // 지금 보여 주는 광고를 끝까지 보면 받을 것
+function watchAd(purpose) {
+  if (!adReady) { toast(t('gacha.adWait')); return; }
+  adFor = purpose;
+  native.showRewardedAd();
+}
+window.bgbbOnAdReady = v => {
+  adReady = v === 'true' || v === true;
+  renderHome();
+  if (screen === 'shop') renderAdCoins();
+  if ($('missionSheet').open) renderMissions();
+};
 window.bgbbOnAdReward = () => {
-  const g = gachaToday();
-  g.ads = (g.ads || 0) + 1;
-  commit();
+  const p = adFor;
+  adFor = { kind: 'gacha' };
+  if (p.kind === 'mission') {
+    const m = todayMissions().find(x => x.id === p.id), d = dailyToday();
+    if (!m || (d.doubled || []).includes(m.id)) return;
+    d.doubled = [...(d.doubled || []), m.id];
+    state.coins += m.coins;
+    commit();
+    toast(t('ad.missionGot', { n: m.coins }));
+    if ($('missionSheet').open) renderMissions();
+  } else if (p.kind === 'coins') {
+    const d = dailyToday();
+    if ((d.adCoins || 0) >= AD_COINS_PER_DAY) return;
+    d.adCoins = (d.adCoins || 0) + 1;
+    state.coins += AD_COINS;
+    commit();
+    toast(t('ad.coinsGot', { n: AD_COINS }));
+  } else {
+    const g = gachaToday();
+    g.ads = (g.ads || 0) + 1;
+    commit();
+    toast(t('gacha.adGot'));
+  }
   play('ui_levelup', 0.5);
-  toast(t('gacha.adGot'));
+  render();
+  const pop = $('topCoins');
+  pop.classList.remove('bump'); void pop.offsetWidth; pop.classList.add('bump');
 };
 $('burst').addEventListener('close', () => stopFx($('fx')));
 
@@ -460,7 +499,7 @@ $('hero').addEventListener('click', () => {
 // 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +1 (하루 3번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
 $('practice').addEventListener('click', () => {
   if (!gachaLeft()) {
-    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +1
+    if (canWatchAd()) watchAd({ kind: 'gacha' });   // 끝까지 보면 bgbbOnAdReward → +1
     else toast(t(adsLeft() ? 'gacha.adWait' : 'gacha.done'));
     return;
   }
@@ -595,16 +634,24 @@ function renderMissionBadge() {
   $('missionN').textContent = `${list.filter(m => m.claimed).length}/${list.length}`;
   $('topMission').classList.toggle('ready', ready);
 }
+/** 미션 버튼: 받기 (🪙 n) → 받은 뒤엔 광고 보고 한 번 더 (📺 +n, 미션마다 1번) → 받음 */
+function missionButton(m) {
+  if (!m.claimed) return `<button class="m-claim" data-id="${m.id}" type="button" ${m.done ? '' : 'disabled'}>${coinify(esc(`🪙 ${m.coins}`))}</button>`;
+  const doubled = (dailyToday().doubled || []).includes(m.id);
+  if (hasAds() && !doubled) return `<button class="m-claim m-ad" data-ad="${m.id}" type="button" ${adReady ? '' : 'disabled'} aria-label="${esc(t('ad.missionAria', { n: m.coins }))}">${adReady ? esc(`📺 +${m.coins}`) : esc(t('ad.loadingShort'))}</button>`;
+  return `<button class="m-claim" type="button" disabled>${esc(t('mission.claimed'))}</button>`;
+}
 function renderMissions() {
   $('missionList').innerHTML = todayMissions().map(m => `<li class="mission ${m.done ? 'done' : ''} ${m.claimed ? 'claimed' : ''}">
     <div class="m-text"><b>${esc(L(m.name))}</b><span class="m-bar"><i style="width:${(m.n / m.goal) * 100}%"></i></span><small>${m.n}/${m.goal}</small></div>
-    <button class="m-claim" data-id="${m.id}" type="button" ${m.done && !m.claimed ? '' : 'disabled'}>${m.claimed ? t('mission.claimed') : coinify(esc(`🪙 ${m.coins}`))}</button>
+    ${missionButton(m)}
   </li>`).join('');
 }
 $('topMission').addEventListener('click', () => { renderMissions(); $('missionSheet').showModal(); });
 $('missionList').addEventListener('click', e => {
   const b = e.target.closest('.m-claim');
   if (!b || b.disabled) return;
+  if (b.dataset.ad) { watchAd({ kind: 'mission', id: b.dataset.ad }); return; }
   const m = todayMissions().find(x => x.id === b.dataset.id);
   if (!m || !m.done || m.claimed) return;
   dailyToday().claimed.push(m.id);
@@ -777,7 +824,17 @@ function itemPreview(x) {
   if (x.slot === 'wear') return `<span class="wear-pv"><img src="${face(heroId(), 'blank', realLook())}" alt="">${x.src ? `<img src="${x.src}" alt="">` : ''}</span>`;
   return `<img src="${face(heroId(), 'blank', x.id === 'look_real')}" alt="">`;
 }
+/** 상점 맨 위: 광고 보고 뿡코인 +20 (하루 3번, 광고가 있는 앱에서만) */
+function renderAdCoins() {
+  const left = coinAdsLeft(), el = $('adCoins');
+  el.hidden = !left;
+  if (!left) return;
+  el.disabled = !adReady;
+  el.innerHTML = adReady ? coinify(esc(t('ad.coins', { n: AD_COINS, left }))) : esc(t('gacha.adLoading'));
+}
+$('adCoins').addEventListener('click', () => watchAd({ kind: 'coins' }));
 function renderShop() {
+  renderAdCoins();
   $('coins').innerHTML = coinify(esc(t('shop.coins', { n: state.coins })));
   const packs = COIN_PACKS.filter(p => tipPrices?.[p.id]);
   $('coinPacks').hidden = !packs.length;
@@ -858,6 +915,27 @@ function giveGifts() {
   commit();
   syncSchedule(previewOperation);
   showItem(gift, L(SLOT_NAMES[gift.slot]), t('shop.giftGot', { when: L(titleById(gift.gift).hint) }));
+  return true;
+}
+
+// ---------------------------------------------------------- 시즌 공지: 시즌 꾸미기는 미리 다 들어 있고, 그 달 처음 열 때 한 번 소개한다 (해마다)
+const SEASON_NOTICES = [
+  { id: 'xmas', month: 12, slot: 'prop' }   // 12월 한정 9종 (items.js season: [12])
+];
+function maybeSeasonNotice() {
+  const d = new Date(), n = SEASON_NOTICES.find(x => x.month === d.getMonth() + 1);
+  if (!n || !state.onboarded) return false;
+  const key = `${n.id}-${d.getFullYear()}`;
+  if (state.notices[key]) return false;
+  state.notices[key] = true;
+  commit();
+  const list = ITEMS.filter(x => x.season?.includes(n.month));
+  $('seasonTitle').textContent = t(`season.${n.id}.title`);
+  $('seasonBody').textContent = t(`season.${n.id}.body`, { n: list.length });
+  $('seasonItems').innerHTML = list.slice(0, 9).map(x => `<span class="pv ${x.slot === 'sound' ? 'pv-sound' : ''}" title="${esc(L(x.name))}">${itemPreview(x)}</span>`).join('');
+  $('seasonGo').onclick = () => { $('seasonSheet').close(); shopSlot = n.slot; showScreen('shop'); };
+  play('ui_treasure', 0.5);
+  $('seasonSheet').showModal();
   return true;
 }
 
@@ -1511,7 +1589,7 @@ window.bgbbOnNativeResume = () => {
   render();
   checkWake();
   checkNightOwl();
-  if (!document.querySelector('dialog[open]') && !giveGifts()) maybeReport();   // 시즌 선물 · 일요일 밤 결산 알림을 눌러 들어온 경우
+  if (!document.querySelector('dialog[open]') && !giveGifts() && !maybeSeasonNotice()) maybeReport();   // 시즌 선물 · 시즌 공지 · 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -1541,7 +1619,7 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
   commit();
-} else if (!giveGifts()) maybeReport();
+} else if (!giveGifts() && !maybeSeasonNotice()) maybeReport();
 native?.checkUpdate?.();
 checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우

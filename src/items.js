@@ -88,7 +88,11 @@ const PROP = [
   { id: 'prop_chair', name: { ko: '회의 의자', en: 'Office chair' }, title: 'meeting_soft', price: 45, src: skin('prop', 'prop_chair') },
   { id: 'prop_pumpkin', name: { ko: '잭오랜턴', en: 'Jack-o-lantern' }, title: 'ss_halloween', price: 40, season: [10], src: skin('prop', 'prop_pumpkin') },
   { id: 'prop_bok', name: { ko: '복주머니', en: 'Lucky pouch' }, title: 'ss_newyear', price: 40, season: [1, 2], src: skin('prop', 'prop_bok') },
-  { id: 'prop_yeot', name: { ko: '수능 엿', en: 'Exam-luck taffy' }, title: 'ss_suneung', price: 40, season: [11], src: skin('prop', 'prop_yeot') }
+  { id: 'prop_yeot', name: { ko: '수능 엿', en: 'Exam-luck taffy' }, title: 'ss_suneung', price: 40, season: [11], src: skin('prop', 'prop_yeot') },
+  // 크리스마스 (12월 한정, tools/make_xmas.py)
+  { id: 'prop_xmas_tree', name: { ko: '크리스마스 트리', en: 'Christmas tree' }, title: 'ss_christmas', price: 40, season: [12], src: skin('prop', 'prop_xmas_tree') },
+  { id: 'prop_snowman', name: { ko: '눈사람', en: 'Snowman' }, price: 40, season: [12], src: skin('prop', 'prop_snowman') },
+  { id: 'prop_gift', name: { ko: '선물 상자', en: 'Gift box' }, price: 40, season: [12], src: skin('prop', 'prop_gift') }
 ];
 
 // wear: 얼굴에 쓰는 것. 표정 그림과 같은 캔버스 · 같은 눈 좌표라 (0,0) 에 겹치면 딱 맞음 (원화 · 실사 모두)
@@ -105,7 +109,8 @@ const WEAR = [
   { id: 'wear_ribbon', name: { ko: '빨간 땡땡이 리본', en: 'Polka-dot bow' }, title: 'first_bell', price: 50 },
   { id: 'wear_nerd', name: { ko: '뿔테 + 반창고', en: 'Taped nerd glasses' }, title: 'monday', price: 60 },
   { id: 'wear_bandana', name: { ko: '필승 두건', en: '"Must win" bandana' }, title: 'streak7', price: 70 },
-  { id: 'wear_santa', name: { ko: '산타 모자', en: 'Santa hat' }, title: 'ss_christmas', price: 50, season: [12] }
+  { id: 'wear_santa', name: { ko: '산타 모자', en: 'Santa hat' }, title: 'ss_christmas', price: 50, season: [12] },
+  { id: 'wear_rudolph', name: { ko: '루돌프 뿔 + 코', en: 'Rudolph antlers' }, price: 60, season: [12] }
 ].map(x => (x.id === 'wear_none' ? x : { ...x, src: skin('wear', x.id) }));
 
 // fx: 터질 때 날아가는 것 (기본 = 노란 '뿡!' 글자)
@@ -118,7 +123,8 @@ const FX = [
   { id: 'fx_poop', name: { ko: '똥', en: 'Poop' }, title: 'overeat', price: 50 },
   { id: 'fx_beans', name: { ko: '콩 튀김', en: 'Flying beans' }, price: 40 },
   { id: 'fx_pixel', name: { ko: '복셀 구름', en: 'Voxel cloud' }, price: 50 },
-  { id: 'fx_petals', name: { ko: '벚꽃잎', en: 'Cherry petals' }, title: 'morning', price: 50 }
+  { id: 'fx_petals', name: { ko: '벚꽃잎', en: 'Cherry petals' }, title: 'morning', price: 50 },
+  { id: 'fx_snow', name: { ko: '눈송이', en: 'Snowflakes' }, price: 50, season: [12] }
 ].map(x => (x.id === 'fx_toot' ? x : { ...x, src: skin('fx', x.id) }));
 
 // frame: 공유 이미지 테두리 (가운데 투명한 칸에 짤이 들어감). 기본 = 아래 검은 띠
@@ -129,7 +135,8 @@ const FRAME = [
   { id: 'frame_vhs', name: { ko: 'VHS 녹화', en: 'VHS tape' }, title: 'night_quiet', price: 60 },
   { id: 'frame_gold', name: { ko: '금테 액자', en: 'Gold frame' }, title: 'streak30', price: 150 },
   { id: 'frame_wanted', name: { ko: '지명수배', en: 'WANTED poster' }, title: 'meeting_loud', price: 80 },
-  { id: 'frame_museum', name: { ko: '미술관 액자', en: 'Museum frame' }, title: 'hold5', price: 120 }
+  { id: 'frame_museum', name: { ko: '미술관 액자', en: 'Museum frame' }, title: 'hold5', price: 120 },
+  { id: 'frame_xmas', name: { ko: '메리 뿡리스마스', en: 'Merry Toot-mas' }, title: 'ss_christmas', price: 80, season: [12] }
 ].map(x => (x.id === 'frame_strip' ? x : { ...x, src: skin('frame', x.id) }));
 
 // bubble: 홈 말풍선 모양 (styles.css 의 .bubble.skin-<id>)

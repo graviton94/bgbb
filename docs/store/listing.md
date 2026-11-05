@@ -57,7 +57,7 @@
 소리는 매번 랜덤 (기본 · 소심 · 우렁참). 3초 녹음으로 내 목소리도 섞을 수 있음.
 
 ■ 조용한 앱
-계정 · 서버 없음. 기록은 폰 안에만 있음. 광고는 짤 뽑기를 더 하고 싶을 때 직접 골라서 보는 것 하나뿐.
+계정 · 서버 없음. 기록은 폰 안에만 있음. 광고는 짤 뽑기나 뿡코인을 더 받고 싶을 때 직접 골라서 볼 때만 나옴.
 
 잠긴 기능 없음. 뿡코인 충전과 응원하기는 원할 때만.
 
@@ -111,7 +111,7 @@ Leave your phone under a cushion or on a friend's seat. The moment someone picks
 The sound is random every time. Record 3 seconds to mix in your own voice.
 
 ■ A quiet app
-No account, no server. Your records stay on your phone. The only ad is one you choose to watch for extra meme draws.
+No account, no server. Your records stay on your phone. Ads only play when you choose to watch one for extra meme draws or coins.
 
 Nothing is locked. Coin packs and Support are there only if you want them.
 
@@ -121,6 +121,23 @@ Nothing is locked. Coin packs and Support are there only if you want them.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
+- 출시 노트 · v2.4.3 (언어별 500자 이내):
+  ```
+  <ko-KR>
+v2.4.3
+- 12월 1일부터 크리스마스 한정 꾸미기 6종 (트리 · 눈사람 · 선물 상자 · 루돌프 뿔 · 눈송이 · 크리스마스 프레임)
+- 새 짤 5종: 현상수배 · 방구능력시험 · 배달앱 · 잠금화면 알림 · 오늘의 운세
+- 레전드 · 실사 짤은 자랑 이미지 바탕도 다르게
+- 원할 때만 보는 광고 보상 추가: 미션 보상 한 번 더 · 뿡코인 +20 (하루 3번)
+  </ko-KR>
+  <en-US>
+v2.4.3
+- Six Christmas items from December 1 (tree, snowman, gift box, Rudolph antlers, snowflakes, Christmas frame)
+- Five new memes: WANTED poster, toot aptitude test, delivery app, lock-screen alerts, today's fortune
+- Legend and real-photo memes get their own share background
+- More optional ad rewards: claim a mission reward again, +20 coins (3 a day)
+  </en-US>
+  ```
 - 출시 노트 · v2.4.2 (2.4.1 내용 포함, 테스트 · 프로덕션 공용, 언어별 500자 이내):
   ```
   <ko-KR>
@@ -254,7 +271,7 @@ ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 
 
 - 개인정보처리방침: https://bbangguppung.github.io/privacy/ (bbangguppung 조직의 bbangguppung.github.io 저장소, 다른 앱 사이트와 따로. 앱 안에는 설정 → 개인정보처리방침)
 - 웹사이트 (스토어 등록정보 · AdMob app-ads.txt 용): https://bbangguppung.github.io
-- 광고: **있음** (AdMob 보상형 광고, 짤 뽑기 +1 을 고를 때만, 하루 3번까지) · 대상 연령: 13세 이상 (어린이 대상 아님)
+- 광고: **있음** (AdMob 보상형 광고, 사용자가 고를 때만: 짤 뽑기 +1 하루 3번 · 미션 보상 한 번 더 · 꾸미기 뿡코인 +20 하루 3번) · 대상 연령: 13세 이상 (어린이 대상 아님)
 - 콘텐츠 등급(IARC): 폭력·성·약물·도박 없음, 사용자 간 소통 없음. 방귀 소리 같은 **가벼운 유머(crude humor)** 가 있다고 답한다.
 - 정부 앱 / 금융 / 건강: 해당 없음
 

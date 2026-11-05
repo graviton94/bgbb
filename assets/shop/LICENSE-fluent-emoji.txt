@@ -1,4 +1,4 @@
-Shop / support icons are composed from Microsoft Fluent Emoji (3D), via @lobehub/fluent-emoji-3d 1.1.0.
+Shop / support / sound-pack icons and the Christmas props, snow FX and frame decorations (tools/make_xmas.py) are composed from Microsoft Fluent Emoji (3D), via @lobehub/fluent-emoji-3d 1.1.0.
 https://github.com/microsoft/fluentui-emoji
 
 MIT License

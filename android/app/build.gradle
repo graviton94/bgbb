@@ -43,8 +43,8 @@ android {
         applicationId 'io.github.graviton94.bgbb'
         minSdk 26
         targetSdk 36
-        versionCode 19
-        versionName '2.4.2'
+        versionCode 20
+        versionName '2.4.3'
         manifestPlaceholders = [admobAppId: ADMOB_APP_ID ?: TEST_APP_ID]
         buildConfigField 'String', 'ADMOB_REWARDED', "\"${ADMOB_REWARDED_ID ?: TEST_REWARDED_ID}\""
     }
