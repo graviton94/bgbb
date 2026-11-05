@@ -172,6 +172,6 @@ export const COIN_PACKS = [
   { id: 'coins_m', coins: 500, img: 'assets/shop/coins_m.webp' },
   { id: 'coins_l', coins: 1500, img: 'assets/shop/coins_l.webp' }
 ];
-// 보상형 광고: '짤 뽑기' 3번을 다 쓴 뒤 광고를 끝까지 보면 +3, 하루 2번까지
-export const AD_BONUS = 3, AD_PER_DAY = 2;
+// 보상형 광고: 오늘 '짤 뽑기' 를 다 쓴 뒤 광고를 끝까지 보면 +1
+export const AD_BONUS = 1, AD_PER_DAY = 3;   // 짤 뽑기: 광고 한 번에 +1, 하루 3번까지 (무료 1 + 광고 3 = 최대 4)
 

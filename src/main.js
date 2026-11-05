@@ -196,8 +196,8 @@ function runFx(meme) {
   });
 }
 
-// ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 광고 보고 +3
-const GACHA = 3;
+// ---------------------------------------------------------- 짤 뽑기 (하루 무료 1번): 랜덤 짤. 다 쓰면 광고 보고 +1 (하루 3번까지)
+const GACHA = 1;   // 하루 무료 짤 뽑기
 /** 오늘 짤 뽑기 기록 (날이 바뀌면 새로) */
 const gachaToday = () => (state.gacha.day === dayKey() ? state.gacha : (state.gacha = { day: dayKey(), n: 0, ads: 0 }));
 const gachaLeft = () => { const g = gachaToday(); return Math.max(0, GACHA + (g.ads || 0) * AD_BONUS - g.n); };
@@ -457,10 +457,10 @@ $('hero').addEventListener('click', () => {
   newBubbles();
 });
 
-// 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +3 (하루 2번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
+// 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +1 (하루 3번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
 $('practice').addEventListener('click', () => {
   if (!gachaLeft()) {
-    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +3
+    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +1
     else toast(t(adsLeft() ? 'gacha.adWait' : 'gacha.done'));
     return;
   }
@@ -636,6 +636,7 @@ $('latest').addEventListener('click', () => {
 // ---------------------------------------------------------- 칭호 도감
 const FILTERS = ['all', 'jackpot', 'legend', 'rare', 'normal', 'locked'];
 
+let dexSeen = null;
 function renderDex() {
   const s = totals();
   $('dexBig').innerHTML = `${ownedCount()}<span>/${TITLES.length}</span>`;
@@ -656,6 +657,10 @@ function renderDex() {
       <b class="dc-name">${own ? esc(L(x.name)) : '???'}</b>
       <small class="dc-how">${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></button></li>`;
   }).join('');
+  // 움직이는 건 딴 칭호 중 화면에 보이는 카드만 (89장이 한꺼번에 돌면 싼 폰에서 버벅임)
+  dexSeen?.disconnect();
+  dexSeen = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }) : null;
+  $('dexList').querySelectorAll('.dex-card:not(.locked):not(.r-normal)').forEach(el => (dexSeen ? dexSeen.observe(el) : el.classList.add('vis')));
 }
 
 $('filters').addEventListener('click', e => {
@@ -1309,7 +1314,7 @@ function guideMock(kind) {
   if (kind === 'home') {
     return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span></div>
       <img class="gm-hero" src="${face('hamster', 'blank')}" alt="">
-      <div class="row3"><span class="btn primary gm-b1">${esc(t('home.cushion'))}</span><span class="btn gm-b2">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze gm-b3">${esc(t('home.freeze'))}</span></div></div>`;
+      <div class="row3"><span class="btn primary gm-b1">${esc(t('home.cushion'))}</span><span class="btn gm-b2">${esc(t('home.gacha', { n: 1 }))}</span><span class="btn gm-freeze gm-b3">${esc(t('home.freeze'))}</span></div></div>`;
   }
   if (kind === 'trap') {
     return `<div class="gm gm-trap"><div class="gt-stage">

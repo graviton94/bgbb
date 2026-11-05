@@ -32,7 +32,7 @@
 새 칭호는 빵빠레 + 지폐 펑, 레전드는 무지개 PPT "축하합니다!!", 잭팟은 머니건 돈폭탄.
 
 ■ 터진 순간이 짤이 됨
-칭호마다 고정 짤 하나. 유튜브 썸네일, 구린 PPT, CCTV, 주식창, 영수증… 하루 3번 짤 뽑기도 있음. 짤 그대로 저장 · 공유.
+칭호마다 고정 짤 하나. 유튜브 썸네일, 구린 PPT, CCTV, 주식창, 영수증… 짤 뽑기는 하루 1번 (광고 보면 최대 4번). 짤 그대로 저장 · 공유.
 
 ■ 기상 알람
 고른 요일 그 시각에 우리 효과음으로 만든 알람 음악이 울림. 끄려면 20번 연타. 알람 울리는 날은 그때부터 방구 시간.
@@ -86,7 +86,7 @@ Normal, Rare and Legend, 0.5% jackpots, 17 once-a-year seasonal titles and 10 hi
 New titles get a fanfare and a cash burst, legends get a rainbow PowerPoint, jackpots get a money gun.
 
 ■ Every toot becomes a meme
-Each title has its own meme: YouTube thumbnails, cringe slides, CCTV, stock charts, receipts… plus 3 meme draws a day. Save and share as is.
+Each title has its own meme: YouTube thumbnails, cringe slides, CCTV, stock charts, receipts… plus a free meme draw every day (up to 4 with ads). Save and share as is.
 
 ■ Wake-up alarm
 On the days you pick, an alarm anthem made of our toots plays. Tap 20 times to stop it. On alarm days toot hours start then.
@@ -121,6 +121,29 @@ Nothing is locked. Coin packs and Support are there only if you want them.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
+- 출시 노트 · v2.4.2 (2.4.1 내용 포함, 테스트 · 프로덕션 공용, 언어별 500자 이내):
+  ```
+  <ko-KR>
+v2.4.2
+- 칭호 도감이 수집 카드로: 등급마다 홀로그램, 안 딴 칭호는 실루엣
+- 자랑 이미지 새로: 등급마다 다른 바탕, 큰 칭호 이름 · 조건 · 날짜
+- 짤 뽑기: 하루 1번 무료, 광고를 보면 한 번씩 더 (하루 최대 4번)
+- 첫 사용 안내 다시 정리 (함정설치 · 쫄 시간 · 비상탈출 · 기상 알람)
+- 안내를 마치면 필요한 권한 두 개를 바로 물어봄
+- 업데이트 받는 동안 진행률 표시
+- 설정은 오른쪽 위 버튼 하나로
+  </ko-KR>
+  <en-US>
+v2.4.2
+- Titles are now collectible cards: holo foil by rarity, silhouettes for ones you have not earned
+- New share images: a background per rarity, the title big with its condition and date
+- Meme draw: one free a day, one more per ad (up to 4 a day)
+- First-run guide reworked (traps, chicken hours, bail-out, wake-up alarm)
+- Finishing the guide asks for the two permissions right away
+- Update download progress is shown
+- Settings live in the top-right button only
+  </en-US>
+  ```
 - 출시 노트 · 정식 출시 v2.4.0 (프로덕션 트랙에 그대로 붙여 넣기, 언어별 500자 이내):
   ```
   <ko-KR>
@@ -231,7 +254,7 @@ ID 를 하나도 만들지 않으면 응원하기 창은 "응원할 수 없음" 
 
 - 개인정보처리방침: https://bbangguppung.github.io/privacy/ (bbangguppung 조직의 bbangguppung.github.io 저장소, 다른 앱 사이트와 따로. 앱 안에는 설정 → 개인정보처리방침)
 - 웹사이트 (스토어 등록정보 · AdMob app-ads.txt 용): https://bbangguppung.github.io
-- 광고: **있음** (AdMob 보상형 광고, 짤 뽑기 +3 을 고를 때만) · 대상 연령: 13세 이상 (어린이 대상 아님)
+- 광고: **있음** (AdMob 보상형 광고, 짤 뽑기 +1 을 고를 때만, 하루 3번까지) · 대상 연령: 13세 이상 (어린이 대상 아님)
 - 콘텐츠 등급(IARC): 폭력·성·약물·도박 없음, 사용자 간 소통 없음. 방귀 소리 같은 **가벼운 유머(crude humor)** 가 있다고 답한다.
 - 정부 앱 / 금융 / 건강: 해당 없음
 

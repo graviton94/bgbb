@@ -622,7 +622,7 @@ export function titleMeme(titleId, ctx) {
 }
 
 /**
- * 랜덤 짤 (홈의 '짤 뽑기', 하루 3번). ctx = { id, mode, t }
+ * 랜덤 짤 (홈의 '짤 뽑기', 하루 1번 + 광고). ctx = { id, mode, t }
  * 레전드 짤 6% · 유니크 짤 (나머지 중) 40% · 조립형, 실사 사진 20%. 잭팟 돈 짤은 잭팟 칭호 전용이라 안 나온다.
  */
 export const ODDS = { legend: 0.06, unique: 0.4, real: 0.2 };

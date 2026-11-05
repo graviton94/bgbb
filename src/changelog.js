@@ -2,24 +2,39 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.4.2', date: '2026-11-05',
+    ko: [
+      '칭호 도감을 수집 카드로: 친구 메달 · 등급마다 홀로그램 (잭팟은 금박 + 무지개), 안 딴 칭호는 실루엣',
+      '자랑 이미지 새로: 등급마다 다른 바탕, 큰 칭호 이름 · 조건 · 날짜. 칭호 65개에 전용 짤',
+      '짤 뽑기: 하루 1번 무료, 광고 보면 한 번씩 더 (하루 최대 4번)',
+      '도감이 더 가볍게: 딴 칭호 중 화면에 보이는 카드만 움직임',
+      '첫 사용 안내에 늦게 터진 방구 규칙 한 줄 추가'
+    ],
+    en: [
+      'Titles are now collectible cards: pal medals and holo foil by rarity (gold and rainbow for jackpots), silhouettes for ones you have not earned',
+      'New share images: a background per rarity, the title big with its condition and date, and 65 more titles get their own meme',
+      'Meme draw: one free a day, one more per ad (up to 4 a day)',
+      'Lighter titles screen: only earned cards on screen animate',
+      'The first-run guide now explains late toots'
+    ]
+  },
+  {
     v: '2.4.1', date: '2026-11-05',
     ko: [
       '업데이트 받는 동안 화면 위에 진행률 표시 · \'지금 받기\' 창이 다시 뜨던 것 수정',
       '첫 사용 안내 다시 정리: 함정설치 · 절대 조용(쫄 시간 · 비상탈출) · 기상 알람을 따로 설명하고 움직이는 그림으로',
       '안내를 마치면 필요한 권한 두 개를 바로 물어봄',
       '설정은 오른쪽 위 버튼 하나로 · 홈의 ⓘ 는 사용설명으로 합침',
-      '칭호 도감을 수집 카드로: 친구 메달 · 레어리티별 홀로그램 (잭팟은 금박 + 무지개), 안 딴 칭호는 실루엣',
-      '꾸미기: 잠긴 물건은 흐리게 + 자물쇠',
-      '자랑 이미지 새로: 등급마다 다른 바탕 (잭팟은 금박 + 무지개), 큰 칭호 이름 · 조건 · 날짜, 칭호 65개에 전용 짤'
+      '칭호 도감: 레어 · 레전드 · 잭팟 줄이 반짝임',
+      '꾸미기: 잠긴 물건은 흐리게 + 자물쇠'
     ],
     en: [
       'Update download progress now shows at the top, and the "Get it now" prompt no longer pops up again',
       'First-run guide reworked: traps, total silence (chicken hours and bail-out) and the wake-up alarm each get their own animated page',
       'Finishing the guide asks for the two permissions right away',
       'Settings live in the top-right button only; the ⓘ on home is now part of the guide',
-      'Titles are now collectible cards: pal medals and holo foil by rarity (gold and rainbow for jackpots), silhouettes for ones you have not earned',
-      'Style: locked items are faded with a lock on top',
-      'New share images: a background per rarity (gold and rainbow for jackpots), the title big with its condition and date, and 65 more titles get their own meme'
+      'Titles: rare, legend and jackpot rows sparkle',
+      'Style: locked items are faded with a lock on top'
     ]
   },
   {
