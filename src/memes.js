@@ -593,9 +593,22 @@ const TITLE_MEMES = {
   meeting_soft: 'chat', meeting_hold: 'report', night_quiet: 'cctv', monday: 'forecast', friday: 'nowplaying', weekend_nap: 'box',
   double_loud: 'versus', broke: 'expect', soft3: 'chat', loud5: 'stock', hold3: 'halo', streak7: 'award', total50: 'receipt',
   lunch_loud: 'receipt', commute: 'expect', cat_hold: 'deal', ensemble: 'lineup', overeat: 'receipt',
-  loud_basic: 'assembled', soft_basic: 'assembled', hold_basic: 'deal', morning: 'forecast', lunch: 'receipt', afternoon: 'chat',
+  hold_basic: 'deal', morning: 'forecast', lunch: 'receipt', afternoon: 'chat',
   evening: 'expect', night: 'nowplaying', first_today: 'news', streak3: 'halo', hamster: 'eng', tit: 'eng', cat: 'eng',
-  hamster_loud: 'versus', tit_soft: 'box'
+  hamster_loud: 'versus', tit_soft: 'box',
+  // v2.4 에 늘어난 칭호들 (기본 조립형 대신 칭호 분위기에 맞는 틀)
+  loud_basic: 'expect', soft_basic: 'box', first_loud: 'news', first_hold: 'deal', second_today: 'stock',
+  on_the_hour: 'forecast', half_hour: 'receipt', pi_time: 'receipt', lucky7: 'thumb', nth7: 'receipt', golden_ratio: 'report',
+  midnight_last: 'nowplaying', early_bird: 'forecast', deadline: 'cctv', late_fix: 'report', ear_night: 'nowplaying', ear_loud: 'nowplaying',
+  friday13: 'cctv', sunday_blues: 'halo', saturday_morning: 'box', payday: 'receipt', wknd_loud: 'thumb',
+  tuesday: 'forecast', wednesday: 'chat', thursday: 'expect', teatime: 'receipt', dinner: 'receipt', brunch: 'forecast',
+  loud7: 'stock', soft5: 'chat', soft_after_hold: 'versus', loud_after_soft: 'versus', silent_hold: 'halo',
+  dnd_hold: 'cctv', saver_hold: 'report', late_hold: 'chat',
+  tit_loud: 'versus', cat_loud: 'thumb', tit_hold: 'deal', hamster_hold: 'halo', hamster_soft: 'box', cat_soft: 'eng',
+  total10: 'stock', total25: 'receipt', total500: 'award', total1000: 'ppt', streak2: 'chat', streak10: 'award', streak100: 'ppt',
+  ss_whiteday: 'chat', ss_blackday: 'receipt', ss_parents: 'award', ss_teachers: 'award', ss_hangul: 'news', ss_dongji: 'forecast',
+  hid_logo: 'eng', hid_poke50: 'cctv', hid_mission3: 'report', hid_alarm_fast: 'news', hid_snooze3: 'nowplaying', hid_trap10: 'lineup',
+  hid_share10: 'thumb', hid_shopaholic: 'receipt', hid_dex_half: 'award', hid_night_owl: 'nowplaying'
 };
 /** ctx = { id, mode, t (처음 받은 순간), title(이름), rarity, headline } */
 export function titleMeme(titleId, ctx) {

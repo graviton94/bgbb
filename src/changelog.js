@@ -9,7 +9,8 @@ export const CHANGELOG = [
       '안내를 마치면 필요한 권한 두 개를 바로 물어봄',
       '설정은 오른쪽 위 버튼 하나로 · 홈의 ⓘ 는 사용설명으로 합침',
       '칭호 도감을 수집 카드로: 친구 메달 · 레어리티별 홀로그램 (잭팟은 금박 + 무지개), 안 딴 칭호는 실루엣',
-      '꾸미기: 잠긴 물건은 흐리게 + 자물쇠'
+      '꾸미기: 잠긴 물건은 흐리게 + 자물쇠',
+      '자랑 이미지 새로: 등급마다 다른 바탕 (잭팟은 금박 + 무지개), 큰 칭호 이름 · 조건 · 날짜, 칭호 65개에 전용 짤'
     ],
     en: [
       'Update download progress now shows at the top, and the "Get it now" prompt no longer pops up again',
@@ -17,7 +18,8 @@ export const CHANGELOG = [
       'Finishing the guide asks for the two permissions right away',
       'Settings live in the top-right button only; the ⓘ on home is now part of the guide',
       'Titles are now collectible cards: pal medals and holo foil by rarity (gold and rainbow for jackpots), silhouettes for ones you have not earned',
-      'Style: locked items are faded with a lock on top'
+      'Style: locked items are faded with a lock on top',
+      'New share images: a background per rarity (gold and rainbow for jackpots), the title big with its condition and date, and 65 more titles get their own meme'
     ]
   },
   {

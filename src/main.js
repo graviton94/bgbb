@@ -74,11 +74,13 @@ function memeForTitle(titleId) {
   return titleMeme(titleId, { id: ev.char, mode: ev.mode, t: ev.t, title: L(x.name), rarity: x.rarity, headline: headlineFor(ev) });
 }
 
-/** 공유 이미지 정보: 짤 + 아래 띠 (칩 · 이름) */
+const cardWhen = ts => { const d = new Date(ts); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+/** 공유 이미지 정보: 짤 + 등급 테마 · 칭호 이름 · 조건 · 누가 언제 */
 function shareData(ev, meme, titleId = null, label = '') {
   const x = titleId && titleById(titleId);
-  return x ? { ev, meme, chip: L(RARITY[x.rarity].name), chipColor: RARITY[x.rarity].color, name: L(x.name) }
-    : { ev, meme, chip: '', chipColor: '#FFFFFF', name: label };
+  const sub = ev ? `${L(charById(ev.char).nick)} · ${cardWhen(ev.t)}` : '';
+  return x ? { ev, meme, rarity: x.rarity, chip: L(RARITY[x.rarity].name), chipColor: RARITY[x.rarity].color, name: L(x.name), how: L(x.how), sub }
+    : { ev, meme, rarity: null, chip: '', chipColor: '#FFFFFF', name: label, sub };
 }
 
 async function shareCard(data) {
