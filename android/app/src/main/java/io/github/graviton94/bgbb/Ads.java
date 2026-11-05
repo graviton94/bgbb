@@ -23,7 +23,7 @@ final class Ads {
 
     interface Sink {
         void ready(boolean ready);   // 볼 광고가 준비됐는지 (버튼 보이기)
-        void reward();               // 끝까지 봤음 → 짤 뽑기 +3
+        void reward();               // 끝까지 봤음 → JS 가 지금 고른 보상 (짤 뽑기 +1 · 미션 한 번 더 · 뿡코인 +20)
     }
 
     private final Activity activity;

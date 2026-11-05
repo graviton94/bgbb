@@ -68,7 +68,7 @@ function demoState() {
     ['first_today', 'hamster', 'loud', 5], ['cat', 'cat', 'hold', 4], ['tit_soft', 'tit', 'soft', 2], ['morning', 'hamster', 'soft', 3]])
     titles[id] = { n, first: t - 6 * 86400e3, last: ev(char, mode) };
   return {
-    onboarded: true, guideV: 3, rulesSeen: true, seenVersion: '2.4.2', reportSeen: '', hero: 'hamster', days, titles,
+    onboarded: true, guideV: 3, rulesSeen: true, seenVersion: '2.4.3', reportSeen: '', hero: 'hamster', days, titles,
     recent: [{ ...ev('hamster', 'loud'), title: 'broke' }],
     tips: [], sentConfig: 'demo', coins: 186,
     bought: Object.fromEntries(['bg_office', 'bg_minihompy', 'prop_whoopee', 'prop_megaphone', 'prop_spray', 'prop_sweetpotato',
@@ -101,7 +101,7 @@ async function captureScreens(lang) {
     // 앱 안에서 보이는 모습으로 찍는다. 터지는 화면용 기록은 window.__events 로 넣는다.
     window.__events = [];
     window.BgbbNative = {
-      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.4.2',
+      configure() {}, drainEvents: () => JSON.stringify(window.__events.splice(0)), remainingToday: () => 3, appVersion: () => '2.4.3',
       effectsAllowed: () => true, exactAllowed: () => true, wakeRinging: () => !!window.__ring, stopWake() {}, snoozeWake() {}, adReady: () => true,
       setWidgetInfo() {}, playToot() {}, previewPack() {}, requestReview() {}, checkUpdate() {},
       soundStatus: () => JSON.stringify({ mode: 'loud', vol: 9, max: 15 }), deviceMode: () => 'loud', setMediaMuted() {}, setDim() {}, setKeepAwake() {}, takeResumed: () => false,
