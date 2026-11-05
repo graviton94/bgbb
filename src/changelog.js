@@ -4,13 +4,13 @@ export const CHANGELOG = [
   {
     v: '2.4.3', date: '2026-11-05',
     ko: [
-      '12월 한정 크리스마스 꾸미기 6종: 트리 · 눈사람 · 선물 상자 · 루돌프 뿔 + 코 · 눈송이 효과 · 메리 뿡리스마스 프레임',
+      '12월 1일부터 크리스마스 한정 꾸미기 6종 (12월에 공지로 알려 줌): 트리 · 눈사람 · 선물 상자 · 루돌프 뿔 + 코 · 눈송이 효과 · 메리 뿡리스마스 프레임',
       '새 짤 5종: 현상수배 · 방구능력시험 · 배달앱 · 잠금화면 알림 · 오늘의 운세',
       '짤 뽑기 자랑 이미지: 레전드 짤 · 실사 짤은 바탕부터 다르게',
       '광고 보고 받기 두 가지 더: 미션 보상 한 번 더 · 꾸미기에서 뿡코인 +20 (하루 3번)'
     ],
     en: [
-      'Six December-only Christmas items: tree, snowman, gift box, Rudolph antlers, snowflake FX and a Merry Toot-mas frame',
+      'Six Christmas items from December 1 (you will get a heads-up then): tree, snowman, gift box, Rudolph antlers, snowflake FX and a Merry Toot-mas frame',
       'Five new memes: WANTED poster, toot aptitude test, delivery app, lock-screen alerts and today’s fortune',
       'Meme-draw share images: legend and real-photo memes get their own background',
       'Two more optional ad rewards: claim a mission reward again, and +20 coins in Style (3 a day)'

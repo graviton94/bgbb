@@ -33,6 +33,7 @@ function initial() {
     coinTokens: [],       // 이미 코인을 넣은 충전 결제 토큰 (같은 결제를 두 번 넣지 않게, 최근 것만)
     coins: 0,             // 뿡코인 (꾸미기 상점)
     bought: {},           // 산 꾸미기 아이템 id → true
+    notices: {},          // 본 시즌 공지 ('xmas-2026' → true, 해마다 한 번)
     equip: { ...DEFAULT_EQUIP },   // 장착 중 { bg, prop, bubble, look }
     tips: [],             // 응원한 상품 ID (Google Play 가 확인해 준 것만)
     plan: null,           // 웹 미리보기용 작전 일정 { day, times }

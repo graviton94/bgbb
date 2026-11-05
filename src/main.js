@@ -918,6 +918,27 @@ function giveGifts() {
   return true;
 }
 
+// ---------------------------------------------------------- 시즌 공지: 시즌 꾸미기는 미리 다 들어 있고, 그 달 처음 열 때 한 번 소개한다 (해마다)
+const SEASON_NOTICES = [
+  { id: 'xmas', month: 12, slot: 'prop' }   // 12월 한정 9종 (items.js season: [12])
+];
+function maybeSeasonNotice() {
+  const d = new Date(), n = SEASON_NOTICES.find(x => x.month === d.getMonth() + 1);
+  if (!n || !state.onboarded) return false;
+  const key = `${n.id}-${d.getFullYear()}`;
+  if (state.notices[key]) return false;
+  state.notices[key] = true;
+  commit();
+  const list = ITEMS.filter(x => x.season?.includes(n.month));
+  $('seasonTitle').textContent = t(`season.${n.id}.title`);
+  $('seasonBody').textContent = t(`season.${n.id}.body`, { n: list.length });
+  $('seasonItems').innerHTML = list.slice(0, 9).map(x => `<span class="pv ${x.slot === 'sound' ? 'pv-sound' : ''}" title="${esc(L(x.name))}">${itemPreview(x)}</span>`).join('');
+  $('seasonGo').onclick = () => { $('seasonSheet').close(); shopSlot = n.slot; showScreen('shop'); };
+  play('ui_treasure', 0.5);
+  $('seasonSheet').showModal();
+  return true;
+}
+
 // ---------------------------------------------------------- 렌더
 function render() {
   const n = streak();
@@ -1568,7 +1589,7 @@ window.bgbbOnNativeResume = () => {
   render();
   checkWake();
   checkNightOwl();
-  if (!document.querySelector('dialog[open]') && !giveGifts()) maybeReport();   // 시즌 선물 · 일요일 밤 결산 알림을 눌러 들어온 경우
+  if (!document.querySelector('dialog[open]') && !giveGifts() && !maybeSeasonNotice()) maybeReport();   // 시즌 선물 · 시즌 공지 · 일요일 밤 결산 알림을 눌러 들어온 경우
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -1598,7 +1619,7 @@ else if (older(state.seenVersion, APP_VERSION)) {   // 업데이트하고 처음
   showNotes(state.seenVersion || CHANGELOG[1]?.v);
   state.seenVersion = APP_VERSION;
   commit();
-} else if (!giveGifts()) maybeReport();
+} else if (!giveGifts() && !maybeSeasonNotice()) maybeReport();
 native?.checkUpdate?.();
 checkWakeSettings();
 checkWake();   // 알람이 앱을 연 경우

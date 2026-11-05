@@ -125,14 +125,14 @@ Nothing is locked. Coin packs and Support are there only if you want them.
   ```
   <ko-KR>
 v2.4.3
-- 12월 한정 크리스마스 꾸미기 6종 (트리 · 눈사람 · 선물 상자 · 루돌프 뿔 · 눈송이 · 크리스마스 프레임)
+- 12월 1일부터 크리스마스 한정 꾸미기 6종 (트리 · 눈사람 · 선물 상자 · 루돌프 뿔 · 눈송이 · 크리스마스 프레임)
 - 새 짤 5종: 현상수배 · 방구능력시험 · 배달앱 · 잠금화면 알림 · 오늘의 운세
 - 레전드 · 실사 짤은 자랑 이미지 바탕도 다르게
 - 원할 때만 보는 광고 보상 추가: 미션 보상 한 번 더 · 뿡코인 +20 (하루 3번)
   </ko-KR>
   <en-US>
 v2.4.3
-- Six December-only Christmas items (tree, snowman, gift box, Rudolph antlers, snowflakes, Christmas frame)
+- Six Christmas items from December 1 (tree, snowman, gift box, Rudolph antlers, snowflakes, Christmas frame)
 - Five new memes: WANTED poster, toot aptitude test, delivery app, lock-screen alerts, today's fortune
 - Legend and real-photo memes get their own share background
 - More optional ad rewards: claim a mission reward again, +20 coins (3 a day)

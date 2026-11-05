@@ -301,6 +301,17 @@
     </div>
   </dialog>
 
+  <!-- 시즌 공지: 그 달 처음 열 때 한 번 (12월 크리스마스 꾸미기 등) -->
+  <dialog class="sheet small season-sheet" id="seasonSheet" aria-labelledby="seasonTitle">
+    <div class="sheet-body">
+      <h3 id="seasonTitle"></h3>
+      <p id="seasonBody"></p>
+      <div class="season-items" id="seasonItems"></div>
+      <button class="btn primary wide" id="seasonGo" type="button" data-i18n="season.go"></button>
+      <button class="btn ghost wide" data-close type="button" data-i18n="season.later"></button>
+    </div>
+  </dialog>
+
   <canvas id="card" width="1080" height="1920" hidden></canvas>
   <div class="upd-pill" id="updPill" popover="manual" role="status" aria-live="polite"><span id="updPillText"></span><i><b id="updPillBar"></b></i></div>
   <div class="toast" id="toast" popover="manual" role="status" aria-live="polite"></div>

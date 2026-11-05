@@ -1301,3 +1301,12 @@ html[lang^="en"] .rest-row span { order: -1; text-align: right; }
 .m-claim.m-ad:not(:disabled) { background: #FFD400; animation: m-ready 1.6s var(--e-pop) infinite; }
 .mission .m-text { min-width: 0; }
 .mission .m-text b { overflow-wrap: anywhere; word-break: keep-all; }
+
+/* 시즌 공지: 아이템 미리보기 3칸씩 */
+.season-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 14px; }
+.season-items .pv { aspect-ratio: 1; border: 2px solid var(--ink); background: #F2F2F0; }
+.season-items .pv img { max-width: 80%; max-height: 80%; }
+.season-items .wear-pv img { max-width: 100%; max-height: 100%; }
+.season-sheet h3 { font: 400 28px/1.15 var(--display); margin: 0 0 6px; word-break: keep-all; }
+.season-sheet p { margin: 0 0 12px; line-height: 1.5; word-break: keep-all; }
+.season-items .pv-sound::after { content: '🔊'; position: absolute; right: 4px; bottom: 2px; font-size: 18px; }
