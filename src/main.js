@@ -74,11 +74,13 @@ function memeForTitle(titleId) {
   return titleMeme(titleId, { id: ev.char, mode: ev.mode, t: ev.t, title: L(x.name), rarity: x.rarity, headline: headlineFor(ev) });
 }
 
-/** 공유 이미지 정보: 짤 + 아래 띠 (칩 · 이름) */
+const cardWhen = ts => { const d = new Date(ts); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+/** 공유 이미지 정보: 짤 + 등급 테마 · 칭호 이름 · 조건 · 누가 언제 */
 function shareData(ev, meme, titleId = null, label = '') {
   const x = titleId && titleById(titleId);
-  return x ? { ev, meme, chip: L(RARITY[x.rarity].name), chipColor: RARITY[x.rarity].color, name: L(x.name) }
-    : { ev, meme, chip: '', chipColor: '#FFFFFF', name: label };
+  const sub = ev ? `${L(charById(ev.char).nick)} · ${cardWhen(ev.t)}` : '';
+  return x ? { ev, meme, rarity: x.rarity, chip: L(RARITY[x.rarity].name), chipColor: RARITY[x.rarity].color, name: L(x.name), how: L(x.how), sub }
+    : { ev, meme, rarity: null, chip: '', chipColor: '#FFFFFF', name: label, sub };
 }
 
 async function shareCard(data) {
@@ -194,8 +196,8 @@ function runFx(meme) {
   });
 }
 
-// ---------------------------------------------------------- 짤 뽑기 (하루 3번): 랜덤 짤. 다 쓰면 광고 보고 +3
-const GACHA = 3;
+// ---------------------------------------------------------- 짤 뽑기 (하루 무료 1번): 랜덤 짤. 다 쓰면 광고 보고 +1 (하루 3번까지)
+const GACHA = 1;   // 하루 무료 짤 뽑기
 /** 오늘 짤 뽑기 기록 (날이 바뀌면 새로) */
 const gachaToday = () => (state.gacha.day === dayKey() ? state.gacha : (state.gacha = { day: dayKey(), n: 0, ads: 0 }));
 const gachaLeft = () => { const g = gachaToday(); return Math.max(0, GACHA + (g.ads || 0) * AD_BONUS - g.n); };
@@ -455,10 +457,10 @@ $('hero').addEventListener('click', () => {
   newBubbles();
 });
 
-// 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +3 (하루 2번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
+// 짤 뽑기: 남았으면 뽑기 · 다 썼으면 광고 보고 +1 (하루 3번) · 그것도 다 썼으면 내일. 연습 한 방은 없음
 $('practice').addEventListener('click', () => {
   if (!gachaLeft()) {
-    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +3
+    if (canWatchAd()) native.showRewardedAd();   // 끝까지 보면 bgbbOnAdReward → +1
     else toast(t(adsLeft() ? 'gacha.adWait' : 'gacha.done'));
     return;
   }
@@ -634,6 +636,7 @@ $('latest').addEventListener('click', () => {
 // ---------------------------------------------------------- 칭호 도감
 const FILTERS = ['all', 'jackpot', 'legend', 'rare', 'normal', 'locked'];
 
+let dexSeen = null;
 function renderDex() {
   const s = totals();
   $('dexBig').innerHTML = `${ownedCount()}<span>/${TITLES.length}</span>`;
@@ -643,13 +646,21 @@ function renderDex() {
   const order = { jackpot: -1, legend: 0, rare: 1, normal: 2 };
   const list = TITLES.filter(x => dexFilter === 'all' || (dexFilter === 'locked' ? !state.titles[x.id] : x.rarity === dexFilter))
     .sort((a, b) => !!state.titles[b.id] - !!state.titles[a.id] || order[a.rarity] - order[b.rarity]);
-  $('dexList').innerHTML = list.map(x => {
+  $('dexList').innerHTML = list.map((x, i) => {
     const own = state.titles[x.id];
-    return `<li><button class="dex-row r-${x.rarity} ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
-      <span class="tag ${x.rarity}">${L(RARITY[x.rarity].name)}</span>
-      <span class="dex-text"><b>${own ? esc(L(x.name)) : '???'}</b><small>${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></span>
-      <span class="n">${own ? t('dex.count', { n: own.n }) : ''}</span></button></li>`;
+    // 메달 얼굴: 마지막으로 터진 친구 · 그때 표정 (잭팟은 엄지척). 안 딴 칭호는 실루엣
+    const who = own?.last?.char || ['hamster', 'tit', 'cat'][i % 3];
+    const expr = !own ? 'blank' : x.rarity === 'jackpot' ? 'thumbs_up' : BURST_FACE[own.last?.mode] || 'burst';
+    return `<li><button class="dex-card r-${x.rarity} ${own ? '' : 'locked'}" data-id="${x.id}" type="button">
+      <span class="dc-top"><span class="tag ${x.rarity}">${L(RARITY[x.rarity].name)}</span>${own ? `<span class="dc-n">x${own.n}</span>` : '<span class="dc-n dc-q">🔒</span>'}</span>
+      <span class="dc-medal"><img src="${face(who, expr)}" alt="" loading="lazy"></span>
+      <b class="dc-name">${own ? esc(L(x.name)) : '???'}</b>
+      <small class="dc-how">${own ? esc(L(x.how)) : esc(t('dex.hint', { hint: L(x.hint) }))}</small></button></li>`;
   }).join('');
+  // 움직이는 건 딴 칭호 중 화면에 보이는 카드만 (89장이 한꺼번에 돌면 싼 폰에서 버벅임)
+  dexSeen?.disconnect();
+  dexSeen = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('vis', e.isIntersecting)), { rootMargin: '80px' }) : null;
+  $('dexList').querySelectorAll('.dex-card:not(.locked):not(.r-normal)').forEach(el => (dexSeen ? dexSeen.observe(el) : el.classList.add('vis')));
 }
 
 $('filters').addEventListener('click', e => {
@@ -661,7 +672,7 @@ $('filters').addEventListener('click', e => {
 });
 
 $('dexList').addEventListener('click', e => {
-  const b = e.target.closest('.dex-row');
+  const b = e.target.closest('.dex-card');
   if (!b) return;
   const x = titleById(b.dataset.id);
   if (!state.titles[x.id]) { toast(t('dex.lockedToast', { hint: L(x.hint) })); return; }
@@ -1303,7 +1314,7 @@ function guideMock(kind) {
   if (kind === 'home') {
     return `<div class="gm gm-home"><div class="gm-top"><span class="mute">🔊 9/15</span></div>
       <img class="gm-hero" src="${face('hamster', 'blank')}" alt="">
-      <div class="row3"><span class="btn primary gm-b1">${esc(t('home.cushion'))}</span><span class="btn gm-b2">${esc(t('home.gacha', { n: 3 }))}</span><span class="btn gm-freeze gm-b3">${esc(t('home.freeze'))}</span></div></div>`;
+      <div class="row3"><span class="btn primary gm-b1">${esc(t('home.cushion'))}</span><span class="btn gm-b2">${esc(t('home.gacha', { n: 1 }))}</span><span class="btn gm-freeze gm-b3">${esc(t('home.freeze'))}</span></div></div>`;
   }
   if (kind === 'trap') {
     return `<div class="gm gm-trap"><div class="gt-stage">
