@@ -4,13 +4,13 @@ export const CHANGELOG = [
   {
     v: '2.4.4', date: '2026-11-06',
     ko: [
-      '방구 소리 대폭 추가: 세 친구 모두 기본 소리가 방구. 오목이는 높은 삐익 방구, 냥이는 피식 · 우르릉 방구 (가끔 방구 뒤에 짹 · 냐옹 · 하악). 모두 61가지',
+      '방구 소리 대폭 추가: 세 친구 모두 기본 소리가 방구. 오목이는 높은 삐익 방구, 냥이는 피식 · 우르릉 방구 (가끔 방구 뒤에 짹 · 냐옹 · 하악). 모두 53가지',
       '연중 방구 소리 팩 4종: 슬픈 트롬본 · 8비트 레벨업 · 속보 징글 · 박수갈채',
       '짤 뽑기가 더 다양하게: 전용 짤이 훨씬 자주 나오고, 최근 3번 나온 짤은 다시 안 나옴',
       '12월 한정 짤 2종: 산타의 착한 아이 명단 · 크리스마스 카드'
     ],
     en: [
-      'Way more toots: all three pals now toot by default. Birdie squeaks, Kitty goes psst or rumbles (sometimes followed by a tweet, meow or hiss). 61 sounds in all',
+      'Way more toots: all three pals now toot by default. Birdie squeaks, Kitty goes psst or rumbles (sometimes followed by a tweet, meow or hiss). 53 sounds in all',
       'Four year-round toot sound packs: sad trombone, 8-bit level up, breaking news and a standing ovation',
       'More varied meme draws: special memes show up far more often, and none of the last 3 repeat',
       'Two December-only memes: Santa’s nice list and a Christmas card'
