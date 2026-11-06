@@ -20,9 +20,9 @@ export const CHARACTERS = [
     name: { ko: '솜뭉치 오목눈이', en: 'Cotton Chickadee' },
     nick: { ko: '오목이', en: 'Birdie' },
     styles: {
-      main: { ko: '짹', en: 'Tweet' },
-      soft: { ko: '파닥', en: 'Flap' },
-      loud: { ko: '째애액', en: 'SKREE' }
+      main: { ko: '뿌잉', en: 'Squeak-toot' },
+      soft: { ko: '삐익', en: 'Peep' },
+      loud: { ko: '뿌애액', en: 'SQUEEEAK' }
     },
     bubbles: {
       ko: ['짹. 아님 뿡.', '날아갈 준비 됨', '곧 노래함 (뿡)', '아무 일 없음'],
@@ -34,9 +34,9 @@ export const CHARACTERS = [
     name: { ko: '시크 뚱냥이', en: 'Chubby Cat' },
     nick: { ko: '냥이', en: 'Kitty' },
     styles: {
-      main: { ko: '냐옹', en: 'Meow' },
-      soft: { ko: '골골', en: 'Purr' },
-      loud: { ko: '캬악', en: 'HISS' }
+      main: { ko: '뿡냥', en: 'Toot-meow' },
+      soft: { ko: '피식', en: 'Psst' },
+      loud: { ko: '부와악', en: 'BRRRAP' }
     },
     bubbles: {
       ko: ['건들지 마', '참는 중. 말 걸지 마.', '귀찮음', '…'],

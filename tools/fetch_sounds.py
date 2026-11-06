@@ -21,6 +21,7 @@ import urllib.request
 UA = "Mozilla/5.0 (X11; Linux x86_64) bgbb-sound-fetch/2.0 (+https://github.com/graviton94/bgbb; ruahn49@gmail.com)"
 OUT = os.path.join(os.path.dirname(__file__), "sound_candidates")
 PER_NEED = 6
+PER = {k: 8 for k in ('fart_pop', 'fart_trumpet', 'fart_flutter', 'fart_pssst', 'fart_cartoon', 'fart_echo', 'fart_fx', 'fart_multi')}   # 방구는 더 많이
 
 # 용도 → (Freesound 검색어들, 길이 범위 초, Commons 검색어들)
 NEEDS = {
@@ -35,6 +36,15 @@ NEEDS = {
     "fart_wet":    (["wet fart", "sloppy fart"], (0.3, 3), ["fart"]),
     "fart_bath":   (["bath fart", "fart bubbles water", "underwater fart"], (0.5, 5), ["fart"]),
     "fart_whoopee": (["whoopee cushion"], (0.5, 4), ["whoopee cushion"]),
+    # 방구 더 많이 (v2.5): 세 친구 모두 기본 소리가 방구라서 종류를 크게 늘린다
+    "fart_pop":     (["fart pop", "quick fart", "short fart sound"], (0.1, 1.2), ["fart"]),
+    "fart_trumpet": (["trumpet fart", "loud fart", "brassy fart"], (0.4, 3), ["fart"]),
+    "fart_flutter": (["fluttering fart", "rattling fart", "fart flutter"], (0.4, 3), ["fart"]),
+    "fart_pssst":   (["silent fart", "hissing fart", "sneaky fart"], (0.3, 3), ["fart"]),
+    "fart_cartoon": (["cartoon fart", "funny fart", "comedy fart"], (0.2, 3), ["fart"]),
+    "fart_echo":    (["toilet fart", "bathroom fart", "fart echo"], (0.3, 4), ["fart"]),
+    "fart_fx":      (["fart sound effect", "farting", "fart noise"], (0.2, 3), ["flatulence"]),
+    "fart_multi":   (["farts", "many farts", "fart compilation"], (1, 12), ["fart"]),
     "cat_meow":    (["cat meow", "meow"], (0.3, 3), ["cat meow"]),
     "cat_purr":    (["cat purr", "purring"], (2, 20), ["cat purring"]),
     "cat_hiss":    (["cat hiss", "cat hissing"], (0.3, 3), ["cat hissing"]),
@@ -168,17 +178,17 @@ def main():
     for need, (fs_queries, dur, cm_queries) in NEEDS.items():
         if need not in only:
             continue
-        chosen, seen = [], set()
+        chosen, seen, per = [], set(), PER.get(need, PER_NEED)
         for q in fs_queries:
             for c in freesound(q, dur):
-                if c["url"] not in seen and len(chosen) < PER_NEED:
+                if c["url"] not in seen and len(chosen) < per:
                     seen.add(c["url"]); chosen.append(c)
             time.sleep(1)
         for q in cm_queries:
-            if len(chosen) >= PER_NEED:
+            if len(chosen) >= per:
                 break
             for c in commons(q, dur):
-                if c["url"] not in seen and len(chosen) < PER_NEED:
+                if c["url"] not in seen and len(chosen) < per:
                     seen.add(c["url"]); chosen.append(c)
         folder = os.path.join(OUT, need)
         os.makedirs(folder, exist_ok=True)

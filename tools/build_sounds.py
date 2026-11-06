@@ -19,16 +19,17 @@ CAND = os.path.join(HERE, "sound_candidates")
 OUT = os.path.join(HERE, "..", "assets", "sounds")
 
 # 결과 파일 → (후보 파일, 최대 길이 초, 음량 dB RMS)
-# 캐릭터 소리는 <친구>_<스타일> · _2 · _3 … = 서로 다른 녹음 (재생할 때마다 하나를 고른다). 햄찌 소심·기본 6개 · 우렁찬 3개 + 레어 3개, 새 우렁찬 2개, 나머지 3개
+# 캐릭터 소리는 <친구>_<스타일> · _2 · _3 … = 서로 다른 녹음 (재생할 때마다 하나를 고른다, 최대 9개).
+# v2.5: 셋 다 기본이 방구. 햄찌 소심 8 · 기본 7 · 우렁참 4 · 레어 3 / 오목이 6 · 7 · 2 / 냥이 6 · 7 · 2 (들어 보고 9개 뺌, 하악 없음)
 SOFT, MAIN, LOUD, UI = -21.0, -17.0, -14.0, -22.0
 CHOICES = {
-    "hamster_soft":   ("fart_squeak/01.ogg", 1.0, SOFT),
+    "hamster_soft": ("fart_squeak/01.ogg", 1.0, SOFT),
     "hamster_soft_2": ("fart_squeak/04.ogg", 1.0, SOFT),
     "hamster_soft_3": ("fart_squeak/06.ogg", 1.0, SOFT),
-    "hamster_main":   ("fart_short/01.ogg", 1.4, MAIN),
+    "hamster_main": ("fart_short/01.ogg", 1.4, MAIN),
     "hamster_main_2": ("fart_squeak/05.ogg", 1.4, MAIN),
     "hamster_main_3": ("fart_short/03.ogg", 1.4, MAIN),
-    "hamster_loud":   ("fart_long/05.ogg", 2.6, LOUD),
+    "hamster_loud": ("fart_long/05.ogg", 2.6, LOUD),
     "hamster_loud_2": ("fart_long/06.ogg", 2.6, LOUD),
     "hamster_loud_3": ("fart_short/06.ogg", 1.0, LOUD),
     # 방구 종류 늘리기: 작은 뽁 · 새는 삐용 · 축축 · 방석
@@ -39,26 +40,46 @@ CHOICES = {
     "hamster_main_5": ("fart_whoopee/01.ogg", 1.4, MAIN),
     "hamster_main_6": ("fart_squeal/01.ogg", 1.4, MAIN),
     # 레어 방구: 햄찌가 낼 때 2% 확률로만 (스타일 상관없이). 따다닥 연발 · 낮은 부르릉 · 욕조
-    "hamster_epic":   ("fart_rapid/01.ogg", 3.0, LOUD),
+    "hamster_epic": ("fart_rapid/01.ogg", 3.0, LOUD),
     "hamster_epic_2": ("fart_deep/04.ogg", 2.2, LOUD),
-    "hamster_epic_3": ("fart_bath/02.ogg", 2.6, LOUD),
-    "tit_main":       ("bird_tweet/05.ogg", 1.6, MAIN),
-    "tit_main_2":     ("bird_tweet/04.ogg", 1.6, MAIN),
-    "tit_main_3":     ("bird_tweet/01.ogg", 1.6, MAIN),
-    "tit_soft":       ("wings/03.ogg", 1.2, SOFT),
-    "tit_soft_2":     ("wings/05.ogg", 1.2, SOFT),
-    "tit_soft_3":     ("wings/01.ogg", 1.2, SOFT),
-    "tit_loud":       ("bird_alarm/01.ogg", 1.6, LOUD),
-    "tit_loud_2":     ("bird_alarm/03.ogg", 1.6, LOUD),
-    "cat_main":       ("cat_meow/01.ogg", 1.5, MAIN),
-    "cat_main_2":     ("cat_meow/02.ogg", 1.5, MAIN),
-    "cat_main_3":     ("cat_meow/05.ogg", 1.0, MAIN),
-    "cat_soft":       ("cat_purr/02.ogg", 2.5, SOFT),
-    "cat_soft_2":     ("cat_purr/03.ogg", 2.5, SOFT),
-    "cat_soft_3":     ("cat_purr/05.ogg", 2.5, SOFT),
-    "cat_loud":       ("cat_hiss/01.ogg", 1.5, LOUD),
-    "cat_loud_2":     ("cat_hiss/04.ogg", 1.5, LOUD),
-    "cat_loud_3":     ("cat_hiss/05.ogg", 1.5, LOUD),
+    # 햄찌 방구 더 (v2.5)
+    "hamster_soft_7": ("fart_pop/04.ogg", 1.0, SOFT),
+    "hamster_soft_8": ("fart_pop/08.ogg", 1.0, SOFT),
+    "hamster_main_7": ("fart_multi/04.ogg", 1.4, MAIN),
+    "hamster_loud_4": ("fart_echo/03.ogg", 2.2, LOUD),
+    "hamster_epic_3": ("fart_multi/08.ogg", 3.0, LOUD),
+    # 오목이 (v2.5): 작은 새라 높고 짧은 삐익 방구 (반음 올림) · 가끔 방구 뒤에 날갯짓 · 짹 · 깍!
+    "tit_soft":     ("fart_pop/03.ogg", 1.0, SOFT, 4),
+    "tit_soft_2":   ("fart_pop/05.ogg", 1.0, SOFT, 4),
+    "tit_soft_3":   ("fart_echo/08.ogg", 1.0, SOFT, 3),
+    "tit_soft_4":   ("fart_fx/08.ogg", 1.0, SOFT, 2),
+    "tit_soft_5":   {"parts": [("fart_pop/01.ogg", 0.8, 5, 0.06, 1.0), ("wings/03.ogg", 0.8, 0, 0, 0.7)], "db": SOFT},
+    "tit_soft_6":   {"parts": [("fart_echo/04.ogg", 0.9, 3, 0.06, 1.0), ("wings/05.ogg", 0.8, 0, 0, 0.7)], "db": SOFT},
+    "tit_main":     ("fart_trumpet/02.ogg", 1.4, MAIN, 4),
+    "tit_main_2":   ("fart_trumpet/03.ogg", 1.4, MAIN, 4),
+    "tit_main_3":   ("fart_fx/02.ogg", 1.4, MAIN, 3),
+    "tit_main_4":   ("fart_fx/05.ogg", 1.4, MAIN, 3),
+    "tit_main_5":   {"parts": [("fart_cartoon/04.ogg", 1.0, 4, 0.08, 1.0), ("bird_tweet/05.ogg", 0.8, 0, 0, 0.8)], "db": MAIN},
+    "tit_main_6":   {"parts": [("fart_pop/02.ogg", 1.0, 4, 0.08, 1.0), ("bird_tweet/04.ogg", 0.8, 0, 0, 0.8)], "db": MAIN},
+    "tit_main_7":   {"parts": [("fart_fx/04.ogg", 1.1, 3, 0.08, 1.0), ("bird_tweet/01.ogg", 0.8, 0, 0, 0.8)], "db": MAIN},
+    "tit_loud":     ("fart_echo/02.ogg", 1.8, LOUD, 3),
+    "tit_loud_2":   {"parts": [("fart_multi/05.ogg", 1.3, 3, 0.06, 1.0), ("bird_alarm/01.ogg", 0.9, 0, 0, 0.8)], "db": LOUD},
+    # 냥이 (v2.5): 소심은 피식 · 뻔뻔한 방구 뒤에 골골 / 냐옹
+    "cat_soft":     ("fart_pssst/01.ogg", 1.2, SOFT),
+    "cat_soft_2":   ("fart_pssst/02.ogg", 1.4, SOFT),
+    "cat_soft_3":   ("fart_cartoon/01.ogg", 1.0, SOFT),
+    "cat_soft_4":   ("fart_fx/06.ogg", 1.2, SOFT),
+    "cat_soft_5":   {"parts": [("fart_pssst/02.ogg", 1.0, 0, 0.1, 1.0), ("cat_purr/02.ogg", 1.2, 0, 0, 0.7)], "db": SOFT},
+    "cat_soft_6":   {"parts": [("fart_cartoon/03.ogg", 0.9, 0, 0.1, 1.0), ("cat_purr/03.ogg", 1.2, 0, 0, 0.7)], "db": SOFT},
+    "cat_main":     ("fart_cartoon/05.ogg", 1.6, MAIN),
+    "cat_main_2":   ("fart_echo/06.ogg", 1.6, MAIN),
+    "cat_main_3":   ("fart_multi/02.ogg", 1.6, MAIN),
+    "cat_main_4":   ("fart_multi/06.ogg", 1.6, MAIN),
+    "cat_main_5":   {"parts": [("fart_cartoon/06.ogg", 1.2, 0, 0.1, 1.0), ("cat_meow/01.ogg", 1.0, 0, 0, 0.8)], "db": MAIN},
+    "cat_main_6":   {"parts": [("fart_echo/01.ogg", 1.2, 0, 0.1, 1.0), ("cat_meow/02.ogg", 0.9, 0, 0, 0.8)], "db": MAIN},
+    "cat_main_7":   {"parts": [("fart_multi/03.ogg", 1.2, 0, 0.1, 1.0), ("cat_meow/05.ogg", 0.9, 0, 0, 0.8)], "db": MAIN},
+    "cat_loud":     ("fart_trumpet/08.ogg", 1.8, LOUD),
+    "cat_loud_2":   ("fart_multi/07.ogg", 2.4, LOUD, -1),
     "ui_pop":         ("ui_pop/02.ogg", 0.25, UI),
     "ui_levelup":     ("ui_levelup/02.ogg", 1.0, UI),
     "ui_treasure":    ("ui_levelup/01.ogg", 1.8, UI),
@@ -108,6 +129,33 @@ def master(x, rms_db, fades=True):
     return np.tanh(x / peak) * peak
 
 
+def pitch(x, semitones):
+    """음 높이 바꾸기 (재생 속도도 같이 바뀜 = 작은 새는 짧고 높게 뿡)"""
+    if not semitones:
+        return x
+    r = 2 ** (semitones / 12)
+    n = max(1, int(len(x) / r))
+    return np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x)
+
+
+def part(rel, seconds, semitones=0):
+    return pitch(trim(loudest_window(trim(load(rel)), seconds)), semitones)
+
+
+def build(spec):
+    """CHOICES 값: (후보, 최대 초, dB) · (후보, 최대 초, dB, 반음) · {"parts": [(후보, 최대 초, 반음, 뒤 간격 초, 음량 배), …], "db": dB}
+    parts 는 이어 붙이기 (방구 → 놀란 짹 / 냥 같은 조합). 음량 배는 조합 안에서 그 조각만 줄일 때."""
+    if isinstance(spec, dict):
+        segs = []
+        for rel, seconds, st, gap, gain in spec["parts"]:
+            x = part(rel, seconds, st)
+            x = x / (np.sqrt(np.mean(x ** 2)) + 1e-9) * 0.1 * gain
+            segs += [x, np.zeros(int(gap * SR))]
+        return master(np.concatenate(segs[:-1]), spec["db"]), [p[0] for p in spec["parts"]]
+    rel, seconds, db, *rest = spec
+    return master(part(rel, seconds, rest[0] if rest else 0), db), [rel]
+
+
 def save(name, x):
     os.makedirs(OUT, exist_ok=True)
     pcm = (np.clip(x, -1, 1) * 32767).astype(np.int16)
@@ -127,17 +175,19 @@ def main():
         if old.endswith(".wav"):
             os.remove(os.path.join(OUT, old))
     credits = {}
-    for name, (rel, seconds, db) in CHOICES.items():
-        x = trim(loudest_window(trim(load(rel)), seconds))
-        save(name, master(x, db))
-        credits[name] = rel
+    for name, spec in CHOICES.items():
+        x, rels = build(spec)
+        save(name, x)
+        credits[name] = rels
     # 출처 (파일별로 어느 녹음인지). 작성자·제목은 verify_credits.py 가 원본 페이지에서 확인해 채운다.
     used = {}
-    for name, rel in credits.items():
-        c = by_file[rel]
-        entry = used.setdefault(c["page"] or c["url"], {"source": c["source"], "page": c["page"], "license": c["license"],
-                                                        "title": c["title"], "used_as": []})
-        entry["used_as"].append(name)
+    for name, rels in credits.items():
+        for rel in rels:
+            c = by_file[rel]
+            entry = used.setdefault(c["page"] or c["url"], {"source": c["source"], "page": c["page"], "license": c["license"],
+                                                            "title": c["title"], "used_as": []})
+            if name not in entry["used_as"]:
+                entry["used_as"].append(name)
     with open(os.path.join(HERE, "sound_credits.json"), "w") as f:
         json.dump(sorted(used.values(), key=lambda e: e["used_as"][0]), f, ensure_ascii=False, indent=1)
 

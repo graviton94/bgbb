@@ -180,6 +180,11 @@ const shop = id => `assets/shop/${id}.webp`;
 const SOUND = [
   { id: 'sound_none', name: { ko: '방구만 (기본)', en: 'Just the toot' }, free: true, src: shop('sound_none') },
   { id: 'sound_drum', name: { ko: '바둠츠', en: 'Ba-dum-tss' }, price: 150, pack: 'drum', src: shop('sound_drum') },
+  // 연중 (tools/make_packs.py)
+  { id: 'sound_trombone', name: { ko: '슬픈 트롬본', en: 'Sad trombone' }, price: 150, pack: 'trombone', src: shop('sound_trombone') },
+  { id: 'sound_levelup', name: { ko: '8비트 레벨업', en: '8-bit level up' }, price: 180, pack: 'levelup', src: shop('sound_levelup') },
+  { id: 'sound_news', name: { ko: '속보 징글', en: 'Breaking news' }, price: 180, pack: 'news', src: shop('sound_news') },
+  { id: 'sound_applause', name: { ko: '박수갈채', en: 'Standing ovation' }, price: 200, pack: 'applause', src: shop('sound_applause') },
   { id: 'sound_xmas', name: { ko: '징글 방구', en: 'Jingle toot' }, gift: 'ss_christmas', price: 300, season: [12], pack: 'xmas', src: shop('sound_xmas') },
   { id: 'sound_halloween', name: { ko: '유령 방구', en: 'Ghost toot' }, gift: 'ss_halloween', price: 300, season: [10], pack: 'halloween', src: shop('sound_halloween') },
   { id: 'sound_seollal', name: { ko: '꽹과리 방구', en: 'Gong toot' }, gift: 'ss_seollal', price: 300, season: [1, 2], pack: 'seollal', src: shop('sound_seollal') },

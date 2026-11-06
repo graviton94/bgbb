@@ -54,7 +54,7 @@
 폰을 소파 쿠션 밑이나 친구 자리에 두고 설치. 누가 들거나 만지는 순간 뿡.
 
 ■ 내 목소리도 됨
-소리는 매번 랜덤 (기본 · 소심 · 우렁참). 3초 녹음으로 내 목소리도 섞을 수 있음.
+방구 소리만 52가지. 친구마다 다르고 매번 랜덤 (소심 · 기본 · 우렁참). 3초 녹음으로 내 목소리도 섞을 수 있음.
 
 ■ 조용한 앱
 계정 · 서버 없음. 기록은 폰 안에만 있음. 광고는 짤 뽑기나 뿡코인을 더 받고 싶을 때 직접 골라서 볼 때만 나옴.
@@ -108,7 +108,7 @@ In a hurry? Bail out. Silence until you tap Back in!
 Leave your phone under a cushion or on a friend's seat. The moment someone picks it up: toot.
 
 ■ Your own voice
-The sound is random every time. Record 3 seconds to mix in your own voice.
+52 different toots, different for each pal and random every time. Record 3 seconds to mix in your own voice.
 
 ■ A quiet app
 No account, no server. Your records stay on your phone. Ads only play when you choose to watch one for extra meme draws or coins.
@@ -121,6 +121,25 @@ Nothing is locked. Coin packs and Support are there only if you want them.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
+- 출시 노트 · v2.4.4 (2.4.3 내용 포함, 언어별 500자 이내):
+  ```
+  <ko-KR>
+v2.4.4
+- 방구 소리 대폭 추가: 세 친구 모두 방구, 모두 52가지
+- 연중 방구 소리 팩 4종: 슬픈 트롬본 · 8비트 레벨업 · 속보 징글 · 박수갈채
+- 짤 뽑기가 더 다양하게 (새 짤 5종, 같은 짤 연속 안 나옴)
+- 12월 1일부터 크리스마스 한정 꾸미기 6종과 크리스마스 짤 2종
+- 원할 때만 보는 광고 보상 추가: 미션 보상 한 번 더 · 뿡코인 +20 (하루 3번)
+  </ko-KR>
+  <en-US>
+v2.4.4
+- Way more toots: all three pals toot, 52 sounds in all
+- Four year-round toot sound packs: sad trombone, 8-bit level up, breaking news, standing ovation
+- More varied meme draws (5 new memes, no back-to-back repeats)
+- From December 1: six Christmas style items and two Christmas memes
+- More optional ad rewards: claim a mission reward again, +20 coins (3 a day)
+  </en-US>
+  ```
 - 출시 노트 · v2.4.3 (언어별 500자 이내):
   ```
   <ko-KR>

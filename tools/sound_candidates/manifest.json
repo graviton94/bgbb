@@ -426,5 +426,541 @@
    "duration": 1.17535,
    "file": "fart_whoopee/01.ogg"
   }
+ ],
+ "fart_pop": [
+  {
+   "source": "freesound",
+   "title": "Short fart",
+   "url": "https://cdn.freesound.org/previews/787/787755_5287430-hq.mp3",
+   "page": "https://freesound.org/s/787755/",
+   "artist": "Sadiquecat",
+   "license": "CC0",
+   "duration": 1.06667,
+   "file": "fart_pop/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Short Fart_01",
+   "url": "https://cdn.freesound.org/previews/241/241000_2628301-hq.mp3",
+   "page": "https://freesound.org/s/241000/",
+   "artist": "Sadiquecat",
+   "license": "CC0",
+   "duration": 1.2,
+   "file": "fart_pop/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoot112.wav",
+   "url": "https://cdn.freesound.org/previews/558/558133_6518586-hq.mp3",
+   "page": "https://freesound.org/s/558133/",
+   "artist": "Sadiquecat",
+   "license": "CC0",
+   "duration": 1.10336,
+   "file": "fart_pop/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoot113.wav",
+   "url": "https://cdn.freesound.org/previews/558/558132_6518586-hq.mp3",
+   "page": "https://freesound.org/s/558132/",
+   "artist": "Sadiquecat",
+   "license": "CC0",
+   "duration": 0.507937,
+   "file": "fart_pop/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoot114.wav",
+   "url": "https://cdn.freesound.org/previews/558/558474_6518586-hq.mp3",
+   "page": "https://freesound.org/s/558474/",
+   "artist": "Sadiquecat",
+   "license": "CC0",
+   "duration": 0.870748,
+   "file": "fart_pop/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart Machine Gun",
+   "url": "https://cdn.freesound.org/previews/752/752171_15867640-hq.mp3",
+   "page": "https://freesound.org/s/752171/",
+   "artist": "DUDE_X-SoundLab",
+   "license": "CC0",
+   "duration": 0.114396,
+   "file": "fart_pop/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burp    - Sound Effect",
+   "url": "https://cdn.freesound.org/previews/342/342201_3908740-hq.mp3",
+   "page": "https://freesound.org/s/342201/",
+   "artist": "DUDE_X-SoundLab",
+   "license": "CC0",
+   "duration": 0.986848,
+   "file": "fart_pop/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart - Close recording",
+   "url": "https://cdn.freesound.org/previews/874/874487_5287430-hq.mp3",
+   "page": "https://freesound.org/s/874487/",
+   "artist": "DUDE_X-SoundLab",
+   "license": "CC0",
+   "duration": 0.27712,
+   "file": "fart_pop/08.ogg"
+  }
+ ],
+ "fart_trumpet": [
+  {
+   "source": "freesound",
+   "title": "Corneteiro Chileno",
+   "url": "https://cdn.freesound.org/previews/846/846006_18449876-hq.mp3",
+   "page": "https://freesound.org/s/846006/",
+   "artist": "mellonius",
+   "license": "CC0",
+   "duration": 2.18299,
+   "file": "fart_trumpet/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoot111.wav",
+   "url": "https://cdn.freesound.org/previews/558/558134_6518586-hq.mp3",
+   "page": "https://freesound.org/s/558134/",
+   "artist": "mellonius",
+   "license": "CC0",
+   "duration": 1.3961,
+   "file": "fart_trumpet/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "small-realpoot117.wav",
+   "url": "https://cdn.freesound.org/previews/561/561535_6518586-hq.mp3",
+   "page": "https://freesound.org/s/561535/",
+   "artist": "mellonius",
+   "license": "CC0",
+   "duration": 1.51068,
+   "file": "fart_trumpet/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "medium-realpoot118.wav",
+   "url": "https://cdn.freesound.org/previews/561/561204_6518586-hq.mp3",
+   "page": "https://freesound.org/s/561204/",
+   "artist": "mellonius",
+   "license": "CC0",
+   "duration": 2.50195,
+   "file": "fart_trumpet/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart 04",
+   "url": "https://cdn.freesound.org/previews/243/243715_1900515-hq.mp3",
+   "page": "https://freesound.org/s/243715/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 1.2078,
+   "file": "fart_trumpet/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burp!",
+   "url": "https://cdn.freesound.org/previews/564/564228_10435241-hq.mp3",
+   "page": "https://freesound.org/s/564228/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 0.789478,
+   "file": "fart_trumpet/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burp 1.m4a",
+   "url": "https://cdn.freesound.org/previews/536/536464_10403690-hq.mp3",
+   "page": "https://freesound.org/s/536464/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 2.04336,
+   "file": "fart_trumpet/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Loud Farts.mp3",
+   "url": "https://cdn.freesound.org/previews/695/695462_14650607-hq.mp3",
+   "page": "https://freesound.org/s/695462/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 1.68345,
+   "file": "fart_trumpet/08.ogg"
+  }
+ ],
+ "fart_flutter": [
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_flutter/01.ogg"
+  }
+ ],
+ "fart_pssst": [
+  {
+   "source": "freesound",
+   "title": "fart sound.mp3",
+   "url": "https://cdn.freesound.org/previews/494/494636_10656099-hq.mp3",
+   "page": "https://freesound.org/s/494636/",
+   "artist": "BGskull123",
+   "license": "CC0",
+   "duration": 1.86921,
+   "file": "fart_pssst/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "sneaky_poot_01.wav",
+   "url": "https://cdn.freesound.org/previews/620/620576_6518586-hq.mp3",
+   "page": "https://freesound.org/s/620576/",
+   "artist": "Jixolros",
+   "license": "CC0",
+   "duration": 2.19946,
+   "file": "fart_pssst/02.ogg"
+  },
+  {
+   "source": "commons",
+   "title": "File:Wet fart tummy rumbles.ogg",
+   "url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Wet_fart_tummy_rumbles.ogg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+   "page": "https://commons.wikimedia.org/wiki/File:Wet_fart_tummy_rumbles.ogg",
+   "artist": "natalie",
+   "license": "Public domain",
+   "duration": 12.538775510204081,
+   "file": "fart_pssst/03.ogg"
+  }
+ ],
+ "fart_cartoon": [
+  {
+   "source": "freesound",
+   "title": "fart 03",
+   "url": "https://cdn.freesound.org/previews/864/864784_19099031-hq.mp3",
+   "page": "https://freesound.org/s/864784/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 0.984,
+   "file": "fart_cartoon/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "fart 02",
+   "url": "https://cdn.freesound.org/previews/864/864777_19099031-hq.mp3",
+   "page": "https://freesound.org/s/864777/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 1.01929,
+   "file": "fart_cartoon/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "fart 01",
+   "url": "https://cdn.freesound.org/previews/864/864599_19099031-hq.mp3",
+   "page": "https://freesound.org/s/864599/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 1.03448,
+   "file": "fart_cartoon/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart 3",
+   "url": "https://cdn.freesound.org/previews/446/446000_9159316-hq.mp3",
+   "page": "https://freesound.org/s/446000/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 0.897506,
+   "file": "fart_cartoon/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "fart_echo.wav",
+   "url": "https://cdn.freesound.org/previews/83/83093_1072407-hq.mp3",
+   "page": "https://freesound.org/s/83093/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 2.01361,
+   "file": "fart_cartoon/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart.aif",
+   "url": "https://cdn.freesound.org/previews/97/97975_1490788-hq.mp3",
+   "page": "https://freesound.org/s/97975/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 2.66935,
+   "file": "fart_cartoon/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Computer Fart.wav",
+   "url": "https://cdn.freesound.org/previews/540/540658_2019171-hq.mp3",
+   "page": "https://freesound.org/s/540658/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 2.19891,
+   "file": "fart_cartoon/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "melonexplosion.wav",
+   "url": "https://cdn.freesound.org/previews/437/437312_2553401-hq.mp3",
+   "page": "https://freesound.org/s/437312/",
+   "artist": "WhatChaDoin",
+   "license": "CC0",
+   "duration": 0.747062,
+   "file": "fart_cartoon/08.ogg"
+  }
+ ],
+ "fart_echo": [
+  {
+   "source": "freesound",
+   "title": "WAV Fart Vegan 045.wav",
+   "url": "https://cdn.freesound.org/previews/650/650694_13558226-hq.mp3",
+   "page": "https://freesound.org/s/650694/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 3.05966,
+   "file": "fart_echo/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart.wav",
+   "url": "https://cdn.freesound.org/previews/135/135716_2078072-hq.mp3",
+   "page": "https://freesound.org/s/135716/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 3.76737,
+   "file": "fart_echo/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Real Very Loud Fart",
+   "url": "https://cdn.freesound.org/previews/672/672206_2559104-hq.mp3",
+   "page": "https://freesound.org/s/672206/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 2.33127,
+   "file": "fart_echo/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "squeakytoiletfart.wav",
+   "url": "https://cdn.freesound.org/previews/524/524127_8964414-hq.mp3",
+   "page": "https://freesound.org/s/524127/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 0.841973,
+   "file": "fart_echo/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart 2",
+   "url": "https://cdn.freesound.org/previews/790/790551_5287430-hq.mp3",
+   "page": "https://freesound.org/s/790551/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 1.53028,
+   "file": "fart_echo/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Bathroom Fart",
+   "url": "https://cdn.freesound.org/previews/854/854139_14650607-hq.mp3",
+   "page": "https://freesound.org/s/854139/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 2.816,
+   "file": "fart_echo/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "14 - poop",
+   "url": "https://cdn.freesound.org/previews/803/803572_7895129-hq.mp3",
+   "page": "https://freesound.org/s/803572/",
+   "artist": "frenkfurth",
+   "license": "CC0",
+   "duration": 2.24742,
+   "file": "fart_echo/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart.",
+   "url": "https://cdn.freesound.org/previews/858/858823_15176424-hq.mp3",
+   "page": "https://freesound.org/s/858823/",
+   "artist": "Robo9418",
+   "license": "CC0",
+   "duration": 0.634172,
+   "file": "fart_echo/08.ogg"
+  }
+ ],
+ "fart_fx": [
+  {
+   "source": "freesound",
+   "title": "Computer Fart.wav",
+   "url": "https://cdn.freesound.org/previews/540/540658_2019171-hq.mp3",
+   "page": "https://freesound.org/s/540658/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 2.19891,
+   "file": "fart_fx/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "game_poot-1-25A",
+   "url": "https://cdn.freesound.org/previews/784/784277_6518586-hq.mp3",
+   "page": "https://freesound.org/s/784277/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 1.02168,
+   "file": "fart_fx/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "diarrhea sound effect.mp3",
+   "url": "https://cdn.freesound.org/previews/629/629122_13917120-hq.mp3",
+   "page": "https://freesound.org/s/629122/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 1.88082,
+   "file": "fart_fx/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "WAV Fart Vegan 081",
+   "url": "https://cdn.freesound.org/previews/777/777443_13558226-hq.mp3",
+   "page": "https://freesound.org/s/777443/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 1.92421,
+   "file": "fart_fx/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "lorenc_fx01_fart.wav",
+   "url": "https://cdn.freesound.org/previews/571/571532_3625175-hq.mp3",
+   "page": "https://freesound.org/s/571532/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 1.804,
+   "file": "fart_fx/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "wet fart",
+   "url": "https://cdn.freesound.org/previews/448/448212_6253486-hq.mp3",
+   "page": "https://freesound.org/s/448212/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 2.66667,
+   "file": "fart_fx/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burp    - Sound Effect",
+   "url": "https://cdn.freesound.org/previews/342/342201_3908740-hq.mp3",
+   "page": "https://freesound.org/s/342201/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 0.986848,
+   "file": "fart_fx/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "jel_note1_fart",
+   "url": "https://cdn.freesound.org/previews/732/732281_15900605-hq.mp3",
+   "page": "https://freesound.org/s/732281/",
+   "artist": "BaDoink",
+   "license": "CC0",
+   "duration": 0.657167,
+   "file": "fart_fx/08.ogg"
+  }
+ ],
+ "fart_multi": [
+  {
+   "source": "freesound",
+   "title": "Chair Fart",
+   "url": "https://cdn.freesound.org/previews/266/266450_1900515-hq.mp3",
+   "page": "https://freesound.org/s/266450/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 2.74197,
+   "file": "fart_multi/01.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Blubberfreak Fart 23",
+   "url": "https://cdn.freesound.org/previews/732/732936_15881540-hq.mp3",
+   "page": "https://freesound.org/s/732936/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 3.2,
+   "file": "fart_multi/02.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Farts Fake 001.",
+   "url": "https://cdn.freesound.org/previews/654/654573_13558226-hq.mp3",
+   "page": "https://freesound.org/s/654573/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 4.44565,
+   "file": "fart_multi/03.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Fart.mp3",
+   "url": "https://cdn.freesound.org/previews/610/610067_7376654-hq.mp3",
+   "page": "https://freesound.org/s/610067/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 2.39166,
+   "file": "fart_multi/04.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Bad Chili Fart.wav",
+   "url": "https://cdn.freesound.org/previews/94/94989_1391979-hq.mp3",
+   "page": "https://freesound.org/s/94989/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 1.39374,
+   "file": "fart_multi/05.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "FART - 1",
+   "url": "https://cdn.freesound.org/previews/518/518700_8031303-hq.mp3",
+   "page": "https://freesound.org/s/518700/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 4.26883,
+   "file": "fart_multi/06.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Cloud fart",
+   "url": "https://cdn.freesound.org/previews/436/436835_8936867-hq.mp3",
+   "page": "https://freesound.org/s/436835/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 7.50488,
+   "file": "fart_multi/07.ogg"
+  },
+  {
+   "source": "freesound",
+   "title": "Burst of Farts.wav",
+   "url": "https://cdn.freesound.org/previews/588/588592_13295818-hq.mp3",
+   "page": "https://freesound.org/s/588592/",
+   "artist": "Ezcah",
+   "license": "CC0",
+   "duration": 4.5045,
+   "file": "fart_multi/08.ogg"
+  }
  ]
 }

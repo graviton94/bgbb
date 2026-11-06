@@ -1,33 +1,73 @@
 [
  {
   "source": "freesound",
-  "page": "https://freesound.org/people/Zabuhailo/sounds/146963/",
+  "page": "https://freesound.org/people/BipolarBad/sounds/695462/",
   "license": "CC0",
-  "title": "catHisses1.wav",
+  "title": "Loud Farts.mp3",
   "used_as": [
    "cat_loud"
   ],
-  "author": "Zabuhailo"
+  "author": "BipolarBad"
  },
  {
   "source": "freesound",
-  "page": "https://freesound.org/people/rickismyname/sounds/826834/",
+  "page": "https://freesound.org/people/The_Fart/sounds/436835/",
   "license": "CC0",
-  "title": "Cat hissing #2",
+  "title": "Cloud fart",
   "used_as": [
    "cat_loud_2"
   ],
-  "author": "rickismyname"
+  "author": "The_Fart"
  },
  {
   "source": "freesound",
-  "page": "https://freesound.org/people/Reitanna/sounds/343928/",
+  "page": "https://freesound.org/people/MokkaCicc/sounds/83093/",
   "license": "CC0",
-  "title": "hiss3.wav",
+  "title": "fart_echo.wav",
   "used_as": [
-   "cat_loud_3"
+   "cat_main"
   ],
-  "author": "Reitanna"
+  "author": "MokkaCicc"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/BipolarBad/sounds/854139/",
+  "license": "CC0",
+  "title": "Bathroom Fart",
+  "used_as": [
+   "cat_main_2"
+  ],
+  "author": "BipolarBad"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Blubberfreak/sounds/732936/",
+  "license": "CC0",
+  "title": "Blubberfreak Fart 23",
+  "used_as": [
+   "cat_main_3"
+  ],
+  "author": "Blubberfreak"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/SamuelGremaud/sounds/518700/",
+  "license": "CC0",
+  "title": "FART - 1",
+  "used_as": [
+   "cat_main_4"
+  ],
+  "author": "SamuelGremaud"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/oldedgar/sounds/97975/",
+  "license": "CC0",
+  "title": "Fart.aif",
+  "used_as": [
+   "cat_main_5"
+  ],
+  "author": "oldedgar"
  },
  {
   "source": "freesound",
@@ -35,9 +75,19 @@
   "license": "CC0",
   "title": "cat meow",
   "used_as": [
-   "cat_main"
+   "cat_main_5"
   ],
   "author": "tuberatanka"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/frenkfurth/sounds/650694/",
+  "license": "CC0",
+  "title": "WAV Fart Vegan 045.wav",
+  "used_as": [
+   "cat_main_6"
+  ],
+  "author": "frenkfurth"
  },
  {
   "source": "freesound",
@@ -45,9 +95,19 @@
   "license": "CC0",
   "title": "New Cat Meow 1",
   "used_as": [
-   "cat_main_2"
+   "cat_main_6"
   ],
   "author": "steffcaffrey"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/frenkfurth/sounds/654573/",
+  "license": "CC0",
+  "title": "Farts Fake 001.",
+  "used_as": [
+   "cat_main_7"
+  ],
+  "author": "frenkfurth"
  },
  {
   "source": "freesound",
@@ -55,9 +115,50 @@
   "license": "CC0",
   "title": "cat meow short",
   "used_as": [
-   "cat_main_3"
+   "cat_main_7"
   ],
   "author": "skymary"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/BGskull123/sounds/494636/",
+  "license": "CC0",
+  "title": "fart sound.mp3",
+  "used_as": [
+   "cat_soft"
+  ],
+  "author": "BGskull123"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/620576/",
+  "license": "CC0",
+  "title": "sneaky_poot_01.wav",
+  "used_as": [
+   "cat_soft_2",
+   "cat_soft_5"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/WhatChaDoin/sounds/864784/",
+  "license": "CC0",
+  "title": "fart 03",
+  "used_as": [
+   "cat_soft_3"
+  ],
+  "author": "WhatChaDoin"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/florianreichelt/sounds/448212/",
+  "license": "CC0",
+  "title": "wet fart",
+  "used_as": [
+   "cat_soft_4"
+  ],
+  "author": "florianreichelt"
  },
  {
   "source": "freesound",
@@ -65,9 +166,19 @@
   "license": "CC0",
   "title": "Buddha Purr.WAV",
   "used_as": [
-   "cat_soft"
+   "cat_soft_5"
   ],
   "author": "Department64"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/WhatChaDoin/sounds/864599/",
+  "license": "CC0",
+  "title": "fart 01",
+  "used_as": [
+   "cat_soft_6"
+  ],
+  "author": "WhatChaDoin"
  },
  {
   "source": "freesound",
@@ -75,19 +186,9 @@
   "license": "CC0",
   "title": "Cat Purr",
   "used_as": [
-   "cat_soft_2"
+   "cat_soft_6"
   ],
   "author": "RazzleDizzle"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/Richard1052/sounds/585775/",
-  "license": "CC0",
-  "title": "Cat purr",
-  "used_as": [
-   "cat_soft_3"
-  ],
-  "author": "Richard1052"
  },
  {
   "source": "freesound",
@@ -111,13 +212,13 @@
  },
  {
   "source": "freesound",
-  "page": "https://freesound.org/people/JavonniNathanOtero/sounds/524096/",
+  "page": "https://freesound.org/people/Gimp_Revival/sounds/588592/",
   "license": "CC0",
-  "title": "explosivetubfart.wav",
+  "title": "Burst of Farts.wav",
   "used_as": [
    "hamster_epic_3"
   ],
-  "author": "JavonniNathanOtero"
+  "author": "Gimp_Revival"
  },
  {
   "source": "freesound",
@@ -148,6 +249,16 @@
    "hamster_loud_3"
   ],
   "author": "Zott820"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Squallar1/sounds/672206/",
+  "license": "CC0",
+  "title": "Real Very Loud Fart",
+  "used_as": [
+   "hamster_loud_4"
+  ],
+  "author": "Squallar1"
  },
  {
   "source": "freesound",
@@ -211,6 +322,16 @@
  },
  {
   "source": "freesound",
+  "page": "https://freesound.org/people/TeddyFerguson/sounds/610067/",
+  "license": "CC0",
+  "title": "Fart.mp3",
+  "used_as": [
+   "hamster_main_7"
+  ],
+  "author": "TeddyFerguson"
+ },
+ {
+  "source": "freesound",
   "page": "https://freesound.org/people/BipolarBad/sounds/759915/",
   "license": "CC0",
   "title": "Short Squeaky Fart",
@@ -271,23 +392,103 @@
  },
  {
   "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/558132/",
+  "license": "CC0",
+  "title": "small-realpoot113.wav",
+  "used_as": [
+   "hamster_soft_7"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Sadiquecat/sounds/874487/",
+  "license": "CC0",
+  "title": "Fart - Close recording",
+  "used_as": [
+   "hamster_soft_8"
+  ],
+  "author": "Sadiquecat"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/robmoth/sounds/135716/",
+  "license": "CC0",
+  "title": "Fart.wav",
+  "used_as": [
+   "tit_loud"
+  ],
+  "author": "robmoth"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/deleted_user_1391979/sounds/94989/",
+  "license": "CC0",
+  "title": "Bad Chili Fart.wav",
+  "used_as": [
+   "tit_loud_2"
+  ],
+  "author": "deleted_user_1391979"
+ },
+ {
+  "source": "freesound",
   "page": "https://freesound.org/people/qubodup/sounds/812026/",
   "license": "CC0",
   "title": "Bird Freaking Out",
   "used_as": [
-   "tit_loud"
+   "tit_loud_2"
   ],
   "author": "qubodup"
  },
  {
   "source": "freesound",
-  "page": "https://freesound.org/people/JackWilDesign/sounds/607902/",
+  "page": "https://freesound.org/people/Jixolros/sounds/558134/",
   "license": "CC0",
-  "title": "SquawkSFX.mp3",
+  "title": "small-realpoot111.wav",
   "used_as": [
-   "tit_loud_2"
+   "tit_main"
   ],
-  "author": "JackWilDesign"
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/561535/",
+  "license": "CC0",
+  "title": "small-realpoot117.wav",
+  "used_as": [
+   "tit_main_2"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/784277/",
+  "license": "CC0",
+  "title": "game_poot-1-25A",
+  "used_as": [
+   "tit_main_3"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/monosfera/sounds/571532/",
+  "license": "CC0",
+  "title": "lorenc_fx01_fart.wav",
+  "used_as": [
+   "tit_main_4"
+  ],
+  "author": "monosfera"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Breviceps/sounds/446000/",
+  "license": "CC0",
+  "title": "Fart 3",
+  "used_as": [
+   "tit_main_5"
+  ],
+  "author": "Breviceps"
  },
  {
   "source": "freesound",
@@ -295,9 +496,19 @@
   "license": "CC0",
   "title": "Super Cute Bird Tweets - Short Chirp SFX",
   "used_as": [
-   "tit_main"
+   "tit_main_5"
   ],
   "author": "LilMati"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/DSISStudios/sounds/241000/",
+  "license": "CC0",
+  "title": "Short Fart_01",
+  "used_as": [
+   "tit_main_6"
+  ],
+  "author": "DSISStudios"
  },
  {
   "source": "freesound",
@@ -305,9 +516,19 @@
   "license": "CC0",
   "title": "Black Capped Chickadee bird call",
   "used_as": [
-   "tit_main_2"
+   "tit_main_6"
   ],
   "author": "nfrae"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/frenkfurth/sounds/777443/",
+  "license": "CC0",
+  "title": "WAV Fart Vegan 081",
+  "used_as": [
+   "tit_main_7"
+  ],
+  "author": "frenkfurth"
  },
  {
   "source": "freesound",
@@ -315,9 +536,59 @@
   "license": "CC0",
   "title": "Chim Sâu 3",
   "used_as": [
-   "tit_main_3"
+   "tit_main_7"
   ],
   "author": "SieuAmThanh"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/558133/",
+  "license": "CC0",
+  "title": "small-realpoot112.wav",
+  "used_as": [
+   "tit_soft"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Jixolros/sounds/558474/",
+  "license": "CC0",
+  "title": "small-realpoot114.wav",
+  "used_as": [
+   "tit_soft_2"
+  ],
+  "author": "Jixolros"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Robo9418/sounds/858823/",
+  "license": "CC0",
+  "title": "Fart.",
+  "used_as": [
+   "tit_soft_3"
+  ],
+  "author": "Robo9418"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/ssud_motion/sounds/732281/",
+  "license": "CC0",
+  "title": "jel_note1_fart",
+  "used_as": [
+   "tit_soft_4"
+  ],
+  "author": "ssud_motion"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/Sadiquecat/sounds/787755/",
+  "license": "CC0",
+  "title": "Short fart",
+  "used_as": [
+   "tit_soft_5"
+  ],
+  "author": "Sadiquecat"
  },
  {
   "source": "freesound",
@@ -325,9 +596,19 @@
   "license": "CC0",
   "title": "wings2.wav",
   "used_as": [
-   "tit_soft"
+   "tit_soft_5"
   ],
   "author": "Godowan"
+ },
+ {
+  "source": "freesound",
+  "page": "https://freesound.org/people/JavonniNathanOtero/sounds/524127/",
+  "license": "CC0",
+  "title": "squeakytoiletfart.wav",
+  "used_as": [
+   "tit_soft_6"
+  ],
+  "author": "JavonniNathanOtero"
  },
  {
   "source": "freesound",
@@ -335,19 +616,9 @@
   "license": "CC0",
   "title": "Bird Flap B 05.wav",
   "used_as": [
-   "tit_soft_2"
+   "tit_soft_6"
   ],
   "author": "deleted_user_2104797"
- },
- {
-  "source": "freesound",
-  "page": "https://freesound.org/people/Raclure/sounds/405552/",
-  "license": "CC0",
-  "title": "Flapping wings of a bird",
-  "used_as": [
-   "tit_soft_3"
-  ],
-  "author": "Raclure"
  },
  {
   "source": "freesound",
