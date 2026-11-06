@@ -5,7 +5,7 @@ import { CHARACTERS } from './data.js';
 const TAKES = {
   hamster: { soft: 8, main: 7, loud: 4, epic: 3 },
   tit: { soft: 6, main: 7, loud: 2 },
-  cat: { soft: 6, main: 7, loud: 3 }
+  cat: { soft: 6, main: 7, loud: 2 }
 };
 // 햄찌는 아주 가끔 스타일과 상관없이 레어 방구 (앱 PrankPlayer 와 같은 확률)
 export const EPIC_CHANCE = 0.02;

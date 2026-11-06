@@ -20,7 +20,7 @@ OUT = os.path.join(HERE, "..", "assets", "sounds")
 
 # 결과 파일 → (후보 파일, 최대 길이 초, 음량 dB RMS)
 # 캐릭터 소리는 <친구>_<스타일> · _2 · _3 … = 서로 다른 녹음 (재생할 때마다 하나를 고른다, 최대 9개).
-# v2.5: 셋 다 기본이 방구. 햄찌 소심 8 · 기본 7 · 우렁참 4 · 레어 3 / 오목이 6 · 7 · 2 / 냥이 6 · 7 · 3 (들어 보고 8개 뺌)
+# v2.5: 셋 다 기본이 방구. 햄찌 소심 8 · 기본 7 · 우렁참 4 · 레어 3 / 오목이 6 · 7 · 2 / 냥이 6 · 7 · 2 (들어 보고 9개 뺌, 하악 없음)
 SOFT, MAIN, LOUD, UI = -21.0, -17.0, -14.0, -22.0
 CHOICES = {
     "hamster_soft": ("fart_squeak/01.ogg", 1.0, SOFT),
@@ -64,7 +64,7 @@ CHOICES = {
     "tit_main_7":   {"parts": [("fart_fx/04.ogg", 1.1, 3, 0.08, 1.0), ("bird_tweet/01.ogg", 0.8, 0, 0, 0.8)], "db": MAIN},
     "tit_loud":     ("fart_echo/02.ogg", 1.8, LOUD, 3),
     "tit_loud_2":   {"parts": [("fart_multi/05.ogg", 1.3, 3, 0.06, 1.0), ("bird_alarm/01.ogg", 0.9, 0, 0, 0.8)], "db": LOUD},
-    # 냥이 (v2.5): 소심은 피식 · 뻔뻔한 방구 뒤에 골골 / 냐옹 / 하악
+    # 냥이 (v2.5): 소심은 피식 · 뻔뻔한 방구 뒤에 골골 / 냐옹
     "cat_soft":     ("fart_pssst/01.ogg", 1.2, SOFT),
     "cat_soft_2":   ("fart_pssst/02.ogg", 1.4, SOFT),
     "cat_soft_3":   ("fart_cartoon/01.ogg", 1.0, SOFT),
@@ -80,7 +80,6 @@ CHOICES = {
     "cat_main_7":   {"parts": [("fart_multi/03.ogg", 1.2, 0, 0.1, 1.0), ("cat_meow/05.ogg", 0.9, 0, 0, 0.8)], "db": MAIN},
     "cat_loud":     ("fart_trumpet/08.ogg", 1.8, LOUD),
     "cat_loud_2":   ("fart_multi/07.ogg", 2.4, LOUD, -1),
-    "cat_loud_3":   {"parts": [("fart_flutter/01.ogg", 1.8, 0, 0.08, 1.0), ("cat_hiss/01.ogg", 1.0, 0, 0, 0.8)], "db": LOUD},
     "ui_pop":         ("ui_pop/02.ogg", 0.25, UI),
     "ui_levelup":     ("ui_levelup/02.ogg", 1.0, UI),
     "ui_treasure":    ("ui_levelup/01.ogg", 1.8, UI),

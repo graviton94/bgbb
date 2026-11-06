@@ -36,7 +36,7 @@ export const CHARACTERS = [
     styles: {
       main: { ko: '뿡냥', en: 'Toot-meow' },
       soft: { ko: '피식', en: 'Psst' },
-      loud: { ko: '부와악', en: 'BRRHISS' }
+      loud: { ko: '부와악', en: 'BRRRAP' }
     },
     bubbles: {
       ko: ['건들지 마', '참는 중. 말 걸지 마.', '귀찮음', '…'],
