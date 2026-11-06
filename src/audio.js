@@ -3,9 +3,9 @@ import { CHARACTERS } from './data.js';
 
 // 캐릭터 · 스타일마다 서로 다른 녹음 수 (tools/build_sounds.py)
 const TAKES = {
-  hamster: { soft: 6, main: 6, loud: 3, epic: 3 },
-  tit: { soft: 3, main: 3, loud: 2 },
-  cat: { soft: 3, main: 3, loud: 3 }
+  hamster: { soft: 8, main: 9, loud: 5, epic: 4 },
+  tit: { soft: 6, main: 7, loud: 4 },
+  cat: { soft: 6, main: 7, loud: 5 }
 };
 // 햄찌는 아주 가끔 스타일과 상관없이 레어 방구 (앱 PrankPlayer 와 같은 확률)
 export const EPIC_CHANCE = 0.02;
