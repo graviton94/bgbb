@@ -108,6 +108,33 @@ def master(x, rms_db, fades=True):
     return np.tanh(x / peak) * peak
 
 
+def pitch(x, semitones):
+    """음 높이 바꾸기 (재생 속도도 같이 바뀜 = 작은 새는 짧고 높게 뿡)"""
+    if not semitones:
+        return x
+    r = 2 ** (semitones / 12)
+    n = max(1, int(len(x) / r))
+    return np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x)
+
+
+def part(rel, seconds, semitones=0):
+    return pitch(trim(loudest_window(trim(load(rel)), seconds)), semitones)
+
+
+def build(spec):
+    """CHOICES 값: (후보, 최대 초, dB) · (후보, 최대 초, dB, 반음) · {"parts": [(후보, 최대 초, 반음, 뒤 간격 초, 음량 배), …], "db": dB}
+    parts 는 이어 붙이기 (방구 → 놀란 짹 / 냥 같은 조합). 음량 배는 조합 안에서 그 조각만 줄일 때."""
+    if isinstance(spec, dict):
+        segs = []
+        for rel, seconds, st, gap, gain in spec["parts"]:
+            x = part(rel, seconds, st)
+            x = x / (np.sqrt(np.mean(x ** 2)) + 1e-9) * 0.1 * gain
+            segs += [x, np.zeros(int(gap * SR))]
+        return master(np.concatenate(segs[:-1]), spec["db"]), [p[0] for p in spec["parts"]]
+    rel, seconds, db, *rest = spec
+    return master(part(rel, seconds, rest[0] if rest else 0), db), [rel]
+
+
 def save(name, x):
     os.makedirs(OUT, exist_ok=True)
     pcm = (np.clip(x, -1, 1) * 32767).astype(np.int16)
@@ -127,17 +154,19 @@ def main():
         if old.endswith(".wav"):
             os.remove(os.path.join(OUT, old))
     credits = {}
-    for name, (rel, seconds, db) in CHOICES.items():
-        x = trim(loudest_window(trim(load(rel)), seconds))
-        save(name, master(x, db))
-        credits[name] = rel
+    for name, spec in CHOICES.items():
+        x, rels = build(spec)
+        save(name, x)
+        credits[name] = rels
     # 출처 (파일별로 어느 녹음인지). 작성자·제목은 verify_credits.py 가 원본 페이지에서 확인해 채운다.
     used = {}
-    for name, rel in credits.items():
-        c = by_file[rel]
-        entry = used.setdefault(c["page"] or c["url"], {"source": c["source"], "page": c["page"], "license": c["license"],
-                                                        "title": c["title"], "used_as": []})
-        entry["used_as"].append(name)
+    for name, rels in credits.items():
+        for rel in rels:
+            c = by_file[rel]
+            entry = used.setdefault(c["page"] or c["url"], {"source": c["source"], "page": c["page"], "license": c["license"],
+                                                            "title": c["title"], "used_as": []})
+            if name not in entry["used_as"]:
+                entry["used_as"].append(name)
     with open(os.path.join(HERE, "sound_credits.json"), "w") as f:
         json.dump(sorted(used.values(), key=lambda e: e["used_as"][0]), f, ensure_ascii=False, indent=1)
 
