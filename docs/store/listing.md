@@ -121,6 +121,23 @@ Nothing is locked. Coin packs and Support are there only if you want them.
 - 테스터: 이메일 목록 (Google 그룹 또는 CSV) — **12명 이상이 14일 연속** 설치 상태여야 프로덕션 신청 가능
 - 의견 보내기 URL/이메일: 앱 설정 → 의견 보내기 와 같은 주소
 - 출시 노트는 `src/changelog.js` (앱 안 패치노트와 같은 글) 의 최신 항목을 옮겨 쓴다.
+- 출시 노트 · v2.4.4 (2.4.3 내용 포함, 언어별 500자 이내):
+  ```
+  <ko-KR>
+v2.4.4
+- 연중 방구 소리 팩 4종: 슬픈 트롬본 · 8비트 레벨업 · 속보 징글 · 박수갈채
+- 짤 뽑기가 더 다양하게 (새 짤 5종, 같은 짤 연속 안 나옴)
+- 12월 1일부터 크리스마스 한정 꾸미기 6종과 크리스마스 짤 2종
+- 원할 때만 보는 광고 보상 추가: 미션 보상 한 번 더 · 뿡코인 +20 (하루 3번)
+  </ko-KR>
+  <en-US>
+v2.4.4
+- Four year-round toot sound packs: sad trombone, 8-bit level up, breaking news, standing ovation
+- More varied meme draws (5 new memes, no back-to-back repeats)
+- From December 1: six Christmas style items and two Christmas memes
+- More optional ad rewards: claim a mission reward again, +20 coins (3 a day)
+  </en-US>
+  ```
 - 출시 노트 · v2.4.3 (언어별 500자 이내):
   ```
   <ko-KR>

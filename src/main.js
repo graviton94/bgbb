@@ -140,8 +140,9 @@ function showBurst(ev, { result = null, more = 0, kind = result ? (result.isNew 
   const title = kind === 'title' ? titleById(result.title) : null;
   const jackpot = title?.rarity === 'jackpot';
   const meme = title ? memeForTitle(result.title)
-    : kind === 'gacha' ? composeMeme({ id: c.id, mode: ev.mode, t: ev.t })
+    : kind === 'gacha' ? composeMeme({ id: c.id, mode: ev.mode, t: ev.t, recent: state.gachaRecent })
       : newsMeme({ id: c.id, mode: ev.mode, t: ev.t, headline: kind === 'practice' ? t('burst.practiceMeta') : headline });
+  if (kind === 'gacha' && meme.name !== 'assembled') { state.gachaRecent = [meme.name, ...(state.gachaRecent || [])].slice(0, 3); commit(); }
   const box = $('meme');
   box.dataset.meme = meme.name;
   renderMeme(box, meme);

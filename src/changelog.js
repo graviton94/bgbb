@@ -2,6 +2,19 @@
 // v 는 android/app/build.gradle 의 versionName 과 같게. Play Console 출시 노트도 여기서 옮겨 쓴다.
 export const CHANGELOG = [
   {
+    v: '2.4.4', date: '2026-11-06',
+    ko: [
+      '연중 방구 소리 팩 4종: 슬픈 트롬본 · 8비트 레벨업 · 속보 징글 · 박수갈채',
+      '짤 뽑기가 더 다양하게: 전용 짤이 훨씬 자주 나오고, 최근 3번 나온 짤은 다시 안 나옴',
+      '12월 한정 짤 2종: 산타의 착한 아이 명단 · 크리스마스 카드'
+    ],
+    en: [
+      'Four year-round toot sound packs: sad trombone, 8-bit level up, breaking news and a standing ovation',
+      'More varied meme draws: special memes show up far more often, and none of the last 3 repeat',
+      'Two December-only memes: Santa’s nice list and a Christmas card'
+    ]
+  },
+  {
     v: '2.4.3', date: '2026-11-05',
     ko: [
       '12월 1일부터 크리스마스 한정 꾸미기 6종 (12월에 공지로 알려 줌): 트리 · 눈사람 · 선물 상자 · 루돌프 뿔 + 코 · 눈송이 효과 · 메리 뿡리스마스 프레임',

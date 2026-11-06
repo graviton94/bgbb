@@ -537,6 +537,44 @@ const ORIGINAL_UNIQUE = {
         charItem(id, 'shameless', 64, 36, 36, { real, floor: 76, shades: !real })],
       fx: { x: 0.85, y: 0.6 }
     };
+  },
+
+  // 12월 한정: 산타의 착한 아이 명단. 방구 부문만 체크
+  santalist: ({ id, mode, real }) => {
+    const rows = [[T('양치 잘함', 'Brushed teeth'), '✗'], [T('일찍 잠', 'Slept early'), '✗'], [T('편식 안 함', 'Ate veggies'), '✗'],
+      [{ loud: T('방구 (대)', 'Tooting (loud)'), soft: T('방구 (몰래)', 'Tooting (sneaky)'), hold: T('방구 참기', 'Holding it in') }[mode], '✓']];
+    const c = charItem(id, mode === 'hold' ? 'hold' : 'shameless', 60, 56, 40, { real, floor: 100 });
+    return {
+      bg: '#B3161F',
+      items: [...[[6, 8], [88, 14], [14, 90], [92, 70], [48, 4], [70, 92]].map(([x, y]) => ({ k: 'img', src: 'assets/skin/fx/fx_snow.webp', x, y, w: 7 })),
+        { k: 'rect', x: 5, y: 6, w: 60, h: 86, color: '#FFF8E7', line: '#7A4A1E', lw: 0.6, rad: 2 },
+        art(T('🎅 산타의 착한 아이 명단', "🎅 SANTA'S NICE LIST"), 7, 10, 56, 5, { font: 'serif', weight: 900, fill: '#B3161F', align: 'center' }),
+        art(`${T('이름', 'Name')}: ${nickOf(id)}`, 10, 20, 52, 4.4, { font: 'serif', weight: 700, fill: '#3B2412' }),
+        ...rows.flatMap(([a, b], k) => [art(a, 10, 30 + k * 9, 40, 4.2, { font: 'serif', weight: 600, fill: '#3B2412' }),
+          art(b, 50, 29 + k * 9, 10, 6, { font: 'brush', weight: 400, fill: b === '✓' ? '#1E8A3A' : '#B3161F', align: 'center' })]),
+        art(T('선물: 콩 한 봉지', 'Gift: a bag of beans'), 10, 70, 52, 5, { font: 'brush', weight: 400, fill: '#B3161F', r: -4 }),
+        art(T('- 산타 (코 막고 씀)', '- Santa (holding his nose)'), 10, 82, 52, 3.2, { font: 'serif', weight: 500, fill: '#7A4A1E' }),
+        c, { k: 'img', src: 'assets/skin/wear/wear_santa.webp', x: c.x, y: c.y, w: c.w }],
+      fx: { x: 0.8, y: 0.85 }
+    };
+  },
+
+  // 12월 한정: 크리스마스 카드. 루돌프 뿔 쓰고, 트리 옆에서
+  xmascard: ({ id, mode, real }) => {
+    const c = charItem(id, mode === 'loud' ? 'burst' : 'whistle', 30, 34, 44, { real, floor: 86 });
+    return {
+      ...grad(170, ['#1E6B3A', '#0E3B22']),
+      items: [...[[4, 4], [86, 6], [20, 22], [74, 26], [8, 60], [90, 54]].map(([x, y], k) => ({ k: 'img', src: 'assets/skin/fx/fx_snow.webp', x, y, w: k % 2 ? 6 : 8 })),
+        { k: 'rect', x: 5, y: 5, w: 90, h: 90, color: 'transparent', line: '#E8C35A', lw: 1, rad: 3 },
+        art('Merry Toot-mas', 0, 9, 100, 10, { font: 'brush', weight: 400, fill: '#FFE28A', align: 'center' }),
+        art(T('올해도 뿡 많이 하세요', 'Wishing you a year full of toots'), 0, 22, 100, 4.6, { font: 'body', weight: 800, fill: '#FFFFFF', align: 'center' }),
+        { k: 'img', src: 'assets/skin/prop/prop_xmas_tree.webp', x: 60, y: 46, w: 36 },
+        { k: 'img', src: 'assets/skin/prop/prop_gift.webp', x: 6, y: 62, w: 26 },
+        c, { k: 'img', src: 'assets/skin/wear/wear_rudolph.webp', x: c.x, y: c.y, w: c.w },
+        { k: 'rect', x: 5, y: 86, w: 90, h: 9, color: 'rgba(0,0,0,0.25)' },
+        art(T(`From. ${nickOf(id)} (냄새 동봉)`, `From ${nickOf(id)} (smell included)`), 0, 88.4, 100, 3.8, { font: 'body', weight: 700, fill: '#FFE28A', align: 'center' })],
+      fx: { x: 0.5, y: 0.7 }
+    };
   }
 };
 
@@ -684,7 +722,7 @@ UNIQUE.news = ({ id, mode, t, real, headline }) => {
 const TITLE_MEMES = {
   // 시즌
   ss_newyear: 'forecast', ss_seollal: 'receipt', ss_valentine: 'chat', ss_aprilfool: 'news', ss_children: 'thumb', ss_chuseok: 'receipt',
-  ss_halloween: 'cctv', ss_pepero: 'stock', ss_suneung: 'report', ss_christmas: 'ppt', ss_yearend: 'award',
+  ss_halloween: 'cctv', ss_pepero: 'stock', ss_suneung: 'report', ss_christmas: 'santalist', ss_yearend: 'award',
   jp_heritage: 'award', jp_lotto: 'money', jp_heir: 'money', jp_the: 'thumb', jp_rain: 'money',
   meeting_loud: 'cctv', last_call: 'nowplaying', hold5: 'award', trinity: 'report', streak30: 'award', total100: 'stock', first_bell: 'forecast',
   meeting_soft: 'chat', meeting_hold: 'report', night_quiet: 'cctv', monday: 'forecast', friday: 'nowplaying', weekend_nap: 'box',
@@ -719,19 +757,27 @@ export function titleMeme(titleId, ctx) {
 }
 
 /**
- * 랜덤 짤 (홈의 '짤 뽑기', 하루 1번 + 광고). ctx = { id, mode, t }
- * 레전드 짤 6% · 유니크 짤 (나머지 중) 40% · 조립형, 실사 사진 20%. 잭팟 돈 짤은 잭팟 칭호 전용이라 안 나온다.
+ * 랜덤 짤 (홈의 '짤 뽑기', 하루 1번 + 광고). ctx = { id, mode, t, recent: [최근 나온 틀 이름] }
+ * 레전드 짤 6% · 유니크 짤 (나머지 중) 79% · 조립형 (약 20%), 실사 사진 20%. 잭팟 돈 짤 · 속보는 안 나온다.
+ * 최근 3번 안에 나온 틀은 다시 안 나온다 (조립형은 매번 모양이 달라서 예외). 시즌 짤은 그 달에만.
  */
-export const ODDS = { legend: 0.06, unique: 0.4, real: 0.2 };
+export const ODDS = { legend: 0.06, unique: 0.79, real: 0.2 };
+export const SEASON_MEMES = { santalist: [12], xmascard: [12] };
+export const inSeasonMeme = (name, t) => !SEASON_MEMES[name] || SEASON_MEMES[name].includes(new Date(t).getMonth() + 1);
 export function composeMeme(ctx) {
+  const recent = new Set(ctx.recent || []);
+  const fresh = names => { const f = names.filter(n => !recent.has(n)); return f.length ? f : names; };
   return withSeed(null, () => {
     if (chance(ODDS.legend)) {
-      const name = pick(Object.keys(LEGEND));
+      const name = pick(fresh(Object.keys(LEGEND)));
       return { name, real: true, legend: true, ...LEGEND[name]({ ...ctx, real: true }) };
     }
     const now = { ...ctx, real: chance(ODDS.real) };
     if (chance(ODDS.unique)) {
-      const name = pick(Object.keys(UNIQUE).filter(k => k !== 'money' && k !== 'news'));
+      const pool = Object.keys(UNIQUE).filter(k => k !== 'money' && k !== 'news' && inSeasonMeme(k, ctx.t));
+      // 시즌 짤이 있는 달엔 조금 더 자주 (시즌 느낌)
+      const seasonal = pool.filter(k => SEASON_MEMES[k] && !recent.has(k));
+      const name = seasonal.length && chance(0.25) ? pick(seasonal) : pick(fresh(pool));
       return { name, real: now.real, ...UNIQUE[name](now) };
     }
     return { name: 'assembled', real: now.real, ...assemble(now) };

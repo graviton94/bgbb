@@ -9,9 +9,14 @@
   seollal    꽹과리 네 번 + 징
   chuseok    대금 같은 피리 오음계 한 소절
   aprilfool  슬라이드 휘슬 올라갔다 내려감 + 띠용
+  trombone   슬픈 트롬본 '뿌~ 뿌~ 뿌~ 뿌우우~' (연중)
+  levelup    8비트 레벨업 아르페지오 (연중)
+  news       뉴스 속보 징글 '따다-단!' (연중)
+  applause   박수갈채 + 휘파람 (연중)
 """
 import os
 import subprocess
+import sys
 import tempfile
 
 import numpy as np
@@ -149,12 +154,79 @@ def aprilfool():
     return mix([(0.3, whistle, 0.4), (1.05, boing, 0.8)], 1.9)
 
 
-PACKS = {"drum": drum, "xmas": xmas, "halloween": halloween, "seollal": seollal, "chuseok": chuseok, "aprilfool": aprilfool}
+def square(freq, sec, duty=0.5, decay=None):
+    n = int(sec * SR)
+    t = np.arange(n) / SR
+    x = np.where((t * freq) % 1 < duty, 1.0, -1.0)
+    x = sosfilt(butter(2, 7000, "lowpass", fs=SR, output="sos"), x)
+    return x * env(n, 0.002, decay)
+
+
+def brass(freq, sec, wah=False, vib=0.0):
+    """금관 비슷하게: 배음을 쌓고 '와' 하고 열렸다 닫히는 밝기"""
+    n = int(sec * SR)
+    t = np.arange(n) / SR
+    f = freq * (1 + vib * np.sin(2 * np.pi * 5.2 * t) * np.minimum(1, t / 0.3))
+    phase = 2 * np.pi * np.cumsum(f) / SR
+    bright = np.sin(np.pi * np.minimum(1, t / sec)) if wah else np.ones(n)
+    x = sum((0.9 ** k) * (bright ** (k * 0.35)) * np.sin(phase * (k + 1)) for k in range(10))
+    return x * env(n, 0.03) * np.concatenate([np.ones(n - int(0.08 * SR)), np.linspace(1, 0, int(0.08 * SR))])
+
+
+def trombone():
+    notes = [(233.1, 0.42), (220.0, 0.42), (207.7, 0.42), (196.0, 1.25)]
+    parts, at = [], 0.35
+    for i, (f, d) in enumerate(notes):
+        parts.append((at, brass(f, d, wah=True, vib=0.03 if i == 3 else 0.0), 0.6))
+        at += d + 0.04
+    return mix(parts, at + 0.3)
+
+
+def levelup():
+    parts = []
+    for i, f in enumerate([523.3, 659.3, 784.0, 1046.5, 1318.5, 1568.0]):   # 도 미 솔 도 미 솔
+        parts.append((0.3 + i * 0.07, square(f, 0.12, 0.25, 0.08), 0.35))
+    for f in (1046.5, 1318.5, 1568.0):   # 마지막 반짝 화음
+        parts.append((0.75, square(f, 0.6, 0.125, 0.25), 0.22))
+    parts.append((0.75, tone(2093.0, 0.6, BELL, decay=0.2), 0.12))
+    return mix(parts, 1.5)
+
+
+def news():
+    chord = lambda fs, d: sum(brass(f, d) for f in fs)
+    hit = lambda: noise(0.25, 60, 400, 0.12) * 1.4   # 팀파니 같은 쿵
+    parts = [(0.3, chord([392.0, 493.9, 587.3], 0.16), 0.32), (0.5, chord([392.0, 493.9, 587.3], 0.16), 0.32),
+             (0.7, chord([523.3, 659.3, 784.0], 0.95), 0.38), (0.7, hit(), 0.8), (0.7, tone(1568.0, 0.9, BELL, decay=0.35), 0.15)]
+    return mix(parts, 1.9)
+
+
+def applause():
+    parts = []
+    for _ in range(140):   # 손뼉 140번을 흩뿌려서 박수 소리
+        at = 0.25 + RNG.random() ** 0.7 * 1.6
+        parts.append((at, noise(0.03, 900, 5000, 0.012), RNG.uniform(0.25, 0.6)))
+    n = int(0.75 * SR)
+    t = np.arange(n) / SR
+    f = 1900 + 900 * np.minimum(1, t / 0.35) + 60 * np.sin(2 * np.pi * 7 * t)   # 휘~익 휘파람
+    whistle = np.sin(2 * np.pi * np.cumsum(f) / SR) * env(n, 0.03) * np.linspace(1, 0.2, n)
+    parts.append((0.55, whistle, 0.35))
+    out = mix(parts, 2.3)
+    return out * np.concatenate([np.ones(len(out) - int(0.6 * SR)), np.linspace(1, 0, int(0.6 * SR))])
+
+
+# 기존 팩 (바둠츠 RMS ≈ 0.08) 과 비슷한 크기로: 연중 팩은 배음이 많아 더 크게 들려서 줄인다
+GAIN = {"trombone": 0.5, "levelup": 0.4, "news": 0.65, "applause": 0.75}
+
+PACKS = {"drum": drum, "xmas": xmas, "halloween": halloween, "seollal": seollal, "chuseok": chuseok, "aprilfool": aprilfool,
+         "trombone": trombone, "levelup": levelup, "news": news, "applause": applause}
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as d:
+        only = sys.argv[1:]   # 이름을 주면 그것만 다시 만든다
         for name, fn in PACKS.items():
-            x = master(fn())
+            if only and name not in only:
+                continue
+            x = master(fn()) * GAIN.get(name, 1.0)
             wav = os.path.join(d, f"{name}.wav")
             wavfile.write(wav, SR, (x * 32767).astype(np.int16))
             out = os.path.join(OUT, f"pack_{name}.ogg")
